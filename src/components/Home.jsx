@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { auth } from '../firebase';
 import { signOut } from 'firebase/auth';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from "react-router-dom";
 
 export default function Home() {
   const [teacherData, setTeacherData] = useState(null);
@@ -10,12 +10,12 @@ export default function Home() {
 
   useEffect(() => {
     // Check if user is authenticated and has teacher data
-    const storedTeacherData = sessionStorage.getItem('teacherData');
-    const displayName = sessionStorage.getItem('displayName');
+    const storedTeacherData = sessionStorage.getItem("teacherData");
+    const displayName = sessionStorage.getItem("displayName");
 
     if (!auth.currentUser || !storedTeacherData || !displayName) {
       // Redirect to login if not authenticated or missing data
-      navigate('/login');
+      navigate("/login");
       return;
     }
 
@@ -23,8 +23,8 @@ export default function Home() {
       const parsedTeacherData = JSON.parse(storedTeacherData);
       setTeacherData(parsedTeacherData);
     } catch (error) {
-      console.error('Error parsing teacher data:', error);
-      navigate('/login');
+      console.error("Error parsing teacher data:", error);
+      navigate("/login");
     } finally {
       setLoading(false);
     }
@@ -33,11 +33,11 @@ export default function Home() {
   const handleLogout = async () => {
     try {
       await signOut(auth);
-      sessionStorage.removeItem('teacherData');
-      sessionStorage.removeItem('displayName');
-      navigate('/login');
+      sessionStorage.removeItem("teacherData");
+      sessionStorage.removeItem("displayName");
+      navigate("/login");
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error("Logout error:", error);
     }
   };
 
@@ -107,7 +107,7 @@ export default function Home() {
                         Grades Teaching
                       </dt>
                       <dd className="text-lg font-medium text-gray-900">
-                        {teacherData.grades?.join(', ') || 'Not specified'}
+                        {teacherData.grades?.join(", ") || "Not specified"}
                       </dd>
                     </dl>
                   </div>
@@ -129,7 +129,7 @@ export default function Home() {
                         Location
                       </dt>
                       <dd className="text-lg font-medium text-gray-900">
-                        {teacherData.location || 'Not specified'}
+                        {teacherData.location || "Not specified"}
                       </dd>
                     </dl>
                   </div>
@@ -173,10 +173,9 @@ export default function Home() {
                         Member Since
                       </dt>
                       <dd className="text-lg font-medium text-gray-900">
-                        {teacherData.createdAt ? 
-                          new Date(teacherData.createdAt).toLocaleDateString() : 
-                          'Recently'
-                        }
+                        {teacherData.createdAt
+                          ? new Date(teacherData.createdAt).toLocaleDateString()
+                          : "Recently"}
                       </dd>
                     </dl>
                   </div>
@@ -192,25 +191,42 @@ export default function Home() {
                 Quick Actions
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                <button className="flex items-center p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                  <span className="text-2xl mr-3">📝</span>
-                  <div className="text-left">
-                    <div className="font-medium text-gray-900">Create Lesson</div>
-                    <div className="text-sm text-gray-500">Start a new lesson plan</div>
-                  </div>
-                </button>
+                <Link
+                  to="/peer-advice"
+                  className="p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <button className="flex items-center ">
+                    <span className="text-2xl mr-3">🤝</span>
+                    <div className="text-left">
+                      <div className="font-medium text-gray-900">
+                        Get Peer Advice
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        Connect with other teachers
+                      </div>
+                    </div>
+                  </button>
+                </Link>
                 <button className="flex items-center p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                   <span className="text-2xl mr-3">👥</span>
                   <div className="text-left">
-                    <div className="font-medium text-gray-900">Manage Students</div>
-                    <div className="text-sm text-gray-500">View and organize students</div>
+                    <div className="font-medium text-gray-900">
+                      Manage Students
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      View and organize students
+                    </div>
                   </div>
                 </button>
                 <button className="flex items-center p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                   <span className="text-2xl mr-3">📊</span>
                   <div className="text-left">
-                    <div className="font-medium text-gray-900">View Reports</div>
-                    <div className="text-sm text-gray-500">Check student progress</div>
+                    <div className="font-medium text-gray-900">
+                      View Reports
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      Check student progress
+                    </div>
                   </div>
                 </button>
               </div>
