@@ -207,17 +207,22 @@ export default function Home() {
                     </div>
                   </button>
                 </Link>
-                <button className="flex items-center p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                  <span className="text-2xl mr-3">👥</span>
-                  <div className="text-left">
+                {/* New Chat with Peers Card */}
+                <Link
+                  to="/chat"
+                  className="flex items-center p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                >
+                  <span className="text-2xl mr-3">💬</span>
+                  <div>
                     <div className="font-medium text-gray-900">
-                      Manage Students
+                      Chat with Peers
                     </div>
                     <div className="text-sm text-gray-500">
-                      View and organize students
+                      Your conversations
                     </div>
                   </div>
-                </button>
+                </Link>
+
                 <button className="flex items-center p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                   <span className="text-2xl mr-3">📊</span>
                   <div className="text-left">

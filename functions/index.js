@@ -5,7 +5,7 @@ const {
   onDocumentUpdated,
 } = require("firebase-functions/v2/firestore");
 const admin = require("firebase-admin");
-const fetch = require("node-fetch"); // ← polyfill
+const fetch = require("node-fetch");
 
 // Initialize admin SDK
 admin.initializeApp();
@@ -16,6 +16,44 @@ const db = admin.firestore();
 // Set global options for cost control
 setGlobalOptions({ maxInstances: 10 });
 
+// Agent base URL - use environment variable in production
+const AGENT_BASE_URL = "https://2e45-34-118-242-66.ngrok-free.app";
+
+// Helper function to make agent calls with error handling
+async function callAgent(endpoint, payload, retries = 2) {
+  for (let attempt = 0; attempt < retries; attempt++) {
+    try {
+      const url = `${AGENT_BASE_URL}${endpoint}`;
+      console.log(`🔗 Calling agent URL:`, url);
+      const response = await fetch(`${AGENT_BASE_URL}${endpoint}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          `Agent call failed: ${response.status} ${response.statusText}`
+        );
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error(
+        `❌ Agent call attempt ${attempt + 1} failed:`,
+        error.message
+      );
+      if (attempt === retries - 1) throw error;
+
+      // Wait before retry
+      await new Promise((resolve) => setTimeout(resolve, 1000 * (attempt + 1)));
+    }
+  }
+}
+
+// === TEACHER REGISTRATION ===
 exports.registerTeacher = onCall(async (request) => {
   try {
     if (!request.auth) {
@@ -23,69 +61,74 @@ exports.registerTeacher = onCall(async (request) => {
     }
 
     const { displayName, grades, location, experienceYears } = request.data;
-    if (!displayName || !grades || !location || experienceYears == null) {
-      throw new HttpsError("invalid-argument", "Missing fields");
+
+    // Enhanced validation
+    if (!displayName?.trim()) {
+      throw new HttpsError("invalid-argument", "Display name is required");
+    }
+    if (!Array.isArray(grades) || grades.length === 0) {
+      throw new HttpsError(
+        "invalid-argument",
+        "At least one grade is required"
+      );
+    }
+    if (!location?.trim()) {
+      throw new HttpsError("invalid-argument", "Location is required");
+    }
+    if (typeof experienceYears !== "number" || experienceYears < 0) {
+      throw new HttpsError(
+        "invalid-argument",
+        "Valid experience years required"
+      );
     }
 
-    // 1) Build your doc payload
     const docData = {
-      displayName,
-      grades,
-      location,
+      displayName: displayName.trim(),
+      grades: grades.filter((g) => g && g.trim()), // Clean grades array
+      location: location.trim(),
       experienceYears,
-      ownerUid: request.auth.uid, // track who created it
-      createdAt: new Date().toISOString(), // Simple timestamp that always works
+      ownerUid: request.auth.uid,
+      createdAt: new Date().toISOString(),
+      status: "registered",
+      lastActiveAt: new Date().toISOString(),
     };
 
-    // 2) Create a brand‑new doc with an auto‑ID ----> .add() method do
     const teacherRef = await db.collection("teachers").add(docData);
 
-    // 3) Return that ID so the frontend can store/sub to it
     return {
       success: true,
       teacherId: teacherRef.id,
+      message: "Teacher registered successfully",
     };
   } catch (error) {
-    console.error("❌ Error details:", error.message);
-    throw new HttpsError(
-      "internal",
-      `Failed to register teacher: ${error.message}`
-    );
+    console.error("❌ Registration error:", error.message);
+
+    if (error instanceof HttpsError) {
+      throw error;
+    }
+
+    throw new HttpsError("internal", `Registration failed: ${error.message}`);
   }
 });
 
-// ADD THIS NEW FUNCTION FOR LOGIN
+// === TEACHER LOGIN - FIXED VERSION ===
 exports.loginTeacher = onCall(async (request) => {
   console.log("🔥 Login attempt started");
-  console.log(
-    "🔥 Auth context:",
-    request.auth
-      ? {
-          uid: request.auth.uid,
-          token: request.auth.token ? "present" : "missing",
-        }
-      : "No auth context"
-  );
-  console.log("🔥 Request data:", request.data);
 
   try {
-    // Check if user is authenticated
     if (!request.auth) {
-      console.log("❌ No authentication context");
       throw new HttpsError("unauthenticated", "User must be authenticated");
     }
 
     const { displayName } = request.data;
 
-    if (!displayName || !displayName.trim()) {
-      console.log("❌ No display name provided");
+    if (!displayName?.trim()) {
       throw new HttpsError("invalid-argument", "Display name is required");
     }
 
     const trimmedName = displayName.trim();
     console.log("🔍 Searching for teacher with name:", trimmedName);
 
-    // Query Firestore to find teacher with matching display name
     const teachersRef = db.collection("teachers");
     const snapshot = await teachersRef
       .where("displayName", "==", trimmedName)
@@ -99,24 +142,22 @@ exports.loginTeacher = onCall(async (request) => {
       };
     }
 
-    // Get the first matching teacher (should be unique)
     const teacherDoc = snapshot.docs[0];
     const teacherData = teacherDoc.data();
 
     console.log("✅ Teacher found:", {
       id: teacherDoc.id,
       name: teacherData.displayName,
-      createdAt: teacherData.createdAt,
     });
 
-    // Update last login timestamp and login count
+    // Update login info
     const currentLoginCount = teacherData.loginCount || 0;
     await teacherDoc.ref.update({
       lastLoginAt: new Date().toISOString(),
       loginCount: currentLoginCount + 1,
+      status: "active",
     });
 
-    // Return success with teacher data
     return {
       success: true,
       message: "Login successful",
@@ -143,33 +184,69 @@ exports.loginTeacher = onCall(async (request) => {
   }
 });
 
+// === CHALLENGE POSTING ===
 exports.postChallenge = onCall(async (req) => {
-  if (!req.auth) throw new HttpsError("unauthenticated", "Sign in required");
-  const { text } = req.data;
-  if (!text || !text.trim())
-    throw new HttpsError("invalid-argument", "Challenge text is required");
+  try {
+    if (!req.auth) {
+      throw new HttpsError("unauthenticated", "Sign in required");
+    }
 
-  const challenge = {
-    ownerUid: req.auth.uid,
-    teacherId: req.auth.uid,
-    text: text.trim(),
-    createdAt: new Date().toISOString(), // Simple timestamp that always works
-    status: "POSTED",
-  };
+    const { text, urgency = "medium", teacherId } = req.data;
 
-  // auto‑ID
-  const ref = await db.collection("challenges").add(challenge);
-  return { success: true, challengeId: ref.id };
+    // 1️⃣ Validate inputs
+    if (!text?.trim()) {
+      throw new HttpsError("invalid-argument", "Challenge text is required");
+    }
+    if (!teacherId || typeof teacherId !== "string") {
+      throw new HttpsError("invalid-argument", "teacherId is required");
+    }
+
+    // 2️⃣ Verify the teacherId belongs to this user
+    const teacherDoc = await db.collection("teachers").doc(teacherId).get();
+    if (!teacherDoc.exists || teacherDoc.data().ownerUid !== req.auth.uid) {
+      throw new HttpsError(
+        "permission-denied",
+        "You do not have permission to post as this teacher"
+      );
+    }
+
+    // 3️⃣ Build and save the challenge
+    const challenge = {
+      ownerUid: req.auth.uid,
+      teacherId, // now using the passed-in doc ID
+      text: text.trim(),
+      urgency,
+      createdAt: new Date().toISOString(),
+      status: "POSTED",
+      responses: [],
+    };
+
+    const ref = await db.collection("challenges").add(challenge);
+
+    return {
+      success: true,
+      challengeId: ref.id,
+      message: "Challenge posted successfully",
+    };
+  } catch (error) {
+    console.error("❌ Error posting challenge:", error);
+
+    if (error instanceof HttpsError) {
+      throw error;
+    }
+    throw new HttpsError(
+      "internal",
+      `Failed to post challenge: ${error.message}`
+    );
+  }
 });
 
-//! ------------------------------Ai Agents----------------------------------
-// ! Profile agent
-const PROFILE_AGENT_URL = "https://9b3e-35-196-150-50.ngrok-free.app/profile";
-//* await db.collection('teachers').doc(request.auth.uid).set(docData);
-//* step 1: when above record entered, it trigger below code also .
+// === AI AGENT FUNCTIONS ===
+// 1️⃣ Profile Agent
 exports.profileAgent = onDocumentCreated("teachers/{teacherId}", async (e) => {
   const teacher = e.data.data();
   const id = e.params.teacherId;
+
   const payload = {
     id,
     name: teacher.displayName,
@@ -179,121 +256,451 @@ exports.profileAgent = onDocumentCreated("teachers/{teacherId}", async (e) => {
   };
 
   try {
-    const res = await fetch(`${PROFILE_AGENT_URL}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+    console.log(`🤖 Profile Agent: Processing teacher ${id}`);
+    const profileResult = await callAgent("/profile", payload);
+
+    await db
+      .collection("teacherProfiles")
+      .doc(id)
+      .set({
+        ...profileResult,
+        processedAt: new Date().toISOString(),
+      });
+
+    console.log(`✅ Profile Agent: Stored profile for ${id}`);
+  } catch (error) {
+    console.error(`❌ Profile Agent failed for ${id}:`, error.message);
+
+    // Store error info for debugging
+    await db.collection("teacherProfiles").doc(id).set({
+      error: error.message,
+      processingFailed: true,
+      processedAt: new Date().toISOString(),
     });
-    const profileResult = await res.json();
-    await db.collection("teacherProfiles").doc(id).set(profileResult);
-    console.log("✅ Stored profile for", id);
-  } catch (err) {
-    console.error("❌ Agent call failed:", err);
   }
 });
 
-//! Challenge Classification Agent
-const CLASSIFY_AGENT_URL = "https://9b3e-35-196-150-50.ngrok-free.app/classify";
+// 2️⃣ Challenge Classification Agent
 exports.classificationAgent = onDocumentCreated(
   "challenges/{challengeId}",
   async (e) => {
     const challengeId = e.params.challengeId;
     const data = e.data.data();
 
-    // call your classification model
-    const res = await fetch(`${CLASSIFY_AGENT_URL}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: challengeId, text: data.text }),
-    });
-    const { type, confidence } = await res.json();
+    try {
+      console.log(
+        `🏷️ Classification Agent: Processing challenge ${challengeId}`
+      );
 
-    // update doc with classification
-    await db.collection("challenges").doc(challengeId).update({
-      classification: { type, confidence },
-      status: "CLASSIFIED",
-    });
+      const classificationResult = await callAgent("/classify", {
+        id: challengeId,
+        text: data.text,
+      });
+
+      await db.collection("challenges").doc(challengeId).update({
+        classification: classificationResult,
+        status: "CLASSIFIED",
+        classifiedAt: new Date().toISOString(),
+      });
+
+      console.log(
+        `✅ Classification Agent: Classified ${challengeId} as ${classificationResult.type}`
+      );
+    } catch (error) {
+      console.error(
+        `❌ Classification Agent failed for ${challengeId}:`,
+        error.message
+      );
+
+      await db.collection("challenges").doc(challengeId).update({
+        classificationError: error.message,
+        status: "CLASSIFICATION_FAILED",
+      });
+    }
   }
 );
 
-// ! Peer Matching agent
-const MATCH_AGENT_URL = "https://9b3e-35-196-150-50.ngrok-free.app/match";
+// 3️⃣ Peer Matching Agent
 exports.matchingAgent = onDocumentUpdated(
   "challenges/{challengeId}",
   async (e) => {
     const before = e.data.before.data();
     const after = e.data.after.data();
-    const challengeId = e.params.challengeId; // ← ADD THIS LINE
+    const challengeId = e.params.challengeId;
 
-    // only run when status flips to CLASSIFIED
-    if (before.status !== "CLASSIFIED" || after.status !== "CLASSIFIED") return;
+    // Only run when status changes to CLASSIFIED
+    if (before.status !== "POSTED" || after.status !== "CLASSIFIED") return;
 
     const { classification, teacherId } = after;
 
-    // fetch teacherProfiles to supply to your match agent:
+    try {
+      console.log(
+        `🤝 Matching Agent: Finding matches for challenge ${challengeId}`
+      );
+
+      // Get teacher profile using teacherId (which is now the actual doc ID)
+      const profileSnap = await db
+        .collection("teacherProfiles")
+        .doc(teacherId)
+        .get();
+      let profile = profileSnap.data();
+
+      console.log("---------------------------");
+      console.log("Profile found:", profile);
+      console.log("---------------------------");
+
+      if (!profile) {
+        console.log(`⚠️ No profile found for teacher ${teacherId}`);
+
+        // Fallback: Get basic teacher data using doc ID
+        const teacherSnap = await db
+          .collection("teachers")
+          .doc(teacherId)
+          .get();
+        const basicProfile = teacherSnap.data();
+
+        console.log("---------------------------");
+        console.log("Basic profile:", basicProfile, "/ Doc ID:", teacherId);
+        console.log("---------------------------");
+
+        if (basicProfile) {
+          profile = {
+            teacherId,
+            matchingCriteria: {
+              grades: basicProfile.grades || [],
+              location: basicProfile.location || "",
+              experienceLevel:
+                basicProfile.experienceYears < 3 ? "novice" : "experienced",
+            },
+          };
+        }
+      }
+
+      const matches = await callAgent("/match", {
+        challengeId,
+        teacherProfile: profile,
+        classification,
+      });
+
+      await db
+        .collection("challenges")
+        .doc(challengeId)
+        .update({
+          matches: matches || [],
+          status: "MATCHED",
+          matchedAt: new Date().toISOString(),
+        });
+
+      console.log(
+        `✅ Matching Agent: Found ${
+          matches?.length || 0
+        } matches for ${challengeId}`
+      );
+    } catch (error) {
+      console.error(
+        `❌ Matching Agent failed for ${challengeId}:`,
+        error.message
+      );
+
+      await db.collection("challenges").doc(challengeId).update({
+        matchingError: error.message,
+        status: "MATCHING_FAILED",
+      });
+    }
+  }
+);
+
+// 4️⃣ Connection Orchestration Agent
+exports.connectionOrchestrationAgent = onDocumentUpdated(
+  "challenges/{challengeId}",
+  async (e) => {
+    const before = e.data.before.data();
+    const after = e.data.after.data();
+    const challengeId = e.params.challengeId;
+
+    if (before.status !== "CLASSIFIED" || after.status !== "MATCHED") return;
+
+    const { matches, teacherId, text } = after;
+
+    try {
+      console.log(
+        `🔗 Orchestration Agent: Creating connection for challenge ${challengeId}`
+      );
+
+      const orchestrationResult = await callAgent("/orchestrate", {
+        challengeId,
+        teacherId,
+        matches: matches || [],
+        text,
+      });
+
+      await db
+        .collection("challenges")
+        .doc(challengeId)
+        .update({
+          ...orchestrationResult,
+          status: "ORCHESTRATED",
+          orchestratedAt: new Date().toISOString(),
+        });
+
+      console.log(
+        `✅ Orchestration Agent: Created connection for ${challengeId}`
+      );
+    } catch (error) {
+      console.error(
+        `❌ Orchestration Agent failed for ${challengeId}:`,
+        error.message
+      );
+
+      await db.collection("challenges").doc(challengeId).update({
+        orchestrationError: error.message,
+        status: "ORCHESTRATION_FAILED",
+      });
+    }
+  }
+);
+
+// === ADDITIONAL CALLABLE FUNCTIONS ===
+
+// 5️⃣ Get AI Peer Support
+exports.getAiPeerSupport = onCall(async (request) => {
+  try {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "Sign-in required");
+    }
+
+    const { challengeText, challengeId } = request.data;
+
+    if (!challengeText?.trim()) {
+      throw new HttpsError("invalid-argument", "Challenge text is required");
+    }
+
+    // Find teacher doc by ownerUid
+    const teacherQuery = await db
+      .collection("teachers")
+      .where("ownerUid", "==", request.auth.uid)
+      .limit(1)
+      .get();
+
+    if (teacherQuery.empty) {
+      throw new HttpsError("failed-precondition", "Teacher profile not found");
+    }
+
+    const teacherDoc = teacherQuery.docs[0];
+    const teacherId = teacherDoc.id;
+
+    // Get teacher profile using actual doc ID
+    const teacherProfileSnap = await db
+      .collection("teacherProfiles")
+      .doc(teacherId)
+      .get();
+    const teacherProfile = teacherProfileSnap.data() || {};
+
+    console.log(
+      `🤖 AI Peer Agent: Providing support for challenge ${challengeId}`
+    );
+
+    const aiSupport = await callAgent("/ai-peer", {
+      challengeText: challengeText.trim(),
+      teacherProfile,
+      challengeId,
+    });
+
+    // Store AI interaction
+    await db.collection("aiInteractions").add({
+      challengeId,
+      teacherId: teacherId, // Use actual teacher doc ID
+      aiSupport,
+      createdAt: new Date().toISOString(),
+    });
+
+    return {
+      success: true,
+      aiSupport,
+      message: "AI peer support provided",
+    };
+  } catch (error) {
+    console.error("❌ AI Peer Support error:", error);
+
+    if (error instanceof HttpsError) {
+      throw error;
+    }
+
+    throw new HttpsError(
+      "internal",
+      `AI peer support failed: ${error.message}`
+    );
+  }
+});
+// === UTILITY FUNCTIONS ===
+
+// Get teacher dashboard data
+// Get teacher dashboard data
+exports.getTeacherDashboard = onCall(async (request) => {
+  try {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "Sign-in required");
+    }
+
+    const ownerUid = request.auth.uid;
+
+    // Find teacher doc by ownerUid
+    const teacherQuery = await db
+      .collection("teachers")
+      .where("ownerUid", "==", ownerUid)
+      .limit(1)
+      .get();
+
+    if (teacherQuery.empty) {
+      throw new HttpsError("failed-precondition", "Teacher profile not found");
+    }
+
+    const teacherDoc = teacherQuery.docs[0];
+    const teacherId = teacherDoc.id;
+
+    // Get teacher profile using actual doc ID
     const profileSnap = await db
       .collection("teacherProfiles")
       .doc(teacherId)
       .get();
     const profile = profileSnap.data();
 
-    // call match agent
-    const res = await fetch(`${MATCH_AGENT_URL}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        challengeId, // now defined
-        teacherProfile: profile,
-        classification,
-      }),
-    });
+    // Get recent challenges using actual teacher doc ID
+    const challengesSnap = await db
+      .collection("challenges")
+      .where("teacherId", "==", teacherId)
+      .orderBy("createdAt", "desc")
+      .limit(10)
+      .get();
 
-    const matches = await res.json();
+    const challenges = challengesSnap.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
 
-    // write matches + flip status
-    await db.collection("challenges").doc(challengeId).update({
-      matches,
-      status: "MATCHED",
-    });
+    // Get AI interactions
+    const aiInteractionsSnap = await db
+      .collection("aiInteractions")
+      .where("teacherId", "==", teacherId)
+      .orderBy("createdAt", "desc")
+      .limit(5)
+      .get();
 
-    console.log(
-      `✅ Matching Agent: wrote ${matches.length} matches for ${challengeId}`
+    const aiInteractions = aiInteractionsSnap.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    return {
+      success: true,
+      dashboard: {
+        profile,
+        recentChallenges: challenges,
+        aiInteractions,
+        stats: {
+          totalChallenges: challenges.length,
+          resolvedChallenges: challenges.filter((c) => c.status === "RESOLVED")
+            .length,
+          aiInteractions: aiInteractions.length,
+        },
+      },
+    };
+  } catch (error) {
+    console.error("❌ Dashboard data error:", error);
+
+    if (error instanceof HttpsError) {
+      throw error;
+    }
+
+    throw new HttpsError(
+      "internal",
+      `Failed to get dashboard data: ${error.message}`
     );
   }
-);
+});
 
-// ! Connect Orchestration agent
-const ORCHESTRATE_AGENT_URL =
-  "https://9b3e-35-196-150-50.ngrok-free.app/orchestrate";
-exports.connectionOrchestrationAgent = onDocumentUpdated(
-  "challenges/{challengeId}",
-  async (e) => {
-    const before = e.data.before.data();
-    const after = e.data.after.data();
-    const challengeId = e.params.challengeId; // ← ADD THIS TOO
-
-    if (before.status !== "MATCHED" || after.status !== "MATCHED") return;
-
-    const { matches, teacherId, text } = after;
-
-    const res = await fetch(`${ORCHESTRATE_AGENT_URL}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        challengeId, // defined
-        teacherId,
-        matches,
-        text,
-      }),
+// Health check for agents
+exports.checkAgentHealth = onCall(async (request) => {
+  try {
+    const healthCheck = await fetch(`${AGENT_BASE_URL}/health`, {
+      method: "GET",
+      headers: { "ngrok-skip-browser-warning": "true" },
+      timeout: 10000,
     });
 
-    const { connectionLink } = await res.json();
+    const healthData = await healthCheck.json();
 
-    await db.collection("challenges").doc(challengeId).update({
-      connectionLink,
-      status: "ORCHESTRATED",
-    });
+    return {
+      success: true,
+      agentHealth: healthData,
+      timestamp: new Date().toISOString(),
+    };
+  } catch (error) {
+    console.error("❌ Agent health check failed:", error);
 
-    console.log(`✅ Orchestration Agent: created link for ${challengeId}`);
+    return {
+      success: false,
+      error: error.message,
+      timestamp: new Date().toISOString(),
+    };
   }
-);
+});
+
+// ======================== START OR FETCH CHAT ===========================
+// === START OR FETCH CHAT ===
+exports.startChatWith = onCall(async (req) => {
+  try {
+    if (!req.auth) {
+      throw new HttpsError("unauthenticated", "Sign‑in required");
+    }
+    const userUid = req.auth.uid;
+    const peerId = req.data.peerId;
+
+    if (!peerId || typeof peerId !== "string") {
+      throw new HttpsError("invalid-argument", "peerId is required");
+    }
+    if (peerId === userUid) {
+      throw new HttpsError("failed-precondition", "Cannot chat with yourself");
+    }
+
+    const convosRef = db.collection("conversations");
+
+    // 🔍 1. Get all convos that include the current user
+    const snap = await convosRef
+      .where("members", "array-contains", userUid)
+      .get();
+
+    // 🔎 2. See if any of those has exactly [userUid, peerId]
+    for (const doc of snap.docs) {
+      const members = doc.data().members;
+      if (
+        Array.isArray(members) &&
+        members.includes(peerId) &&
+        members.length === 2
+      ) {
+        console.log(`Found existing convo ${doc.id}`);
+        return { convoId: doc.id };
+      }
+    }
+
+    // ➕ 3. Otherwise create a new one
+    const now = new Date().toISOString();
+    const newConvo = {
+      members: [userUid, peerId],
+      createdAt: now,
+      lastUpdated: now,
+    };
+    const newDoc = await convosRef.add(newConvo);
+    console.log(`Created new convo ${newDoc.id}`);
+    return { convoId: newDoc.id };
+  } catch (err) {
+    console.error("startChatWith error:", err);
+    // If it’s already an HttpsError, rethrow it
+    if (err instanceof HttpsError) throw err;
+    // Otherwise wrap it so the client sees a cleaner message
+    throw new HttpsError("internal", "Unable to start or fetch chat", {
+      original: err.message,
+    });
+  }
+});
+
