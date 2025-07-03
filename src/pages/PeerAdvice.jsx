@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { auth, db, functions } from "../firebase"; // ← we’ll import db & functions
 import { useNavigate } from "react-router-dom";
 import { httpsCallable } from "firebase/functions";
-import { doc, onSnapshot } from "firebase/firestore";
+import { doc, onSnapshot, getDoc } from "firebase/firestore";
 
 export default function PeerAdvice() {
   const [teacherData, setTeacherData] = useState(null);
@@ -11,6 +11,8 @@ export default function PeerAdvice() {
   const [challengeText, setChallengeText] = useState("");
   const [challengeId, setChallengeId] = useState(null);
   const [challengeDoc, setChallengeDoc] = useState(null);
+  const [peerNames, setPeerNames] = useState({});
+
   const navigate = useNavigate();
 
   // 1️⃣ Auth check + load teacherData
@@ -42,7 +44,11 @@ export default function PeerAdvice() {
 
     try {
       const postChallenge = httpsCallable(functions, "postChallenge");
-      const { data } = await postChallenge({ text: challengeText.trim() });
+      const { data } = await postChallenge({
+        text: challengeText.trim(),
+        teacherId: teacherData.id,
+        urgency: "medium",
+      });
       setChallengeId(data.challengeId);
       setChallengeText(""); // clear input
     } catch (err) {
@@ -52,12 +58,44 @@ export default function PeerAdvice() {
     }
   };
 
+  // fetch peer data
+  const fetchPeerName = async (peerId) => {
+    if (peerNames[peerId]) return; // already fetched
+
+    try {
+      const ref = doc(db, "teachers", peerId);
+      const snap = await getDoc(ref);
+      const data = snap.data();
+      if (data?.displayName) {
+        setPeerNames((prev) => ({ ...prev, [peerId]: data.displayName }));
+      } else {
+        setPeerNames((prev) => ({ ...prev, [peerId]: "Unknown" }));
+      }
+    } catch (err) {
+      console.error("❌ Error fetching peer name:", err.message);
+      setPeerNames((prev) => ({ ...prev, [peerId]: "Unknown" }));
+    }
+  };
+  useEffect(() => {
+    if (challengeDoc?.matches) {
+      challengeDoc.matches.forEach(({ peerId }) => {
+        fetchPeerName(peerId);
+      });
+    }
+  }, [challengeDoc]);
+
   if (loading || !teacherData) {
     return (
       <div className="min-h-screen flex justify-center items-center">
         <p className="text-gray-500">Loading…</p>
       </div>
     );
+  }
+
+  async function startChatWith(functions, peerId) {
+    const fn = httpsCallable(functions, "startChatWith");
+    const { data } = await fn({ peerId });
+    return data.convoId;
   }
 
   return (
@@ -133,11 +171,42 @@ export default function PeerAdvice() {
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
                   🤝 Suggested Peers
                 </h3>
-                <ul className="list-disc list-inside text-gray-700">
+                <ul
+                  className="list-disc list-inside text-gray-700"
+                  style={{ textDecoration: "none", listStyle: "none" }}
+                >
                   {challengeDoc.matches.map(({ peerId, score }) => (
                     <li key={peerId}>
-                      Peer: <span className="font-semibold">{peerId}</span>,
-                      Score: {(score * 100).toFixed(1)}%
+                      <button
+                        className="w-full text-left bg-indigo-100 hover:bg-indigo-200 px-4 py-2 rounded flex justify-between items-center"
+                        onClick={async () => {
+                          try {
+                            setLoading(true);
+                            const chatRoomId = await startChatWith(
+                              functions,
+                              peerId
+                            );
+                            navigate(`/chat/${chatRoomId}`);
+                          } catch (err) {
+                            console.error("Failed to start chat:", err);
+                            // optionally show a toast/error UI
+                          } finally {
+                            setLoading(false);
+                          }
+                        }}
+                      >
+                        <span>
+                          {`Chat with ${peerNames[peerId] || peerId} — ${(
+                            score * 100
+                          ).toFixed(1)}% match`}
+                        </span>
+
+                        <svg
+                          /* chat icon */ className="w-5 h-5 text-indigo-600"
+                        >
+                          <use href="#icon-chat" />
+                        </svg>
+                      </button>
                     </li>
                   ))}
                 </ul>
