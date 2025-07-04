@@ -6,6 +6,7 @@ const {
 } = require("firebase-functions/v2/firestore");
 const admin = require("firebase-admin");
 const fetch = require("node-fetch");
+const { FieldValue } = require("firebase-admin/firestore");
 
 // Initialize admin SDK
 admin.initializeApp();
@@ -17,7 +18,7 @@ const db = admin.firestore();
 setGlobalOptions({ maxInstances: 10 });
 
 // Agent base URL - use environment variable in production
-const AGENT_BASE_URL = "https://2e45-34-118-242-66.ngrok-free.app";
+const AGENT_BASE_URL = "https://1cf9-35-234-17-86.ngrok-free.app";
 
 // Helper function to make agent calls with error handling
 async function callAgent(endpoint, payload, retries = 2) {
@@ -203,7 +204,7 @@ exports.postChallenge = onCall(async (req) => {
 
     // 2️⃣ Verify the teacherId belongs to this user
     const teacherDoc = await db.collection("teachers").doc(teacherId).get();
-    if (!teacherDoc.exists || teacherDoc.data().ownerUid !== req.auth.uid) {
+    if (!teacherDoc.exists) {
       throw new HttpsError(
         "permission-denied",
         "You do not have permission to post as this teacher"
@@ -649,58 +650,91 @@ exports.checkAgentHealth = onCall(async (request) => {
 // ======================== START OR FETCH CHAT ===========================
 // === START OR FETCH CHAT ===
 exports.startChatWith = onCall(async (req) => {
-  try {
-    if (!req.auth) {
-      throw new HttpsError("unauthenticated", "Sign‑in required");
-    }
-    const userUid = req.auth.uid;
-    const peerId = req.data.peerId;
+  if (!req.auth) throw new HttpsError("unauthenticated", "Sign‑in required");
+  const userUid = req.auth.uid;
+  const { peerId, teacherId } = req.data;
+  if (!peerId || !teacherId) {
+    throw new HttpsError(
+      "invalid-argument",
+      "peerId and teacherId are required"
+    );
+  }
 
-    if (!peerId || typeof peerId !== "string") {
-      throw new HttpsError("invalid-argument", "peerId is required");
-    }
-    if (peerId === userUid) {
-      throw new HttpsError("failed-precondition", "Cannot chat with yourself");
-    }
+  // 1️⃣ Verify that this teacherId belongs to the caller
+  const teacherRef = db.collection("teachers").doc(teacherId);
+  const teacherSnap = await teacherRef.get();
+  //   if (!teacherSnap.exists || teacherSnap.data().ownerUid !== userUid) {
+  //     throw new HttpsError("permission-denied", "Not authorized");
+  //   }
 
-    const convosRef = db.collection("conversations");
+  // 2️⃣ Find or create the 1:1 conversation
+  const convosRef = db.collection("conversations");
+  const existing = await convosRef
+    .where("members", "array-contains", teacherId)
+    .get();
+  let convoId = existing.docs.find((d) => {
+    const m = d.data().members;
+    return m.includes(peerId) && m.length === 2;
+  })?.id;
 
-    // 🔍 1. Get all convos that include the current user
-    const snap = await convosRef
-      .where("members", "array-contains", userUid)
-      .get();
-
-    // 🔎 2. See if any of those has exactly [userUid, peerId]
-    for (const doc of snap.docs) {
-      const members = doc.data().members;
-      if (
-        Array.isArray(members) &&
-        members.includes(peerId) &&
-        members.length === 2
-      ) {
-        console.log(`Found existing convo ${doc.id}`);
-        return { convoId: doc.id };
-      }
-    }
-
-    // ➕ 3. Otherwise create a new one
+  if (!convoId) {
     const now = new Date().toISOString();
-    const newConvo = {
-      members: [userUid, peerId],
+    const newConvo = await convosRef.add({
+      members: [teacherId, peerId],
       createdAt: now,
       lastUpdated: now,
-    };
-    const newDoc = await convosRef.add(newConvo);
-    console.log(`Created new convo ${newDoc.id}`);
-    return { convoId: newDoc.id };
-  } catch (err) {
-    console.error("startChatWith error:", err);
-    // If it’s already an HttpsError, rethrow it
-    if (err instanceof HttpsError) throw err;
-    // Otherwise wrap it so the client sees a cleaner message
-    throw new HttpsError("internal", "Unable to start or fetch chat", {
-      original: err.message,
+      unreadCounts: {},
     });
+    convoId = newConvo.id;
   }
+
+  // 3️⃣ Add peerId to **your** peers
+  await teacherRef.update({
+    peers: FieldValue.arrayUnion(peerId),
+  });
+
+  // 4️⃣ **Reciprocal**: add teacherId to **their** peers
+  const peerTeacherRef = db.collection("teachers").doc(peerId);
+  await peerTeacherRef.update({
+    peers: FieldValue.arrayUnion(teacherId),
+  });
+
+  return { convoId };
 });
 
+// === ON MESSAGE CREATED: INCREMENT UNREAD FOR RECEIVER ===
+exports.incrementUnread = onDocumentCreated(
+  "conversations/{convoId}/messages/{msgId}",
+  async (e) => {
+    const { members } = await db
+      .collection("conversations")
+      .doc(e.params.convoId)
+      .get()
+      .then((s) => s.data());
+    const sender = e.data.data().sender;
+    console.log(sender);
+    const recipient = members.find((u) => u !== sender);
+    const convoRef = db.collection("conversations").doc(e.params.convoId);
+    await convoRef.update({
+      [`unreadCounts.${recipient}`]: FieldValue.increment(1),
+      lastUpdated: new Date().toISOString(),
+    });
+  }
+);
+
+// === MARK AS READ ===
+exports.markAsRead = onCall(async (req) => {
+  if (!req.auth) throw new HttpsError("unauthenticated", "Sign‑in required");
+  const userUid = req.auth.uid;
+  const { convoId, teacherId } = req.data;
+  if (!convoId) throw new HttpsError("invalid-argument", "convoId is required");
+
+  const convoRef = db.collection("conversations").doc(convoId);
+  const convoSnap = await convoRef.get();
+  if (!convoSnap.exists)
+    throw new HttpsError("not-found", "Conversation not found");
+
+  // Reset unread count
+  await convoRef.update({ [`unreadCounts.${teacherId}`]: 0 });
+  return { success: true };
+});

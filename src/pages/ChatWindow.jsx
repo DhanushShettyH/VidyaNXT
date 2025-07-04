@@ -1,149 +1,138 @@
 // src/pages/ChatWindow.jsx
 import React, { useEffect, useState, useRef } from "react";
-import { db, auth } from "../firebase";
+import { db, auth, functions } from "../firebase";
 import {
-  collection,
-  query,
-  where,
-  onSnapshot,
-  orderBy,
-  addDoc,
-  serverTimestamp,
-  doc as docRef,
+	collection,
+	query,
+	onSnapshot,
+	orderBy,
+	addDoc,
+	serverTimestamp,
+	doc,
+	setDoc,
+	getDoc,
 } from "firebase/firestore";
 import { useNavigate, useParams } from "react-router-dom";
-
-// Sidebar: list of your conversations
-function ChatList({ onSelect }) {
-  const [conversations, setConversations] = useState([]);
-  const userId = auth.currentUser.uid;
-
-  useEffect(() => {
-    const q = query(
-      collection(db, "conversations"),
-      where("members", "array-contains", userId),
-      orderBy("lastUpdated", "desc")
-    );
-    return onSnapshot(q, (snap) => {
-      setConversations(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
-    });
-  }, [userId]);
-
-  return (
-    <div className="w-1/3 border-r h-full overflow-auto">
-      <h2 className="p-4 font-bold">Chats</h2>
-      <ul>
-        {conversations.map((conv) => {
-          const friendId = conv.members.find((m) => m !== userId);
-          return (
-            <li key={conv.id}>
-              <button
-                onClick={() => onSelect(conv.id)}
-                className="w-full text-left p-3 hover:bg-gray-100"
-              >
-                {conv.name || friendId}
-              </button>
-            </li>
-          );
-        })}
-      </ul>
-    </div>
-  );
-}
+import { ArrowLeft } from "lucide-react";
+import { httpsCallable } from "firebase/functions";
 
 export default function ChatWindow() {
-  const { convoId } = useParams();
-  const navigate = useNavigate();
-  const [messages, setMessages] = useState([]);
-  const [newMsg, setNewMsg] = useState("");
-  const bottomRef = useRef(null);
-  const userId = auth.currentUser.uid;
+	const { convoId } = useParams();
+	const navigate = useNavigate();
+	const [messages, setMessages] = useState([]);
+	const [newMsg, setNewMsg] = useState("");
+	const [peerName, setPeerName] = useState("");
+	const bottomRef = useRef(null);
+	const userId = auth.currentUser.uid;
+	const teacherData = JSON.parse(sessionStorage.getItem("teacherData"));
+	const teacherId = teacherData?.id;
 
-  // Load messages when convoId changes
-  useEffect(() => {
-    if (!convoId) return;
-    const messagesRef = collection(db, "conversations", convoId, "messages");
-    const q = query(messagesRef, orderBy("createdAt", "asc"));
-    const unsub = onSnapshot(q, (snap) => {
-      setMessages(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
-      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-    });
-    return unsub;
-  }, [convoId]);
+	// Fetch and listen to messages
+	useEffect(() => {
+		if (!convoId) return;
 
-  const sendMessage = async (e) => {
-    e.preventDefault();
-    if (!newMsg.trim() || !convoId) return;
+		// Fetch conversation members to get peerId and name
+		const getPeerName = async () => {
+			const convoRef = doc(db, "conversations", convoId);
+			const convoSnap = await getDoc(convoRef);
+			if (convoSnap.exists()) {
+				const members = convoSnap.data().members;
+				const peerId = members.find((m) => m !== teacherId);
+				// fetch teacher displayName
+				const teacherRef = doc(db, "teachers", peerId);
+				const teacherSnap = await getDoc(teacherRef);
+				setPeerName(teacherSnap.data()?.displayName || peerId);
+			}
+		};
+		getPeerName();
 
-    await addDoc(collection(db, "conversations", convoId, "messages"), {
-      text: newMsg.trim(),
-      sender: userId,
-      createdAt: serverTimestamp(),
-    });
+		// listen for messages
+		const messagesRef = collection(db, "conversations", convoId, "messages");
+		const q = query(messagesRef, orderBy("createdAt", "asc"));
+		const unsub = onSnapshot(q, (snap) => {
+			setMessages(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+			bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+		});
+		return unsub;
+	}, [convoId, teacherId]);
 
-    // update lastUpdated timestamp
-    await docRef(db, "conversations", convoId).set(
-      { lastUpdated: serverTimestamp() },
-      { merge: true }
-    );
+	// send message
+	const sendMessage = async (e) => {
+		e.preventDefault();
+		if (!newMsg.trim() || !convoId) return;
 
-    setNewMsg("");
-  };
+		await addDoc(collection(db, "conversations", convoId, "messages"), {
+			text: newMsg.trim(),
+			sender: teacherId,
+			createdAt: serverTimestamp(),
+		});
 
-  return (
-    <div className="flex h-screen">
-      <ChatList onSelect={(id) => navigate(`/chat/${id}`)} />
+		await setDoc(
+			doc(db, "conversations", convoId),
+			{ lastUpdated: serverTimestamp() },
+			{ merge: true }
+		);
 
-      <div className="flex-1 flex flex-col">
-        {convoId ? (
-          <>
-            <div className="flex-1 overflow-auto p-4">
-              {messages.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={`mb-2 flex ${
-                    msg.sender === userId ? "justify-end" : "justify-start"
-                  }`}
-                >
-                  <div
-                    className={`px-4 py-2 rounded-lg max-w-xs break-words ${
-                      msg.sender === userId
-                        ? "bg-indigo-500 text-white"
-                        : "bg-gray-200"
-                    }`}
-                  >
-                    {msg.text}
-                  </div>
-                </div>
-              ))}
-              <div ref={bottomRef} />
-            </div>
-            <form
-              onSubmit={sendMessage}
-              className="p-4 border-t flex items-center"
-            >
-              <input
-                type="text"
-                value={newMsg}
-                onChange={(e) => setNewMsg(e.target.value)}
-                placeholder="Type a message..."
-                className="flex-1 border rounded-l-lg px-4 py-2 focus:outline-none"
-              />
-              <button
-                type="submit"
-                disabled={!newMsg.trim()}
-                className="bg-indigo-600 text-white px-4 py-2 rounded-r-lg disabled:opacity-50"
-              >
-                Send
-              </button>
-            </form>
-          </>
-        ) : (
-          <div className="flex-1 flex items-center justify-center text-gray-500">
-            Select a conversation to start chatting
-          </div>
-        )}
-      </div>
-    </div>
-  );
+		setNewMsg("");
+	};
+
+	useEffect(() => {
+		if (!convoId) return;
+
+		const stored = sessionStorage.getItem("teacherData");
+		if (!stored) return;
+
+		const teacherData = JSON.parse(stored);
+		const markRead = httpsCallable(functions, "markAsRead");
+
+		markRead({ convoId, teacherId: teacherData.id }).catch(console.error);
+	}, [convoId]);
+
+	return (
+		<div className="flex flex-col h-screen bg-gray-50">
+			{/* Top Nav with Peer Name */}
+			<nav className="bg-white shadow p-4 flex items-center">
+				<button onClick={() => navigate(-1)} className="mr-4">
+					<ArrowLeft className="w-6 h-6 text-gray-700" />
+				</button>
+				<h2 className="text-lg font-semibold text-gray-900">{peerName}</h2>
+			</nav>
+
+			{/* Messages area */}
+			<div className="flex-1 overflow-auto p-4">
+				{messages.map((msg) => (
+					<div
+						key={msg.id}
+						className={`mb-2 flex ${msg.sender === teacherId ? "justify-end" : "justify-start"}`}
+					>
+						<div
+							className={`px-4 py-2 rounded-lg max-w-xs break-words ${msg.sender === teacherId ? "bg-indigo-500 text-white" : "bg-gray-200"
+								}`}
+						>
+							{msg.text}
+						</div>
+					</div>
+				))}
+				<div ref={bottomRef} />
+			</div>
+
+			{/* Input */}
+			<form onSubmit={sendMessage} className="p-4 border-t bg-white flex">
+				<input
+					type="text"
+					value={newMsg}
+					onChange={(e) => setNewMsg(e.target.value)}
+					placeholder="Type a message..."
+					className="flex-1 border rounded-l-lg px-4 py-2 focus:outline-none"
+				/>
+				<button
+					type="submit"
+					disabled={!newMsg.trim()}
+					className="bg-indigo-600 text-white px-4 py-2 rounded-r-lg disabled:opacity-50"
+				>
+					Send
+				</button>
+			</form>
+		</div>
+	);
 }
