@@ -11,11 +11,14 @@ import {
 	getDocs,
 } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
+import { AI_PEER_ID, AI_PEER_NAME } from "../constants";
 
 export default function PeersList() {
 	const [teacherData, setTeacherData] = useState(null);
 	const [peers, setPeers] = useState([]);
-	const [peerNames, setPeerNames] = useState({});
+	const [peerNames, setPeerNames] = useState({
+		[AI_PEER_ID]: AI_PEER_NAME
+	});
 	const [unreadMap, setUnreadMap] = useState({});
 	const [loading, setLoading] = useState(true);
 	const navigate = useNavigate();
@@ -39,7 +42,14 @@ export default function PeersList() {
 			try {
 				const ref = doc(db, "teachers", teacherData.id);
 				const snap = await getDoc(ref);
-				setPeers(snap.data()?.peers || []);
+				const rawPeers = snap.data()?.peers || [];
+
+				// If AI_PEER_ID isn’t already in there, add it up front; otherwise leave as‑is
+				const withAi = rawPeers.includes(AI_PEER_ID)
+					? rawPeers
+					: [AI_PEER_ID, ...rawPeers];
+
+				setPeers(withAi);
 			} catch (e) {
 				console.error(e);
 			} finally {
@@ -51,12 +61,16 @@ export default function PeersList() {
 	// Fetch peer display names
 	useEffect(() => {
 		peers.forEach((peerId) => {
+			// skip the AI peer, we already know its name
+			if (peerId === AI_PEER_ID) return;
+			// if we've already loaded this name, skip
 			if (peerNames[peerId]) return;
+			// otherwise fetch from Firestore
 			getDoc(doc(db, "teachers", peerId))
 				.then((snap) => {
 					setPeerNames((p) => ({
 						...p,
-						[peerId]: snap.data()?.displayName || "Unknown",
+						[peerId]: snap.data()?.displayName || peerId,
 					}));
 				})
 				.catch(console.error);
@@ -100,6 +114,11 @@ export default function PeersList() {
 		setLoading(true);
 		try {
 			const teacherId = teacherData.id;
+			if (peerId === AI_PEER_ID) {
+				// Navigate to a special “AI chat” route
+				navigate(`/chat/ai`);
+				return;
+			}
 			console.log(peerId, teacherId);
 			const q = query(
 				collection(db, "conversations"),

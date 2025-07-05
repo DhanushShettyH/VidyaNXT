@@ -70,20 +70,21 @@ export default function PeerAdvice() {
 			setPeerNames((prev) => ({ ...prev, [peerId]: "Unknown" }));
 		}
 	};
+
 	useEffect(() => {
 		if (challengeDoc?.matches) {
 			challengeDoc.matches.forEach(({ peerId }) => fetchPeerName(peerId));
 		}
 	}, [challengeDoc]);
 
-	// Helper to start chat (now sends teacherId too)
+	// Helper to start chat with peer
 	const startChatWithPeer = async (peerId) => {
 		const fn = httpsCallable(functions, "startChatWith");
 		const { data } = await fn({ peerId, teacherId: teacherData.id });
 		return data.convoId;
 	};
 
-	// handle click — start chat (backend now records peer list)
+	// Handle peer click
 	const handlePeerClick = async (peerId) => {
 		setLoading(true);
 		try {
@@ -94,6 +95,23 @@ export default function PeerAdvice() {
 		} finally {
 			setLoading(false);
 		}
+	};
+
+	// Handle AI chat click
+	const handleAiChatClick = () => {
+		// Pass challenge data to AI chat
+		const challengeData = {
+			challengeId,
+			challengeText: challengeDoc?.text || challengeText,
+			classification: challengeDoc?.classification,
+			teacherData
+		};
+
+		// Store challenge data for AI chat to use
+		sessionStorage.setItem("aiChatChallenge", JSON.stringify(challengeData));
+
+		// Navigate to AI chat
+		navigate("/chat/ai");
 	};
 
 	if (loading || !teacherData) {
@@ -146,23 +164,76 @@ export default function PeerAdvice() {
 							</div>
 						)}
 
-						{/* Peer Matches */}
+						{/* Support Options */}
 						{(challengeDoc.status === "MATCHED" || challengeDoc.matches) && (
-							<div className="bg-white p-6 rounded-lg shadow">
-								<h3 className="text-lg font-medium text-gray-900 mb-2">🤝 Suggested Peers</h3>
-								<ul className="space-y-2">
-									{challengeDoc.matches.map(({ peerId, score }) => (
-										<li key={peerId}>
-											<button
-												className="w-full text-left bg-indigo-100 hover:bg-indigo-200 px-4 py-2 rounded flex justify-between items-center"
-												onClick={() => handlePeerClick(peerId)}
-											>
-												<span>{`Chat with ${peerNames[peerId] || peerId} — ${(score * 100).toFixed(1)}% match`}</span>
-												<svg className="w-5 h-5 text-indigo-600"><use href="#icon-chat" /></svg>
-											</button>
-										</li>
-									))}
-								</ul>
+							<div className="space-y-4">
+
+								{/* Peer Matches */}
+								{challengeDoc.matches && challengeDoc.matches.length > 0 && (
+									<div className="bg-white p-6 rounded-lg shadow">
+										<h3 className="text-lg font-medium text-gray-900 mb-4">🤝 Suggested Peers</h3>
+										<div className="space-y-2">
+											{challengeDoc.matches.map(({ peerId, score }) => (
+												<button
+													key={peerId}
+													className="w-full text-left bg-indigo-100 hover:bg-indigo-200 px-4 py-3 rounded-lg flex justify-between items-center transition-colors"
+													onClick={() => handlePeerClick(peerId)}
+												>
+													<div>
+														<span className="font-medium">{peerNames[peerId] || peerId}</span>
+														<span className="text-sm text-gray-600 ml-2">
+															{(score * 100).toFixed(1)}% match
+														</span>
+													</div>
+													<div className="flex items-center text-indigo-600">
+														<span className="text-sm mr-2">Chat now</span>
+														<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+															<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+														</svg>
+													</div>
+												</button>
+											))}
+										</div>
+									</div>
+								)}
+
+								{/* AI Chat Option */}
+								{challengeDoc.aiChatRecommended && (
+									<div className="bg-gradient-to-r from-purple-50 to-indigo-50 p-6 rounded-lg shadow border border-purple-200">
+										<h3 className="text-lg font-medium text-gray-900 mb-2 flex items-center">
+											<span className="text-2xl mr-2">🤖</span>
+											AI Teaching Assistant
+										</h3>
+										<p className="text-gray-700 mb-4">
+											{challengeDoc.matches && challengeDoc.matches.length > 0
+												? "Want immediate help while waiting for peers? Chat with our AI assistant trained on teaching best practices."
+												: "No peer matches found right now, but our AI assistant is ready to help! Get instant support and personalized advice."
+											}
+										</p>
+										<button
+											onClick={handleAiChatClick}
+											className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-3 rounded-lg hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 flex items-center"
+										>
+											<span className="mr-2">Chat with AI Assistant</span>
+											<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+											</svg>
+										</button>
+										<div className="mt-3 text-sm text-gray-600">
+											<span className="font-medium">✨ Features:</span> Instant responses • 24/7 availability • Personalized advice • Resource recommendations
+										</div>
+									</div>
+								)}
+
+								{/* No options available */}
+								{!challengeDoc.matches?.length && !challengeDoc.aiChatRecommended && (
+									<div className="bg-yellow-50 p-6 rounded-lg shadow border border-yellow-200">
+										<h3 className="text-lg font-medium text-yellow-800 mb-2">⏳ Finding Support Options</h3>
+										<p className="text-yellow-700">
+											We're working on finding the best support options for your challenge. Please check back in a moment.
+										</p>
+									</div>
+								)}
 							</div>
 						)}
 

@@ -3,16 +3,17 @@ import { auth } from '../firebase';
 import { signOut } from 'firebase/auth';
 import { Link, useNavigate } from "react-router-dom";
 import { collection, onSnapshot, query, where } from 'firebase/firestore';
-import { db } from '../firebase'; // ✅ Make sure this import exists
+import { db } from '../firebase';
 
 export default function Home() {
 	const [teacherData, setTeacherData] = useState(null);
 	const [loading, setLoading] = useState(true);
 	const [unreadTotal, setUnreadTotal] = useState(0);
+	const [wellnessAlerts, setWellnessAlerts] = useState(0);
 
 	const navigate = useNavigate();
 
-	// ✅ Always run hooks at top-level, not conditionally
+	// Always run hooks at top-level, not conditionally
 	useEffect(() => {
 		const storedTeacherData = sessionStorage.getItem("teacherData");
 		const displayName = sessionStorage.getItem("displayName");
@@ -33,6 +34,7 @@ export default function Home() {
 		}
 	}, [navigate]);
 
+	// Listen for chat unread messages
 	useEffect(() => {
 		if (!teacherData) return;
 
@@ -49,6 +51,22 @@ export default function Home() {
 				total += count;
 			});
 			setUnreadTotal(total);
+		});
+
+		return () => unsub();
+	}, [teacherData]);
+
+	// Listen for wellness alerts
+	useEffect(() => {
+		if (!teacherData) return;
+
+		const alertsQuery = query(
+			collection(db, "teachers", teacherData.id, "wellness_alerts"),
+			where("acknowledged", "==", false)
+		);
+
+		const unsub = onSnapshot(alertsQuery, (snap) => {
+			setWellnessAlerts(snap.size);
 		});
 
 		return () => unsub();
@@ -202,13 +220,21 @@ export default function Home() {
 									)}
 								</Link>
 
-								<button className="flex items-center p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-									<span className="text-2xl mr-3">📊</span>
+								<Link
+									to="/wellness-dashboard"
+									className="relative flex items-center p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+								>
+									<span className="text-2xl mr-3">🧘</span>
 									<div className="text-left">
-										<div className="font-medium text-gray-900">View Reports</div>
-										<div className="text-sm text-gray-500">Check student progress</div>
+										<div className="font-medium text-gray-900">Wellness Dashboard</div>
+										<div className="text-sm text-gray-500">Check your mental/physical health</div>
 									</div>
-								</button>
+									{wellnessAlerts > 0 && (
+										<span className="absolute top-2 right-2 bg-red-500 text-white text-xs font-semibold px-2 py-1 rounded-full">
+											{wellnessAlerts}
+										</span>
+									)}
+								</Link>
 							</div>
 						</div>
 					</div>
