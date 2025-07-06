@@ -1,127 +1,58 @@
-"""
-Shared configuration for VidyaNxt backend
-"""
 import os
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 
 class Config:
-    """Global configuration class"""
+    """Configuration management for VidyaNXT"""
     
     def __init__(self):
-        # Firebase configuration
+        self.env = os.getenv('ENV', 'development')
+        self.debug = os.getenv('DEBUG', 'false').lower() == 'true'
+        
+        # Firebase config
         self.firebase_project_id = os.getenv('FIREBASE_PROJECT_ID')
-        self.firebase_private_key = os.getenv('FIREBASE_PRIVATE_KEY')
-        self.firebase_client_email = os.getenv('FIREBASE_CLIENT_EMAIL')
         
-        # Agent configuration
-        self.agent_base_url = os.getenv('AGENT_BASE_URL', 'https://c64b-34-125-235-37.ngrok-free.app')
-        self.max_retries = int(os.getenv('MAX_RETRIES', '2'))
-        self.retry_delay = int(os.getenv('RETRY_DELAY', '1000'))  # milliseconds
-        
-        # System configuration
-        self.max_instances = int(os.getenv('MAX_INSTANCES', '10'))
-        self.log_level = os.getenv('LOG_LEVEL', 'INFO')
-        
-        # AI/LLM configuration
+        # Gemini config
         self.gemini_api_key = os.getenv('GEMINI_API_KEY')
-        self.openai_api_key = os.getenv('OPENAI_API_KEY')
+        self.gemini_model = os.getenv('GEMINI_MODEL', 'gemini-pro')
         
-        # Database configuration
-        self.firestore_database = os.getenv('FIRESTORE_DATABASE', '(default)')
+        # Agent config
+        self.max_agents = int(os.getenv('MAX_AGENTS', '10'))
+        self.agent_timeout = int(os.getenv('AGENT_TIMEOUT', '30'))
         
-        # Security configuration
-        self.jwt_secret = os.getenv('JWT_SECRET')
-        self.encryption_key = os.getenv('ENCRYPTION_KEY')
+        # A2A Protocol config
+        self.message_retention_hours = int(os.getenv('MESSAGE_RETENTION_HOURS', '24'))
+        self.max_conversation_length = int(os.getenv('MAX_CONVERSATION_LENGTH', '100'))
         
-        # External service configuration
-        self.email_service_url = os.getenv('EMAIL_SERVICE_URL')
-        self.notification_service_url = os.getenv('NOTIFICATION_SERVICE_URL')
+        # MCP config
+        self.mcp_timeout = int(os.getenv('MCP_TIMEOUT', '10'))
         
-        # Feature flags
-        self.enable_wellness_monitoring = os.getenv('ENABLE_WELLNESS_MONITORING', 'true').lower() == 'true'
-        self.enable_ai_fallback = os.getenv('ENABLE_AI_FALLBACK', 'true').lower() == 'true'
-        self.enable_peer_matching = os.getenv('ENABLE_PEER_MATCHING', 'true').lower() == 'true'
-        
-    def get_agent_config(self, agent_name: str) -> Dict[str, Any]:
-        """Get configuration specific to an agent"""
-        base_config = {
-            'max_retries': self.max_retries,
-            'retry_delay': self.retry_delay,
-            'base_url': self.agent_base_url,
-            'log_level': self.log_level
-        }
-        
-        # Agent-specific configurations
-        agent_configs = {
-            'profile_agent': {
-                'endpoint': '/profile',
-                'timeout': 30000,
-                'cache_ttl': 3600
-            },
-            'classification_agent': {
-                'endpoint': '/classify',
-                'timeout': 15000,
-                'cache_ttl': 1800
-            },
-            'matching_agent': {
-                'endpoint': '/match',
-                'timeout': 20000,
-                'max_matches': 5
-            },
-            'ai_chat_agent': {
-                'endpoint': '/ai-peer',
-                'timeout': 30000,
-                'max_conversation_length': 50
-            },
-            'connection_agent': {
-                'endpoint': '/orchestrate',
-                'timeout': 25000
-            },
-            'wellness_agent': {
-                'endpoint': '/wellness',
-                'timeout': 20000,
-                'monitoring_interval': 3600
-            }
-        }
-        
-        return {**base_config, **agent_configs.get(agent_name, {})}
-    
-    def get_firestore_config(self) -> Dict[str, Any]:
-        """Get Firestore configuration"""
+    def get_agent_config(self) -> Dict[str, Any]:
+        """Get agent-specific configuration"""
         return {
-            'project_id': self.firebase_project_id,
-            'database': self.firestore_database,
-            'credentials': {
-                'private_key': self.firebase_private_key,
-                'client_email': self.firebase_client_email
-            }
+            'max_agents': self.max_agents,
+            'timeout': self.agent_timeout,
+            'debug': self.debug
         }
     
-    def get_collections(self) -> Dict[str, str]:
-        """Get Firestore collection names"""
+    def get_gemini_config(self) -> Dict[str, Any]:
+        """Get Gemini configuration"""
         return {
-            'teachers': 'teachers',
-            'teacher_profiles': 'teacherProfiles',
-            'challenges': 'challenges',
-            'ai_interactions': 'aiInteractions',
-            'wellness_reports': 'wellness_reports',
-            'connections': 'connections',
-            'chat_sessions': 'chatSessions'
+            'api_key': self.gemini_api_key,
+            'model': self.gemini_model,
+            'timeout': self.mcp_timeout
         }
     
-    def validate_config(self) -> bool:
-        """Validate essential configuration"""
-        required_vars = [
-            'firebase_project_id',
-            'agent_base_url'
-        ]
-        
-        missing_vars = [var for var in required_vars if not getattr(self, var)]
-        
-        if missing_vars:
-            raise ValueError(f"Missing required configuration: {', '.join(missing_vars)}")
-            
-        return True
-
-# Global configuration instance
-config = Config()
+    def get_a2a_config(self) -> Dict[str, Any]:
+        """Get A2A protocol configuration"""
+        return {
+            'retention_hours': self.message_retention_hours,
+            'max_conversation_length': self.max_conversation_length
+        }
+    
+    def is_production(self) -> bool:
+        """Check if running in production"""
+        return self.env == 'production'
+    
+    def is_development(self) -> bool:
+        """Check if running in development"""
+        return self.env == 'development'

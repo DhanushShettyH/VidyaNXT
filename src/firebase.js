@@ -1,27 +1,29 @@
-// src/firebase.js
+// firebase-config.js
 import { initializeApp } from "firebase/app";
 import { getAuth, connectAuthEmulator } from "firebase/auth";
 import { getFunctions, connectFunctionsEmulator } from "firebase/functions";
-import { getFirestore, connectFirestoreEmulator } from "firebase/firestore"; // ← import Firestore
+import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  projectId: import.meta.env.VITE_PROJECT_ID,
 };
 
 const app = initializeApp(firebaseConfig);
 
-// — AUTH EMULATOR —
+// Initialize services
 const auth = getAuth(app);
-connectAuthEmulator(auth, "http://127.0.0.1:9099");
-
-// — FUNCTIONS EMULATOR —
 const functions = getFunctions(app);
-connectFunctionsEmulator(functions, "localhost", 5001);
-
-// — FIRESTORE EMULATOR —   ← NEW
 const db = getFirestore(app);
-connectFirestoreEmulator(db, "localhost", 8080); // default Firestore emulator port
+
+// Connect to emulators only in development and only once
+if (import.meta.env.VITE_DEV) {
+  connectAuthEmulator(auth, "http://127.0.0.1:9099");
+
+  connectFunctionsEmulator(functions, "127.0.0.1", 5001);
+
+  connectFirestoreEmulator(db, "127.0.0.1", 8080);
+}
 
 export { app, auth, functions, db };
