@@ -1,2 +1,7 @@
-node_modules/
+# Python bytecode
+__pycache__/
+
+# Python virtual environment
+venv/
 *.local
+.env

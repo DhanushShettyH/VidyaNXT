@@ -10,15 +10,13 @@
       "source": "functions",
       "codebase": "default",
       "ignore": [
-        "node_modules",
+        "venv",
         ".git",
         "firebase-debug.log",
         "firebase-debug.*.log",
         "*.local"
       ],
-      "predeploy": [
-        "npm --prefix \"$RESOURCE_DIR\" run lint"
-      ]
+      "runtime": "python313"
     }
   ],
   "hosting": {
@@ -35,11 +33,12 @@
       }
     ]
   },
+  "storage": {
+    "rules": "storage.rules"
+  },
   "emulators": {
     "auth": {
-      "port": 9099,
-	"allowUnauthenticated": true   
-
+      "port": 9099
     },
     "functions": {
       "port": 5001
