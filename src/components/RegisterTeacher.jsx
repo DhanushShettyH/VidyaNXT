@@ -5,7 +5,7 @@ import {
 	createUserWithEmailAndPassword,
 	onAuthStateChanged,
 } from "firebase/auth";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 // AI Loading Component
 const AILoadingScreen = ({ loadingText }) => {
@@ -75,6 +75,7 @@ const AILoadingScreen = ({ loadingText }) => {
 };
 
 export default function RegisterTeacher() {
+	const navigate = useNavigate();
 	const [form, setForm] = useState({
 		email: "",
 		password: "",
@@ -82,6 +83,7 @@ export default function RegisterTeacher() {
 		grades: "",
 		location: "",
 		experienceYears: "",
+		expertise: "", // New optional field
 	});
 	const [status, setStatus] = useState(null);
 	const [loading, setLoading] = useState(false);
@@ -136,12 +138,19 @@ export default function RegisterTeacher() {
 			setLoadingText("Finalizing your registration...");
 
 			const register = httpsCallable(functions, "registerTeacher");
-			const result = await register({
+			const registerData = {
 				displayName: form.displayName,
 				grades: form.grades.split(",").map((g) => g.trim()),
 				location: form.location,
 				experienceYears: Number(form.experienceYears),
-			});
+			};
+
+			// Add expertise only if provided
+			if (form.expertise.trim()) {
+				registerData.expertise = form.expertise.split(",").map((e) => e.trim());
+			}
+
+			const result = await register(registerData);
 
 			console.log("Function result:", result.data);
 
@@ -149,7 +158,9 @@ export default function RegisterTeacher() {
 			setLoadingText("Welcome to the platform!");
 			await new Promise(resolve => setTimeout(resolve, 500));
 
-			setStatus({ type: "success", message: "Registration successful!" });
+			setStatus({ type: "success", message: "Registration successful! Redirecting to login..." });
+
+			// Clear form
 			setForm({
 				email: "",
 				password: "",
@@ -157,7 +168,14 @@ export default function RegisterTeacher() {
 				grades: "",
 				location: "",
 				experienceYears: "",
+				expertise: "",
 			});
+
+			// Redirect to login page after a brief delay
+			setTimeout(() => {
+				navigate("/login");
+			}, 1500);
+
 		} catch (err) {
 			console.error("Error:", err);
 			setStatus({
@@ -183,8 +201,8 @@ export default function RegisterTeacher() {
 					{status && (
 						<div
 							className={`p-3 rounded ${status.type === "success"
-									? "bg-green-100 text-green-800"
-									: "bg-red-100 text-red-800"
+								? "bg-green-100 text-green-800"
+								: "bg-red-100 text-red-800"
 								}`}
 						>
 							{status.message}
@@ -199,7 +217,7 @@ export default function RegisterTeacher() {
 							value={form.email}
 							onChange={handleChange}
 							required
-							className="block w-full px-3 py-2 border rounded-md"
+							className="block w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-400"
 						/>
 						<input
 							name="password"
@@ -208,7 +226,7 @@ export default function RegisterTeacher() {
 							value={form.password}
 							onChange={handleChange}
 							required
-							className="block w-full px-3 py-2 border rounded-md"
+							className="block w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-400"
 						/>
 						<input
 							name="displayName"
@@ -217,7 +235,7 @@ export default function RegisterTeacher() {
 							value={form.displayName}
 							onChange={handleChange}
 							required
-							className="block w-full px-3 py-2 border rounded-md"
+							className="block w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-400"
 						/>
 						<input
 							name="grades"
@@ -226,7 +244,7 @@ export default function RegisterTeacher() {
 							value={form.grades}
 							onChange={handleChange}
 							required
-							className="block w-full px-3 py-2 border rounded-md"
+							className="block w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-400"
 						/>
 						<input
 							name="location"
@@ -235,7 +253,7 @@ export default function RegisterTeacher() {
 							value={form.location}
 							onChange={handleChange}
 							required
-							className="block w-full px-3 py-2 border rounded-md"
+							className="block w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-400"
 						/>
 						<input
 							name="experienceYears"
@@ -244,8 +262,23 @@ export default function RegisterTeacher() {
 							value={form.experienceYears}
 							onChange={handleChange}
 							required
-							className="block w-full px-3 py-2 border rounded-md"
+							className="block w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-400"
 						/>
+
+						{/* New optional expertise field */}
+						<div>
+							<input
+								name="expertise"
+								type="text"
+								placeholder="Areas of Expertise (optional - comma-separated)"
+								value={form.expertise}
+								onChange={handleChange}
+								className="block w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-400"
+							/>
+							<p className="text-xs text-gray-500 mt-1">
+								e.g., Mathematics, Science, Creative Writing, Special Education
+							</p>
+						</div>
 					</div>
 
 					<button
