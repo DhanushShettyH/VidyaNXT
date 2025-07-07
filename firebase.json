@@ -1,50 +1,65 @@
 {
-  "firestore": {
-    "database": "(default)",
-    "location": "asia-south1",
-    "rules": "firestore.rules",
-    "indexes": "firestore.indexes.json"
-  },
-  "functions": [
-    {
-      "source": "functions",
-      "codebase": "default",
-      "ignore": [
-        "node_modules",
-        ".git",
-        "firebase-debug.log",
-        "firebase-debug.*.log",
-        "*.local"
-      ],
-      "predeploy": [
-        "npm --prefix \"$RESOURCE_DIR\" run lint"
-      ]
-    }
-  ],
-  "hosting": {
-    "site": "vidyanxt-c5816",
-    "public": "public",
-    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
-    "rewrites": [
-      {
-        "source": "**",
-        "destination": "/index.html"
-      }
-    ]
-  },
-  "emulators": {
-    "auth": {
-      "port": 9099
-    },
-    "functions": {
-      "port": 5001
-    },
-    "firestore": {
-      "port": 8080
-    },
-    "ui": {
-      "enabled": true
-    },
-    "singleProjectMode": true
-  }
+	"firestore": {
+		"database": "(default)",
+		"location": "us-central1",
+		"rules": "firestore.rules",
+		"indexes": "firestore.indexes.json"
+	},
+	"functions": [
+		{
+			"source": "functions",
+			"codebase": "default",
+			"ignore": [
+				"node_modules",
+				".git",
+				"firebase-debug.log",
+				"firebase-debug.*.log",
+				"*.local"
+			],
+			"predeploy": [
+				"npm --prefix \"$RESOURCE_DIR\" run lint"
+			]
+		}
+	],
+	"hosting": {
+		"site": "vidyanxt-c5816",
+		"public": "dist",
+		"ignore": [
+			"firebase.json",
+			"**/.*",
+			"**/node_modules/**"
+		],
+		"rewrites": [
+			{
+				"source": "**",
+				"destination": "/index.html"
+			}
+		],
+		"headers": [
+			{
+				"source": "**/*.@(woff|woff2|ttf|otf|eot)",
+				"headers": [
+					{
+						"key": "Cache-Control",
+						"value": "public, max-age=31536000"
+					}
+				]
+			}
+		]
+	},
+	"emulators": {
+		"auth": {
+			"port": 9099
+		},
+		"functions": {
+			"port": 5001
+		},
+		"firestore": {
+			"port": 8080
+		},
+		"ui": {
+			"enabled": true
+		},
+		"singleProjectMode": true
+	}
 }

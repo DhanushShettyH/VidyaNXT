@@ -32,8 +32,11 @@ class MatchingAgent {
           classification
         );
 
-        // Filter for peer matches
-        const peerMatches = aiMatches.filter((match) => match.type === "peer");
+        // Filter for peer matches and ensure no self-matching
+        const peerMatches = aiMatches.filter(
+          (match) =>
+            match.type === "peer" && match.peerId !== teacherProfile.teacherId
+        );
 
         // Check if AI chat is recommended
         const aiMatch = aiMatches.find((match) => match.type === "ai");
@@ -89,6 +92,7 @@ class MatchingAgent {
 
       profilesSnap.forEach((doc) => {
         const profile = doc.data();
+        // Ensure we don't include the current user's profile
         if (profile.teacherId !== teacherProfile.teacherId) {
           allProfiles.push(profile);
         }
@@ -110,7 +114,14 @@ class MatchingAgent {
       const response = await result.response;
       const aiResponse = parseGeminiResponse(response.text());
 
-      return aiResponse.matches || [];
+      // Additional safety check to filter out current user's ID
+      const filteredMatches = (aiResponse.matches || []).filter(
+        (match) => match.peerId !== teacherProfile.teacherId
+      );
+
+      return filteredMatches.length > 0
+        ? filteredMatches
+        : [{ type: "ai", score: 1.0, reason: "No valid peer matches found" }];
     } catch (error) {
       console.error("AI matching failed:", error);
       //   logger.error("AI matching failed:", error);
@@ -125,13 +136,15 @@ class MatchingAgent {
     return `
 You are an expert teacher matching system. Find the best peer matches for a teacher based on their profile and challenge.
 
+IMPORTANT: DO NOT include the current teacher (ID: ${teacherProfile.teacherId}) in your matches. Only match with OTHER teachers.
+
 Current Teacher Profile:
 ${JSON.stringify(teacherProfile, null, 2)}
 
 Challenge Classification:
 ${JSON.stringify(classification, null, 2)}
 
-Available Peer Profiles:
+Available Peer Profiles (excluding current teacher):
 ${JSON.stringify(allProfiles.slice(0, 20), null, 2)}
 
 Find the best matches considering:
@@ -151,7 +164,7 @@ Respond with JSON:
   "matches": [
     {
       "type": "peer",
-      "peerId": "teacher_id",
+      "peerId": "teacher_id_of_peer_NOT_current_teacher",
       "score": 0.0-1.0,
       "reasons": ["specific matching reasons"]
     }
@@ -160,6 +173,7 @@ Respond with JSON:
   "aiReason": "reason for AI recommendation"
 }
 
+CRITICAL: Ensure peerId is NEVER ${teacherProfile.teacherId}. Only return OTHER teachers' IDs.
 Return top 3 peer matches maximum. Score based on relevance and compatibility.
 `;
   }
@@ -177,7 +191,7 @@ Return top 3 peer matches maximum. Score based on relevance and compatibility.
       profilesSnap.forEach((doc) => {
         const profile = doc.data();
 
-        // Don't match with self
+        // Don't match with self - this is the key fix
         if (profile.teacherId === currentProfile.teacherId) return;
 
         // Simple matching logic
