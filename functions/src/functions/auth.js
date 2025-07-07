@@ -7,6 +7,7 @@ const {
   createTeacher,
   findTeacherByName,
   updateTeacherLogin,
+  findTeacherByUid,
 } = require("../services/teacher");
 
 // Register teacher function
@@ -50,24 +51,22 @@ const loginTeacher = onCall(async (request) => {
   console.log("🔥 Login attempt started");
 
   try {
-    // Check authentication
-    if (!request.auth) {
+    // Ensure user is authenticated
+    if (!request.auth || !request.auth.uid) {
       throw new HttpsError("unauthenticated", "User must be authenticated");
     }
 
-    // Validate input data
-    const { displayName } = validateTeacherLogin(request.data);
+    const uid = request.auth.uid;
+    console.log("🔍 Looking for teacher with UID:", uid);
 
-    console.log("🔍 Searching for teacher with name:", displayName);
-
-    // Find teacher by name
-    const teacher = await findTeacherByName(displayName);
+    // Find teacher by UID
+    const teacher = await findTeacherByUid(uid);
 
     if (!teacher) {
-      console.log("❌ No teacher found with name:", displayName);
+      console.log("❌ No teacher found with UID:", uid);
       return {
         success: false,
-        message: "Teacher not found. Please check your name or register first.",
+        message: "No teacher profile found for this account.",
       };
     }
 

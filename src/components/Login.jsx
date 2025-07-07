@@ -1,14 +1,19 @@
 import React, { useState } from 'react';
 import { auth } from '../firebase';
-import { signInAnonymously } from 'firebase/auth';
-import { getFunctions, httpsCallable } from 'firebase/functions';
-import { Link, useNavigate } from 'react-router-dom';
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { getFunctions, httpsCallable } from "firebase/functions";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function Login() {
-  const [name, setName] = useState('');
+  const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm((f) => ({ ...f, [name]: value }));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -16,34 +21,45 @@ export default function Login() {
     setLoading(true);
 
     try {
-      // First, sign in anonymously to get authentication context
-      const userCredential = await signInAnonymously(auth);
-      console.log('🔥 Authenticated user:', userCredential.user.uid);
+      // Step 1: Firebase email/password sign-in
+      const userCred = await signInWithEmailAndPassword(
+        auth,
+        form.email,
+        form.password
+      );
+      const uid = userCred.user.uid;
+      console.log("✅ Authenticated user:", uid);
 
-      // Call the login function to verify teacher exists
+      // Step 2: Call cloud function to fetch teacher details
       const functions = getFunctions();
-      const loginTeacher = httpsCallable(functions, 'loginTeacher');
-      
-      const result = await loginTeacher({ displayName: name.trim() });
-      
+      const loginTeacher = httpsCallable(functions, "loginTeacher");
+
+      const result = await loginTeacher({ uid });
+
       if (result.data.success) {
-        // Store teacher data in sessionStorage for the session
-        sessionStorage.setItem('teacherData', JSON.stringify(result.data.teacher));
-        sessionStorage.setItem('displayName', name.trim());
-        
-        console.log('✅ Login successful:', result.data.teacher);
-        navigate('/home');
+        // Store teacher data in session
+        const data = JSON.stringify(result.data.teacher);
+        sessionStorage.setItem("teacherData", data);
+        sessionStorage.setItem("displayName", data.displayName);
+
+        console.log("✅ Login success:", result.data.teacher);
+        navigate("/home");
       } else {
-        setError(result.data.message || 'Teacher not found');
+        setError(result.data.message || "Teacher not found.");
       }
     } catch (err) {
-      console.error('❌ Login error:', err);
-      if (err.code === 'functions/not-found') {
-        setError('Teacher with this name not found. Please check your name or register first.');
-      } else if (err.code === 'functions/unauthenticated') {
-        setError('Authentication failed. Please try again.');
+      console.error("❌ Login error:", err);
+
+      if (err.code === "auth/user-not-found") {
+        setError("No user found. Please register.");
+      } else if (err.code === "auth/wrong-password") {
+        setError("Invalid password.");
+      } else if (err.code === "auth/invalid-email") {
+        setError("Invalid email format.");
+      } else if (err.code === "functions/unauthenticated") {
+        setError("Authentication failed. Try again.");
       } else {
-        setError('Login failed. Please try again.');
+        setError(err.message || "Login failed. Please try again.");
       }
     } finally {
       setLoading(false);
@@ -58,45 +74,67 @@ export default function Login() {
             Welcome Back!
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Enter your name to login
+            Login with your email and password
           </p>
         </div>
-        
+
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
             {error}
           </div>
         )}
-        
+
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-              Full Name
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Email
             </label>
             <input
-              id="name"
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              id="email"
+              name="email"
+              type="email"
+              value={form.email}
+              onChange={handleChange}
               required
-              placeholder="Enter your registered name"
-              className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              placeholder="Enter your registered email"
+              className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md"
             />
           </div>
-          
+
+          <div>
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Password
+            </label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              value={form.password}
+              onChange={handleChange}
+              required
+              className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md"
+            />
+          </div>
+
           <button
             type="submit"
-            disabled={loading || !name.trim()}
-            className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={loading}
+            className="w-full py-2 px-4 rounded-md text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
           >
-            {loading ? 'Logging in...' : 'Login'}
+            {loading ? "Logging in..." : "Login"}
           </button>
         </form>
-        
+
         <div className="text-center">
           <span className="text-sm text-gray-600">
-            Don't have an account?{' '}
-            <Link to="/register" className="font-medium text-indigo-600 hover:text-indigo-500">
+            Don’t have an account?{" "}
+            <Link to="/register" className="text-indigo-600 hover:underline">
               Register here
             </Link>
           </span>

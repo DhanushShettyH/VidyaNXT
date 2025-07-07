@@ -22,12 +22,9 @@
     }
   ],
   "hosting": {
+    "site": "vidyanxt-c5816",
     "public": "public",
-    "ignore": [
-      "firebase.json",
-      "**/.*",
-      "**/node_modules/**"
-    ],
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "rewrites": [
       {
         "source": "**",

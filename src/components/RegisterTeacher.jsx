@@ -1,42 +1,30 @@
-import React, { useEffect, useState } from 'react';
-import { auth, functions } from '../firebase';
-import { httpsCallable } from 'firebase/functions';
-import { signInAnonymously, onAuthStateChanged } from 'firebase/auth';
-import { Link } from 'react-router-dom';
+import React, { useState } from "react";
+import { auth, functions } from "../firebase";
+import { httpsCallable } from "firebase/functions";
+import {
+  createUserWithEmailAndPassword,
+  onAuthStateChanged,
+} from "firebase/auth";
+import { Link } from "react-router-dom";
 
 export default function RegisterTeacher() {
   const [form, setForm] = useState({
-    displayName: '',
-    grades: '',
-    location: '',
-    experienceYears: '',
+    email: "",
+    password: "",
+    displayName: "",
+    grades: "",
+    location: "",
+    experienceYears: "",
   });
-  const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState(null);
-  const [isAuthReady, setIsAuthReady] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
 
-  useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        try {
-          await signInAnonymously(auth);
-        } catch (error) {
-          console.error('Failed to sign in anonymously:', error);
-          setStatus({ type: 'error', message: 'Authentication failed' });
-        }
-      } else {
-        console.log('Authenticated uid:', user.uid);
+  // Listen to auth state
+  React.useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (user) => {
+      if (user) {
         setCurrentUser(user);
-        setIsAuthReady(true);
-        
-        // Force token refresh to ensure it's valid
-        try {
-          const token = await user.getIdToken(true);
-          console.log('Token refreshed successfully');
-        } catch (error) {
-          console.error('Token refresh failed:', error);
-        }
       }
     });
     return () => unsub();
@@ -49,44 +37,49 @@ export default function RegisterTeacher() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setStatus(null);
-
-    // Double-check authentication
-    if (!currentUser) {
-      setStatus({ type: 'error', message: 'User not authenticated' });
-      setLoading(false);
-      return;
-    }
+    setLoading(true);
 
     try {
-      // Get fresh token before making the call
-      const token = await currentUser.getIdToken(true);
-      console.log('Using token for function call');
-      
-      const register = httpsCallable(functions, 'registerTeacher');
+      // Create user
+      const cred = await createUserWithEmailAndPassword(
+        auth,
+        form.email,
+        form.password
+      );
+
+      console.log("User registered:", cred.user.uid);
+      setCurrentUser(cred.user);
+
+      // Optional: force token refresh
+      const token = await cred.user.getIdToken(true);
+      console.log("Token:", token);
+
+      // Call Cloud Function
+      const register = httpsCallable(functions, "registerTeacher");
       const result = await register({
         displayName: form.displayName,
-        grades: form.grades.split(',').map((g) => g.trim()),
+        grades: form.grades.split(",").map((g) => g.trim()),
         location: form.location,
         experienceYears: Number(form.experienceYears),
       });
-      
-      console.log('Function result:', result.data);
-      setStatus({ type: 'success', message: 'Registration successful!' });
-      setForm({ displayName: '', grades: '', location: '', experienceYears: '' });
+
+      console.log("Function result:", result.data);
+      setStatus({ type: "success", message: "Registration successful!" });
+      setForm({
+        email: "",
+        password: "",
+        displayName: "",
+        grades: "",
+        location: "",
+        experienceYears: "",
+      });
     } catch (err) {
-      console.error('Registration error:', err);
-      
-      // Better error handling
-      let errorMessage = 'Registration failed';
-      if (err.code === 'functions/unauthenticated') {
-        errorMessage = 'Authentication failed. Please refresh the page.';
-      } else if (err.message) {
-        errorMessage = err.message;
-      }
-      
-      setStatus({ type: 'error', message: errorMessage });
+      console.error("Error:", err);
+      setStatus({
+        type: "error",
+        message: err.message || "Registration failed",
+      });
     } finally {
       setLoading(false);
     }
@@ -102,21 +95,12 @@ export default function RegisterTeacher() {
           Teacher Registration
         </h2>
 
-        {/* Show authentication status */}
-        <div className="text-sm text-center">
-          {isAuthReady ? (
-            <span className="text-green-600">✓ Authenticated ({currentUser?.uid?.slice(0, 8)}...)</span>
-          ) : (
-            <span className="text-yellow-600">⚠ Authenticating...</span>
-          )}
-        </div>
-
         {status && (
           <div
             className={`p-3 rounded ${
-              status.type === 'success'
-                ? 'bg-green-100 text-green-800'
-                : 'bg-red-100 text-red-800'
+              status.type === "success"
+                ? "bg-green-100 text-green-800"
+                : "bg-red-100 text-red-800"
             }`}
           >
             {status.message}
@@ -124,83 +108,74 @@ export default function RegisterTeacher() {
         )}
 
         <div className="space-y-4">
-          <div>
-            <label htmlFor="displayName" className="block text-sm font-medium text-gray-700">
-              Full Name
-            </label>
-            <input
-              id="displayName"
-              name="displayName"
-              type="text"
-              value={form.displayName}
-              onChange={handleChange}
-              required
-              className="mt-1 block w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-300"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="grades" className="block text-sm font-medium text-gray-700">
-              Grades (comma‑separated)
-            </label>
-            <input
-              id="grades"
-              name="grades"
-              type="text"
-              placeholder="e.g. 1,2,3"
-              value={form.grades}
-              onChange={handleChange}
-              required
-              className="mt-1 block w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-300"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="location" className="block text-sm font-medium text-gray-700">
-              Location
-            </label>
-            <input
-              id="location"
-              name="location"
-              type="text"
-              value={form.location}
-              onChange={handleChange}
-              required
-              className="mt-1 block w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-300"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="experienceYears" className="block text-sm font-medium text-gray-700">
-              Years of Experience
-            </label>
-            <input
-              id="experienceYears"
-              name="experienceYears"
-              type="number"
-              min="0"
-              value={form.experienceYears}
-              onChange={handleChange}
-              required
-              className="mt-1 block w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-300"
-            />
-          </div>
+          <input
+            name="email"
+            type="email"
+            placeholder="Email"
+            value={form.email}
+            onChange={handleChange}
+            required
+            className="block w-full px-3 py-2 border rounded-md"
+          />
+          <input
+            name="password"
+            type="password"
+            placeholder="Password"
+            value={form.password}
+            onChange={handleChange}
+            required
+            className="block w-full px-3 py-2 border rounded-md"
+          />
+          <input
+            name="displayName"
+            type="text"
+            placeholder="Full Name"
+            value={form.displayName}
+            onChange={handleChange}
+            required
+            className="block w-full px-3 py-2 border rounded-md"
+          />
+          <input
+            name="grades"
+            type="text"
+            placeholder="Grades (comma-separated)"
+            value={form.grades}
+            onChange={handleChange}
+            required
+            className="block w-full px-3 py-2 border rounded-md"
+          />
+          <input
+            name="location"
+            type="text"
+            placeholder="Location"
+            value={form.location}
+            onChange={handleChange}
+            required
+            className="block w-full px-3 py-2 border rounded-md"
+          />
+          <input
+            name="experienceYears"
+            type="number"
+            placeholder="Years of Experience"
+            value={form.experienceYears}
+            onChange={handleChange}
+            required
+            className="block w-full px-3 py-2 border rounded-md"
+          />
         </div>
 
         <button
           type="submit"
-          disabled={loading || !isAuthReady}
+          disabled={loading}
           className={`w-full py-2 px-4 rounded-md text-white font-medium focus:outline-none focus:ring-2 focus:ring-indigo-400 ${
-            loading || !isAuthReady
-              ? 'bg-indigo-300 cursor-not-allowed'
-              : 'bg-indigo-600 hover:bg-indigo-700'
+            loading ? "bg-indigo-300" : "bg-indigo-600 hover:bg-indigo-700"
           }`}
         >
-          {loading ? 'Registering…' : 'Register'}
+          {loading ? "Registering…" : "Register"}
         </button>
 
         <p className="text-center text-sm text-gray-600">
-          Have an account?{' '}
+          Already have an account?{" "}
           <Link to="/login" className="text-indigo-600 hover:underline">
             Sign in
           </Link>

@@ -1,5 +1,6 @@
 const admin = require("firebase-admin");
 const { COLLECTIONS, STATUS } = require("../config/constants");
+const { FieldValue } = require("firebase-admin/firestore");
 
 const db = admin.firestore();
 
@@ -35,13 +36,33 @@ async function findTeacherByName(displayName) {
   };
 }
 
+// services/teacher.js
+
+async function findTeacherByUid(uid) {
+  const snapshot = await db
+    .collection(COLLECTIONS.TEACHERS)
+    .where("ownerUid", "==", uid)
+    .limit(1)
+    .get();
+
+  if (snapshot.empty) {
+    return null;
+  }
+
+  const doc = snapshot.docs[0];
+  return {
+    id: doc.id,
+    ...doc.data(),
+  };
+}
+
 // Update teacher login info
 async function updateTeacherLogin(teacherId, loginData) {
   const teacherRef = db.collection(COLLECTIONS.TEACHERS).doc(teacherId);
 
   await teacherRef.update({
     lastLoginAt: new Date().toISOString(),
-    loginCount: admin.firestore.FieldValue.increment(1),
+    loginCount: FieldValue.increment(1),
     status: STATUS.ACTIVE,
     ...loginData,
   });
@@ -64,6 +85,7 @@ async function getTeacherProfile(teacherId) {
 module.exports = {
   createTeacher,
   findTeacherByName,
+  findTeacherByUid,
   updateTeacherLogin,
   getTeacherProfile,
 };
