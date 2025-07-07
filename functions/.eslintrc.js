@@ -2,27 +2,20 @@ module.exports = {
   env: {
     es6: true,
     node: true,
+    commonjs: true,
   },
   parserOptions: {
-    "ecmaVersion": 2018,
+    ecmaVersion: 2020,
+    sourceType: "script", // Use "script" for CommonJS
   },
-  extends: [
-    "eslint:recommended",
-    "google",
-  ],
+  extends: ["eslint:recommended"],
   rules: {
-    "no-restricted-globals": ["error", "name", "length"],
-    "prefer-arrow-callback": "error",
-    "quotes": ["error", "double", {"allowTemplateLiterals": true}],
+    "no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
+    "no-console": "off",
+    "prefer-const": "error",
+    "no-var": "error",
   },
-  overrides: [
-    {
-      files: ["**/*.spec.*"],
-      env: {
-        mocha: true,
-      },
-      rules: {},
-    },
-  ],
-  globals: {},
+  globals: {
+    // Add any global variables you need
+  },
 };

@@ -1,7 +1,10 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
+const functions = require("firebase-functions");
 
 // Initialize Gemini AI (free tier)
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const genAI = new GoogleGenerativeAI(
+  process.env.GEMINI_API_KEY || functions.config().gemini.key
+);
 
 // Get the model
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
