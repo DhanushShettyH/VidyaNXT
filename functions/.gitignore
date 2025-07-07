@@ -1,9 +1,0 @@
-# Python bytecode
-__pycache__/
-
-# Python virtual environment
-venv/
-*.local
-.env
-
-index_copy.js
