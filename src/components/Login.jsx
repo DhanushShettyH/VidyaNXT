@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { auth } from '../firebase';
+import React, { useState } from "react";
+import { auth } from "../firebase";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { getFunctions, httpsCallable } from "firebase/functions";
 import { Link, useNavigate } from "react-router-dom";
@@ -21,70 +21,56 @@ export default function Login() {
     setLoading(true);
 
     try {
-      // Step 1: Firebase email/password sign-in
       const userCred = await signInWithEmailAndPassword(
         auth,
         form.email,
         form.password
       );
       const uid = userCred.user.uid;
-      console.log("✅ Authenticated user:", uid);
 
-      // Step 2: Call cloud function to fetch teacher details
-      const functions = getFunctions();
-      const loginTeacher = httpsCallable(functions, "loginTeacher");
-
+      const loginTeacher = httpsCallable(getFunctions(), "loginTeacher");
       const result = await loginTeacher({ uid });
 
       if (result.data.success) {
-        // Store teacher data in session
         const data = JSON.stringify(result.data.teacher);
         sessionStorage.setItem("teacherData", data);
         sessionStorage.setItem("displayName", data.displayName);
-
         console.log("✅ Login success:", result.data.teacher);
         navigate("/home");
       } else {
         setError(result.data.message || "Teacher not found.");
       }
     } catch (err) {
-      console.error("❌ Login error:", err);
-
-      if (err.code === "auth/user-not-found") {
+      if (err.code === "auth/user-not-found")
         setError("No user found. Please register.");
-      } else if (err.code === "auth/wrong-password") {
+      else if (err.code === "auth/wrong-password")
         setError("Invalid password.");
-      } else if (err.code === "auth/invalid-email") {
+      else if (err.code === "auth/invalid-email")
         setError("Invalid email format.");
-      } else if (err.code === "functions/unauthenticated") {
-        setError("Authentication failed. Try again.");
-      } else {
-        setError(err.message || "Login failed. Please try again.");
-      }
+      else setError(err.message || "Login failed. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Welcome Back!
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Login with your email and password
-          </p>
-        </div>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+      <form
+        onSubmit={handleSubmit}
+        className="w-full max-w-md bg-white p-6 rounded-lg shadow-lg space-y-6"
+      >
+        <h2 className="text-2xl font-semibold text-gray-800 text-center">
+          Teacher Login
+        </h2>
+        <p className="text-sm text-center text-gray-600">
+          Login with your email and password
+        </p>
 
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-            {error}
-          </div>
+          <div className="bg-red-100 text-red-800 p-3 rounded">{error}</div>
         )}
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        <div className="space-y-4">
           <div>
             <label
               htmlFor="email"
@@ -99,8 +85,7 @@ export default function Login() {
               value={form.email}
               onChange={handleChange}
               required
-              placeholder="Enter your registered email"
-              className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md"
+              className="mt-1 block w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-300"
             />
           </div>
 
@@ -118,28 +103,30 @@ export default function Login() {
               value={form.password}
               onChange={handleChange}
               required
-              className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md"
+              className="mt-1 block w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-300"
             />
           </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-2 px-4 rounded-md text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
-          >
-            {loading ? "Logging in..." : "Login"}
-          </button>
-        </form>
-
-        <div className="text-center">
-          <span className="text-sm text-gray-600">
-            Don’t have an account?{" "}
-            <Link to="/register" className="text-indigo-600 hover:underline">
-              Register here
-            </Link>
-          </span>
         </div>
-      </div>
+
+        <button
+          type="submit"
+          disabled={loading}
+          className={`w-full py-2 px-4 rounded-md text-white font-medium focus:outline-none focus:ring-2 focus:ring-indigo-400 ${
+            loading
+              ? "bg-indigo-300 cursor-not-allowed"
+              : "bg-indigo-600 hover:bg-indigo-700"
+          }`}
+        >
+          {loading ? "Logging in…" : "Login"}
+        </button>
+
+        <p className="text-center text-sm text-gray-600">
+          Don’t have an account?{" "}
+          <Link to="/register" className="text-indigo-600 hover:underline">
+            Register here
+          </Link>
+        </p>
+      </form>
     </div>
   );
 }
