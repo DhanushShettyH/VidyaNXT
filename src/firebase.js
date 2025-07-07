@@ -7,7 +7,7 @@ import { getFirestore, connectFirestoreEmulator } from "firebase/firestore"; // 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  projectId: import.meta.env.VITE_PROJECT_ID,
 };
 
 const app = initializeApp(firebaseConfig);

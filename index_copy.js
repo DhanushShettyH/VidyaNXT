@@ -53,7 +53,8 @@ async function callAgent(endpoint, payload, retries = 2) {
     }
   }
 }
-// === TEACHER REGISTRATION ===
+
+//! ===============login and register
 exports.registerTeacher = onCall(async (request) => {
   try {
     if (!request.auth) {
@@ -110,43 +111,6 @@ exports.registerTeacher = onCall(async (request) => {
     throw new HttpsError("internal", `Registration failed: ${error.message}`);
   }
 });
-exports.profileAgent = onDocumentCreated("teachers/{teacherId}", async (e) => {
-  const teacher = e.data.data();
-  const id = e.params.teacherId;
-
-  const payload = {
-    id,
-    name: teacher.displayName,
-    grades: teacher.grades,
-    location: teacher.location,
-    experience: teacher.experienceYears,
-  };
-
-  try {
-    console.log(`🤖 Profile Agent: Processing teacher ${id}`);
-    const profileResult = await callAgent("/profile", payload);
-
-    await db
-      .collection("teacherProfiles")
-      .doc(id)
-      .set({
-        ...profileResult,
-        processedAt: new Date().toISOString(),
-      });
-
-    console.log(`✅ Profile Agent: Stored profile for ${id}`);
-  } catch (error) {
-    console.error(`❌ Profile Agent failed for ${id}:`, error.message);
-
-    // Store error info for debugging
-    await db.collection("teacherProfiles").doc(id).set({
-      error: error.message,
-      processingFailed: true,
-      processedAt: new Date().toISOString(),
-    });
-  }
-});
-// === TEACHER LOGIN - FIXED VERSION ===
 exports.loginTeacher = onCall(async (request) => {
   console.log("🔥 Login attempt started");
 
@@ -218,8 +182,101 @@ exports.loginTeacher = onCall(async (request) => {
     });
   }
 });
+exports.profileAgent = onDocumentCreated("teachers/{teacherId}", async (e) => {
+  const teacher = e.data.data();
+  const id = e.params.teacherId;
 
-// === CHALLENGE POSTING ===
+  const payload = {
+    id,
+    name: teacher.displayName,
+    grades: teacher.grades,
+    location: teacher.location,
+    experience: teacher.experienceYears,
+  };
+
+  try {
+    console.log(`🤖 Profile Agent: Processing teacher ${id}`);
+    const profileResult = await callAgent("/profile", payload);
+
+    await db
+      .collection("teacherProfiles")
+      .doc(id)
+      .set({
+        ...profileResult,
+        processedAt: new Date().toISOString(),
+      });
+
+    console.log(`✅ Profile Agent: Stored profile for ${id}`);
+  } catch (error) {
+    console.error(`❌ Profile Agent failed for ${id}:`, error.message);
+
+    // Store error info for debugging
+    await db.collection("teacherProfiles").doc(id).set({
+      error: error.message,
+      processingFailed: true,
+      processedAt: new Date().toISOString(),
+    });
+  }
+});
+
+// this is what profile agent do
+// # 1️⃣ Enhanced Profile Agent (keep existing)
+// @app.route("/profile", methods=["POST"])
+// def profile_agent():
+//     try:
+//         data = request.json
+//         teacher_id = data['id']
+
+//         # Create detailed profile text
+//         profile_text = (
+//             f"Teacher Profile: {data['name']} teaches grades {', '.join(data['grades'])} "
+//             f"in {data['location']} with {data['experience']} years of experience."
+//         )
+
+//         # Generate summary
+//         summary = summarizer(profile_text, max_length=50, min_length=20, do_sample=False)[0]['summary_text']
+
+//         # Create advanced matching criteria
+//         grade_combinations = data['grades']
+//         experience_level = "novice" if data['experience'] < 3 else "experienced" if data['experience'] < 10 else "veteran"
+
+//         # AI interaction preferences
+//         ai_preferences = {
+//             "preferredInteractionStyle": "supportive" if data['experience'] < 5 else "collaborative",
+//             "topicExpertise": determine_topic_expertise(grade_combinations, data['experience']),
+//             "communicationPreference": "detailed" if experience_level == "novice" else "concise"
+//         }
+
+//         profile_result = {
+//             "teacherId": teacher_id,
+//             "summary": summary,
+//             "matchingCriteria": {
+//                 "grades": grade_combinations,
+//                 "location": data['location'],
+//                 "experienceLevel": experience_level,
+//                 "gradeScore": len(grade_combinations) * 10,
+//                 "regionKey": data['location'].lower().replace(' ', '_')
+//             },
+//             "aiPreferences": ai_preferences,
+//             "profileStrength": min(100, data['experience'] * 5 + len(grade_combinations) * 15),
+//             "createdAt": datetime.now().isoformat()
+//         }
+
+//         # Store in memory
+//         teacher_profiles[teacher_id] = profile_result
+
+//         # Update network stats
+//         network_stats["total_teachers"] += 1
+//         for grade in grade_combinations:
+//             network_stats["grade_coverage"][grade] = network_stats["grade_coverage"].get(grade, 0) + 1
+//         network_stats["location_coverage"][data['location']] = network_stats["location_coverage"].get(data['location'], 0) + 1
+
+//         return jsonify(profile_result)
+
+//     except Exception as e:
+//         return jsonify({"error": str(e)}), 500
+
+//! ===============
 exports.postChallenge = onCall(async (req) => {
   try {
     if (!req.auth) {
@@ -292,6 +349,42 @@ exports.postChallenge = onCall(async (req) => {
 
 // === AI AGENT FUNCTIONS ===
 // 1️⃣ Profile Agent
+exports.profileAgent = onDocumentCreated("teachers/{teacherId}", async (e) => {
+  const teacher = e.data.data();
+  const id = e.params.teacherId;
+
+  const payload = {
+    id,
+    name: teacher.displayName,
+    grades: teacher.grades,
+    location: teacher.location,
+    experience: teacher.experienceYears,
+  };
+
+  try {
+    console.log(`🤖 Profile Agent: Processing teacher ${id}`);
+    const profileResult = await callAgent("/profile", payload);
+
+    await db
+      .collection("teacherProfiles")
+      .doc(id)
+      .set({
+        ...profileResult,
+        processedAt: new Date().toISOString(),
+      });
+
+    console.log(`✅ Profile Agent: Stored profile for ${id}`);
+  } catch (error) {
+    console.error(`❌ Profile Agent failed for ${id}:`, error.message);
+
+    // Store error info for debugging
+    await db.collection("teacherProfiles").doc(id).set({
+      error: error.message,
+      processingFailed: true,
+      processedAt: new Date().toISOString(),
+    });
+  }
+});
 
 // 2️⃣ Challenge Classification Agent
 exports.classificationAgent = onDocumentCreated(
@@ -512,7 +605,55 @@ async function findPeerMatchesFallback(currentProfile, classification) {
 }
 
 // 4️⃣ Connection Orchestration Agent
-exports.connectionOrchestrationAgent = onDocumentUpdated(
+// exports.connectionOrchestrationAgent = onDocumentUpdated(
+//   "challenges/{challengeId}",
+//   async (e) => {
+//     const before = e.data.before.data();
+//     const after = e.data.after.data();
+//     const challengeId = e.params.challengeId;
+
+//     if (before.status !== "CLASSIFIED" || after.status !== "MATCHED") return;
+
+//     const { matches, teacherId, text } = after;
+
+//     try {
+//       console.log(
+//         `🔗 Orchestration Agent: Creating connection for challenge ${challengeId}`
+//       );
+
+//       const orchestrationResult = await callAgent("/orchestrate", {
+//         challengeId,
+//         teacherId,
+//         matches: matches || [],
+//         text,
+//       });
+
+//       await db
+//         .collection("challenges")
+//         .doc(challengeId)
+//         .update({
+//           ...orchestrationResult,
+//           status: "ORCHESTRATED",
+//           orchestratedAt: new Date().toISOString(),
+//         });
+
+//       console.log(
+//         `✅ Orchestration Agent: Created connection for ${challengeId}`
+//       );
+//     } catch (error) {
+//       console.error(
+//         `❌ Orchestration Agent failed for ${challengeId}:`,
+//         error.message
+//       );
+
+//       await db.collection("challenges").doc(challengeId).update({
+//         orchestrationError: error.message,
+//         status: "ORCHESTRATION_FAILED",
+//       });
+//     }
+//   }
+// );
+exports.enhancedConnectionOrchestrationAgent = onDocumentUpdated(
   "challenges/{challengeId}",
   async (e) => {
     const before = e.data.before.data();
@@ -521,35 +662,85 @@ exports.connectionOrchestrationAgent = onDocumentUpdated(
 
     if (before.status !== "CLASSIFIED" || after.status !== "MATCHED") return;
 
-    const { matches, teacherId, text } = after;
+    const { matches, teacherId, text, classification } = after;
 
     try {
       console.log(
-        `🔗 Orchestration Agent: Creating connection for challenge ${challengeId}`
+        `🔗 Enhanced Orchestration Agent: Processing challenge ${challengeId}`
       );
+
+      // Get teacher profile for enhanced orchestration
+      const profileSnap = await db
+        .collection("teacherProfiles")
+        .doc(teacherId)
+        .get();
+      const teacherProfile = profileSnap.data() || {};
 
       const orchestrationResult = await callAgent("/orchestrate", {
         challengeId,
         teacherId,
         matches: matches || [],
         text,
+        classification,
+        teacherProfile,
       });
 
-      await db
-        .collection("challenges")
-        .doc(challengeId)
-        .update({
-          ...orchestrationResult,
-          status: "ORCHESTRATED",
-          orchestratedAt: new Date().toISOString(),
-        });
+      // Enhanced orchestration data
+      const updateData = {
+        ...orchestrationResult,
+        status: "ORCHESTRATED",
+        orchestratedAt: new Date().toISOString(),
+        orchestrationEnhanced: true,
+      };
+
+      // If AI session is recommended, create it automatically
+      if (orchestrationResult.recommendAiChat) {
+        try {
+          const aiSessionResult = await callAgent("/create-ai-session", {
+            teacherId,
+            challengeId,
+            challengeText: text,
+            teacherProfile,
+          });
+
+          updateData.aiSessionId = aiSessionResult.sessionId;
+          updateData.aiSessionCreated = true;
+
+          // Store AI session
+          await db
+            .collection("aiChatSessions")
+            .doc(aiSessionResult.sessionId)
+            .set({
+              sessionId: aiSessionResult.sessionId,
+              challengeId,
+              teacherId,
+              challengeText: text,
+              persona: aiSessionResult.persona,
+              welcomeMessage: aiSessionResult.welcomeMessage,
+              suggestedQuestions: aiSessionResult.suggestedQuestions,
+              createdAt: new Date().toISOString(),
+              status: "active",
+              messageCount: 0,
+              lastMessageAt: new Date().toISOString(),
+              createdBy: "orchestration-agent",
+            });
+        } catch (aiError) {
+          console.error(
+            `❌ Failed to create AI session during orchestration:`,
+            aiError
+          );
+          updateData.aiSessionError = aiError.message;
+        }
+      }
+
+      await db.collection("challenges").doc(challengeId).update(updateData);
 
       console.log(
-        `✅ Orchestration Agent: Created connection for ${challengeId}`
+        `✅ Enhanced Orchestration Agent: Completed for ${challengeId}`
       );
     } catch (error) {
       console.error(
-        `❌ Orchestration Agent failed for ${challengeId}:`,
+        `❌ Enhanced Orchestration Agent failed for ${challengeId}:`,
         error.message
       );
 
@@ -747,7 +938,7 @@ exports.checkAgentHealth = onCall(async (request) => {
   }
 });
 
-// ======================== START OR FETCH CHAT ===========================
+//! ======================== START OR FETCH CHAT ===========================
 // === START OR FETCH CHAT ===
 exports.startChatWith = onCall(async (req) => {
   if (!req.auth) throw new HttpsError("unauthenticated", "Sign‑in required");
@@ -801,7 +992,6 @@ exports.startChatWith = onCall(async (req) => {
 
   return { convoId };
 });
-
 // === ON MESSAGE CREATED: INCREMENT UNREAD FOR RECEIVER ===
 exports.incrementUnread = onDocumentCreated(
   "conversations/{convoId}/messages/{msgId}",
@@ -821,7 +1011,6 @@ exports.incrementUnread = onDocumentCreated(
     });
   }
 );
-
 // === MARK AS READ ===
 exports.markAsRead = onCall(async (req) => {
   if (!req.auth) throw new HttpsError("unauthenticated", "Sign‑in required");
@@ -1822,106 +2011,8 @@ exports.getDebugInfo = onCall(async (request) => {
 
 // === IMPROVED ORCHESTRATION AGENT ===
 // Update the existing orchestration agent to handle the new response format
-exports.enhancedConnectionOrchestrationAgent = onDocumentUpdated(
-  "challenges/{challengeId}",
-  async (e) => {
-    const before = e.data.before.data();
-    const after = e.data.after.data();
-    const challengeId = e.params.challengeId;
 
-    if (before.status !== "CLASSIFIED" || after.status !== "MATCHED") return;
-
-    const { matches, teacherId, text, classification } = after;
-
-    try {
-      console.log(
-        `🔗 Enhanced Orchestration Agent: Processing challenge ${challengeId}`
-      );
-
-      // Get teacher profile for enhanced orchestration
-      const profileSnap = await db
-        .collection("teacherProfiles")
-        .doc(teacherId)
-        .get();
-      const teacherProfile = profileSnap.data() || {};
-
-      const orchestrationResult = await callAgent("/orchestrate", {
-        challengeId,
-        teacherId,
-        matches: matches || [],
-        text,
-        classification,
-        teacherProfile,
-      });
-
-      // Enhanced orchestration data
-      const updateData = {
-        ...orchestrationResult,
-        status: "ORCHESTRATED",
-        orchestratedAt: new Date().toISOString(),
-        orchestrationEnhanced: true,
-      };
-
-      // If AI session is recommended, create it automatically
-      if (orchestrationResult.recommendAiChat) {
-        try {
-          const aiSessionResult = await callAgent("/create-ai-session", {
-            teacherId,
-            challengeId,
-            challengeText: text,
-            teacherProfile,
-          });
-
-          updateData.aiSessionId = aiSessionResult.sessionId;
-          updateData.aiSessionCreated = true;
-
-          // Store AI session
-          await db
-            .collection("aiChatSessions")
-            .doc(aiSessionResult.sessionId)
-            .set({
-              sessionId: aiSessionResult.sessionId,
-              challengeId,
-              teacherId,
-              challengeText: text,
-              persona: aiSessionResult.persona,
-              welcomeMessage: aiSessionResult.welcomeMessage,
-              suggestedQuestions: aiSessionResult.suggestedQuestions,
-              createdAt: new Date().toISOString(),
-              status: "active",
-              messageCount: 0,
-              lastMessageAt: new Date().toISOString(),
-              createdBy: "orchestration-agent",
-            });
-        } catch (aiError) {
-          console.error(
-            `❌ Failed to create AI session during orchestration:`,
-            aiError
-          );
-          updateData.aiSessionError = aiError.message;
-        }
-      }
-
-      await db.collection("challenges").doc(challengeId).update(updateData);
-
-      console.log(
-        `✅ Enhanced Orchestration Agent: Completed for ${challengeId}`
-      );
-    } catch (error) {
-      console.error(
-        `❌ Enhanced Orchestration Agent failed for ${challengeId}:`,
-        error.message
-      );
-
-      await db.collection("challenges").doc(challengeId).update({
-        orchestrationError: error.message,
-        status: "ORCHESTRATION_FAILED",
-      });
-    }
-  }
-);
-
-// ============================================wellness
+// =================================================================wellness
 // Helper function to send notifications (NEW)
 async function sendNotification(teacherId, notificationData) {
   try {
@@ -2365,17 +2456,3 @@ exports.getWellnessDashboard = onCall(async (request) => {
     throw new HttpsError("internal", error.message);
   }
 });
-
-// Add these utility functions if you don't already have them
-function extractTextFromResponse(response) {
-  if (typeof response === "string") return response;
-  if (response && response.response) return response.response;
-  if (response && response.message) return response.message;
-  if (response && response.text) return response.text;
-  return JSON.stringify(response);
-}
-
-function extractMetricsFromResponse(response) {
-  if (response && response.metrics) return response.metrics;
-  return null;
-}
