@@ -14,8 +14,24 @@
   },
   "main": "index.js",
   "dependencies": {
-    "firebase-admin": "^12.6.0",
-    "firebase-functions": "^6.0.1"
+    "@google-ai/generativelanguage": "^3.2.0",
+    "@google-cloud/firestore": "^7.11.2",
+    "@google-cloud/functions-framework": "^4.0.0",
+    "@google-cloud/pubsub": "^5.1.0",
+    "@google-labs/breadboard": "^0.34.0",
+    "@google-labs/breadboard-cli": "^0.13.1",
+    "@google-labs/breadboard-server": "^0.1.17",
+    "@google-labs/breadboard-web": "^1.10.1",
+    "@google/generative-ai": "^0.24.1",
+    "@modelcontextprotocol/sdk": "^1.15.0",
+    "axios": "^1.10.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.0.1",
+    "express": "^5.1.0",
+    "firebase-admin": "^12.7.0",
+    "firebase-functions": "^6.3.2",
+    "uuid": "^11.1.0",
+    "ws": "^8.18.3"
   },
   "devDependencies": {
     "eslint": "^8.15.0",

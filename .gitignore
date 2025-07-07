@@ -25,4 +25,4 @@ dev-dist
 *.sw?
 .env
 
-index_copy.js
+index_copy_test.js
