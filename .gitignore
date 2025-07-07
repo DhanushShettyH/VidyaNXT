@@ -24,3 +24,5 @@ dev-dist
 *.sln
 *.sw?
 .env
+
+index_copy.js
