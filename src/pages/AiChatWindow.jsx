@@ -390,11 +390,6 @@ export default function AiChatWindow() {
 				</button>
 				<div className="flex items-center space-x-2">
 					<div className="text-lg font-semibold">AI Teaching Assistant</div>
-					{sessionData && sessionData.persona && (
-						<div className="text-sm text-gray-500">
-							({sessionData.persona})
-						</div>
-					)}
 					<div
 						className={`w-2 h-2 rounded-full ${isLoading ? "bg-yellow-400" : "bg-green-400"}`}
 					/>

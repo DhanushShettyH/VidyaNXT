@@ -56,10 +56,35 @@ function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function parseGeminiResponse(responseText) {
+  try {
+    // Remove markdown code blocks if present
+    let cleanText = responseText.trim();
+
+    // Remove ```json and ``` if present
+    if (cleanText.startsWith("```json")) {
+      cleanText = cleanText.replace(/^```json\s*/, "");
+    }
+    if (cleanText.startsWith("```")) {
+      cleanText = cleanText.replace(/^```\s*/, "");
+    }
+    if (cleanText.endsWith("```")) {
+      cleanText = cleanText.replace(/\s*```$/, "");
+    }
+
+    // Parse the cleaned JSON
+    return JSON.parse(cleanText);
+  } catch (error) {
+    console.error("Failed to parse Gemini response:", responseText);
+    throw new Error(`JSON parsing failed: ${error.message}`);
+  }
+}
+
 module.exports = {
   getExperienceLevel,
   getAIPreferences,
   determineTopicExpertise,
   calculateProfileStrength,
   delay,
+  parseGeminiResponse,
 };

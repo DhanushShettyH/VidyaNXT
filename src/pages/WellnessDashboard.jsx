@@ -36,6 +36,7 @@ export default function WellnessDashboard() {
 			setLoading(true);
 			const getEnhancedTeacherDashboard = httpsCallable(functions, 'getEnhancedTeacherDashboard');
 			const result = await getEnhancedTeacherDashboard({ teacher_id: teacherId });
+			console.log('Dashboard data:', result.data); // Debug log
 			setDashboardData(result.data);
 		} catch (error) {
 			console.error('Error fetching dashboard data:', error);
@@ -92,6 +93,29 @@ export default function WellnessDashboard() {
 		);
 	}
 
+	// Helper function to get wellness summary or default values
+	const getWellnessSummary = () => {
+		if (dashboardData?.wellness?.summary) {
+			return dashboardData.wellness.summary;
+		}
+		// Generate summary from available data
+		const recentReports = dashboardData?.wellness?.recent_reports || [];
+		if (recentReports.length > 0) {
+			const avgScore = recentReports.reduce((sum, report) => {
+				return sum + (report.wellness_scores?.overall_wellness || 0);
+			}, 0) / recentReports.length;
+
+			return {
+				avg_wellness_score: avgScore,
+				total_analyses: recentReports.length,
+				wellness_trend: avgScore > 75 ? 'improving' : avgScore > 50 ? 'stable' : 'declining'
+			};
+		}
+		return null;
+	};
+
+	const wellnessSummary = getWellnessSummary();
+
 	return (
 		<div className="min-h-screen bg-gray-50">
 			{/* Header */}
@@ -120,7 +144,8 @@ export default function WellnessDashboard() {
 							{ id: 'overview', label: 'Overview', icon: '📊' },
 							{ id: 'metrics', label: 'Metrics', icon: '📈' },
 							{ id: 'alerts', label: 'Alerts', icon: '🚨' },
-							{ id: 'analytics', label: 'Analytics', icon: '🔍' }
+							{ id: 'analytics', label: 'Analytics', icon: '🔍' },
+							{ id: 'challenges', label: 'Recent Challenges', icon: '💪' }
 						].map((tab) => (
 							<button
 								key={tab.id}
@@ -142,6 +167,43 @@ export default function WellnessDashboard() {
 			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 				{activeTab === 'overview' && (
 					<div className="space-y-6">
+						{/* Teacher Info */}
+						<div className="bg-white overflow-hidden shadow rounded-lg">
+							<div className="px-4 py-5 sm:p-6">
+								<h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
+									Teacher Profile
+								</h3>
+								{dashboardData?.teacher && (
+									<div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+										<div className="bg-blue-50 p-4 rounded-lg">
+											<div className="text-xl font-bold text-blue-600 capitalize">
+												{dashboardData.teacher.displayName}
+											</div>
+											<div className="text-sm text-blue-700">Name</div>
+										</div>
+										<div className="bg-green-50 p-4 rounded-lg">
+											<div className="text-xl font-bold text-green-600">
+												{dashboardData.teacher.experienceYears} years
+											</div>
+											<div className="text-sm text-green-700">Experience</div>
+										</div>
+										<div className="bg-purple-50 p-4 rounded-lg">
+											<div className="text-xl font-bold text-purple-600">
+												Grades {dashboardData.teacher.grades?.join(', ')}
+											</div>
+											<div className="text-sm text-purple-700">Teaching Grades</div>
+										</div>
+										<div className="bg-orange-50 p-4 rounded-lg">
+											<div className="text-xl font-bold text-orange-600 capitalize">
+												{dashboardData.teacher.location}
+											</div>
+											<div className="text-sm text-orange-700">Location</div>
+										</div>
+									</div>
+								)}
+							</div>
+						</div>
+
 						{/* Wellness Summary */}
 						<div className="bg-white overflow-hidden shadow rounded-lg">
 							<div className="px-4 py-5 sm:p-6">
@@ -149,29 +211,33 @@ export default function WellnessDashboard() {
 									Wellness Summary
 								</h3>
 
-								{dashboardData?.wellness?.summary ? (
+								{wellnessSummary ? (
 									<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 										<div className="bg-green-50 p-4 rounded-lg">
 											<div className="text-2xl font-bold text-green-600">
-												{Math.round(dashboardData.wellness.summary.avg_wellness_score || 0)}%
+												{Math.round(wellnessSummary.avg_wellness_score || 0)}%
 											</div>
 											<div className="text-sm text-green-700">Average Wellness Score</div>
 										</div>
 										<div className="bg-blue-50 p-4 rounded-lg">
 											<div className="text-2xl font-bold text-blue-600">
-												{dashboardData.wellness.summary.total_analyses || 0}
+												{wellnessSummary.total_analyses || 0}
 											</div>
 											<div className="text-sm text-blue-700">Total Analyses</div>
 										</div>
 										<div className="bg-purple-50 p-4 rounded-lg">
 											<div className="text-2xl font-bold text-purple-600 capitalize">
-												{dashboardData.wellness.summary.wellness_trend || 'Stable'}
+												{wellnessSummary.wellness_trend || 'Stable'}
 											</div>
 											<div className="text-sm text-purple-700">Wellness Trend</div>
 										</div>
 									</div>
 								) : (
-									<p className="text-gray-500">No wellness data available yet. Start using the app to generate insights!</p>
+									<div className="text-center py-8">
+										<div className="text-gray-400 text-6xl mb-4">📊</div>
+										<p className="text-gray-500">No wellness data available yet.</p>
+										<p className="text-sm text-gray-400">Start using the app to generate insights!</p>
+									</div>
 								)}
 							</div>
 						</div>
@@ -213,7 +279,11 @@ export default function WellnessDashboard() {
 									))}
 
 									{(!dashboardData?.wellness?.recent_reports || dashboardData.wellness.recent_reports.length === 0) && (
-										<p className="text-gray-500 text-center py-4">No recent activity</p>
+										<div className="text-center py-8">
+											<div className="text-gray-400 text-6xl mb-4">📱</div>
+											<p className="text-gray-500">No recent activity</p>
+											<p className="text-sm text-gray-400">Your wellness analyses will appear here</p>
+										</div>
 									)}
 								</div>
 							</div>
@@ -234,6 +304,71 @@ export default function WellnessDashboard() {
 
 				{activeTab === 'analytics' && (
 					<WellnessAnalytics teacherId={teacherData?.id} />
+				)}
+
+				{activeTab === 'challenges' && (
+					<div className="space-y-6">
+						<div className="bg-white overflow-hidden shadow rounded-lg">
+							<div className="px-4 py-5 sm:p-6">
+								<h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
+									Recent Challenges
+								</h3>
+
+								{dashboardData?.challenges?.recent?.length > 0 ? (
+									<div className="space-y-4">
+										{dashboardData.challenges.recent.map((challenge, index) => (
+											<div key={challenge.id} className="border rounded-lg p-4 hover:bg-gray-50">
+												<div className="flex items-start justify-between">
+													<div className="flex-1">
+														<div className="flex items-center mb-2">
+															<span className="text-lg mr-2">
+																{challenge.classification?.type === 'behavior management' ? '⚠️' :
+																	challenge.classification?.type === 'classroom management' ? '🏫' :
+																		challenge.classification?.type === 'student engagement' ? '🎯' : '💡'}
+															</span>
+															<div className="font-medium text-gray-900 capitalize">
+																{challenge.classification?.type || 'General Challenge'}
+															</div>
+															<span className={`ml-2 px-2 py-1 text-xs rounded-full ${challenge.urgency === 'high' ? 'bg-red-100 text-red-800' :
+																	challenge.urgency === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+																		'bg-green-100 text-green-800'
+																}`}>
+																{challenge.urgency} urgency
+															</span>
+														</div>
+														<p className="text-gray-600 mb-2 line-clamp-2">
+															{challenge.text}
+														</p>
+														<div className="text-sm text-gray-500">
+															{new Date(challenge.createdAt).toLocaleDateString()} •
+															Status: <span className="capitalize">{challenge.status?.toLowerCase()}</span>
+														</div>
+													</div>
+												</div>
+
+												{challenge.matches && challenge.matches.length > 0 && (
+													<div className="mt-3 pt-3 border-t">
+														<div className="text-sm text-gray-600">
+															<strong>Matched with peer:</strong> Score {Math.round(challenge.matches[0].score * 100)}%
+														</div>
+														<div className="text-xs text-gray-500 mt-1">
+															{challenge.matches[0].reasons?.[0]}
+														</div>
+													</div>
+												)}
+											</div>
+										))}
+									</div>
+								) : (
+									<div className="text-center py-8">
+										<div className="text-gray-400 text-6xl mb-4">🏆</div>
+										<p className="text-gray-500">No recent challenges</p>
+										<p className="text-sm text-gray-400">Your teaching challenges and solutions will appear here</p>
+									</div>
+								)}
+							</div>
+						</div>
+					</div>
 				)}
 			</div>
 		</div>

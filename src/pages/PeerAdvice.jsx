@@ -8,6 +8,7 @@ import { doc, onSnapshot, getDoc } from "firebase/firestore";
 export default function PeerAdvice() {
 	const [teacherData, setTeacherData] = useState(null);
 	const [loading, setLoading] = useState(true);
+	const [processingChallenge, setProcessingChallenge] = useState(false); // New state for challenge processing
 	const [challengeText, setChallengeText] = useState("");
 	const [challengeId, setChallengeId] = useState(null);
 	const [challengeDoc, setChallengeDoc] = useState(null);
@@ -31,7 +32,20 @@ export default function PeerAdvice() {
 		if (!challengeId) return;
 		const ref = doc(db, "challenges", challengeId);
 		const unsubscribe = onSnapshot(ref, (snap) => {
-			setChallengeDoc(snap.data());
+			const data = snap.data();
+			if (data) {
+				// Ensure aiChatRecommended is always true
+				const updatedData = {
+					...data,
+					aiChatRecommended: true
+				};
+				setChallengeDoc(updatedData);
+
+				// Stop loading when we get matches or when status is MATCHED/ORCHESTRATED
+				if (data.matches?.length > 0 || data.status === "MATCHED" || data.status === "ORCHESTRATED") {
+					setProcessingChallenge(false);
+				}
+			}
 		});
 		return () => unsubscribe();
 	}, [challengeId]);
@@ -40,7 +54,7 @@ export default function PeerAdvice() {
 	const handleSubmit = async (e) => {
 		e.preventDefault();
 		if (!challengeText.trim()) return;
-		setLoading(true);
+		setProcessingChallenge(true); // Use processingChallenge instead of loading
 		try {
 			const postChallenge = httpsCallable(functions, "postChallenge");
 			const { data } = await postChallenge({
@@ -50,10 +64,10 @@ export default function PeerAdvice() {
 			});
 			setChallengeId(data.challengeId);
 			setChallengeText("");
+			// Don't set processingChallenge to false here - let the snapshot listener handle it
 		} catch (err) {
 			console.error("Error posting challenge:", err);
-		} finally {
-			setLoading(false);
+			setProcessingChallenge(false);
 		}
 	};
 
@@ -114,6 +128,58 @@ export default function PeerAdvice() {
 		navigate("/chat/ai");
 	};
 
+	// AI Processing Loading Screen Component
+	const AIProcessingLoader = () => (
+		<div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
+			<div className="bg-white rounded-2xl p-8 max-w-md mx-4 text-center shadow-2xl">
+				{/* Animated AI Brain */}
+				<div className="relative w-20 h-20 mx-auto mb-6">
+					<div className="absolute inset-0 rounded-full bg-gradient-to-r from-purple-400 to-indigo-600 animate-pulse"></div>
+					<div className="absolute inset-2 rounded-full bg-white flex items-center justify-center">
+						<div className="w-8 h-8 relative">
+							{/* Animated dots representing neural network */}
+							<div className="absolute w-2 h-2 bg-purple-600 rounded-full animate-bounce" style={{ top: '0px', left: '12px' }}></div>
+							<div className="absolute w-2 h-2 bg-indigo-600 rounded-full animate-bounce" style={{ top: '12px', left: '0px', animationDelay: '0.1s' }}></div>
+							<div className="absolute w-2 h-2 bg-purple-600 rounded-full animate-bounce" style={{ top: '12px', left: '24px', animationDelay: '0.2s' }}></div>
+							<div className="absolute w-2 h-2 bg-indigo-600 rounded-full animate-bounce" style={{ top: '24px', left: '12px', animationDelay: '0.3s' }}></div>
+							{/* Connecting lines */}
+							<div className="absolute w-0.5 h-3 bg-purple-300 rotate-45" style={{ top: '8px', left: '7px' }}></div>
+							<div className="absolute w-0.5 h-3 bg-purple-300 -rotate-45" style={{ top: '8px', left: '20px' }}></div>
+							<div className="absolute w-0.5 h-3 bg-purple-300 rotate-45" style={{ top: '13px', left: '7px' }}></div>
+							<div className="absolute w-0.5 h-3 bg-purple-300 -rotate-45" style={{ top: '13px', left: '20px' }}></div>
+						</div>
+					</div>
+				</div>
+
+				{/* Magic sparkles */}
+				<div className="absolute top-4 left-8 w-1 h-1 bg-yellow-400 rounded-full animate-ping"></div>
+				<div className="absolute top-12 right-8 w-1 h-1 bg-blue-400 rounded-full animate-ping" style={{ animationDelay: '0.5s' }}></div>
+				<div className="absolute bottom-12 left-12 w-1 h-1 bg-pink-400 rounded-full animate-ping" style={{ animationDelay: '1s' }}></div>
+				<div className="absolute bottom-8 right-12 w-1 h-1 bg-green-400 rounded-full animate-ping" style={{ animationDelay: '1.5s' }}></div>
+
+				{/* Text content */}
+				<h3 className="text-2xl font-bold text-gray-800 mb-3 flex items-center justify-center">
+					<span className="mr-2">🤖</span>
+					AI Magic in Progress
+				</h3>
+				<div className="space-y-2 text-gray-600">
+					<p className="font-medium">✨ Analyzing your challenge...</p>
+					<p className="font-medium">🔍 Finding perfect peer matches...</p>
+					<p className="font-medium">🧠 Preparing AI assistance...</p>
+				</div>
+
+				{/* Progress bar */}
+				<div className="mt-6 w-full bg-gray-200 rounded-full h-2">
+					<div className="bg-gradient-to-r from-purple-600 to-indigo-600 h-2 rounded-full animate-pulse"></div>
+				</div>
+
+				<p className="text-sm text-gray-500 mt-4">
+					This usually takes 10-30 seconds
+				</p>
+			</div>
+		</div>
+	);
+
 	if (loading || !teacherData) {
 		return (
 			<div className="min-h-screen flex justify-center items-center">
@@ -124,6 +190,9 @@ export default function PeerAdvice() {
 
 	return (
 		<div className="min-h-screen bg-gray-50">
+			{/* AI Processing Overlay */}
+			{processingChallenge && <AIProcessingLoader />}
+
 			<div className="max-w-4xl mx-auto py-8 px-4">
 				<h1 className="text-3xl font-bold text-gray-900 mb-6">👥 Peer Advice Center</h1>
 
@@ -144,9 +213,14 @@ export default function PeerAdvice() {
 							onChange={(e) => setChallengeText(e.target.value)}
 							placeholder="Describe the teaching challenge you're facing..."
 							className="w-full border border-gray-300 rounded-lg p-3 mb-4"
+							disabled={processingChallenge}
 						/>
-						<button type="submit" disabled={loading} className="bg-indigo-600 disabled:opacity-50 text-white px-4 py-2 rounded hover:bg-indigo-700">
-							Submit for Peer Help
+						<button
+							type="submit"
+							disabled={processingChallenge || !challengeText.trim()}
+							className="bg-indigo-600 disabled:opacity-50 text-white px-4 py-2 rounded hover:bg-indigo-700 transition-colors"
+						>
+							{processingChallenge ? "🤖 AI Processing..." : "Submit for Peer Help"}
 						</button>
 					</form>
 				</div>
@@ -197,40 +271,38 @@ export default function PeerAdvice() {
 									</div>
 								)}
 
-								{/* AI Chat Option */}
-								{challengeDoc.aiChatRecommended && (
-									<div className="bg-gradient-to-r from-purple-50 to-indigo-50 p-6 rounded-lg shadow border border-purple-200">
-										<h3 className="text-lg font-medium text-gray-900 mb-2 flex items-center">
-											<span className="text-2xl mr-2">🤖</span>
-											AI Teaching Assistant
-										</h3>
-										<p className="text-gray-700 mb-4">
-											{challengeDoc.matches && challengeDoc.matches.length > 0
-												? "Want immediate help while waiting for peers? Chat with our AI assistant trained on teaching best practices."
-												: "No peer matches found right now, but our AI assistant is ready to help! Get instant support and personalized advice."
-											}
-										</p>
-										<button
-											onClick={handleAiChatClick}
-											className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-3 rounded-lg hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 flex items-center"
-										>
-											<span className="mr-2">Chat with AI Assistant</span>
-											<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-											</svg>
-										</button>
-										<div className="mt-3 text-sm text-gray-600">
-											<span className="font-medium">✨ Features:</span> Instant responses • 24/7 availability • Personalized advice • Resource recommendations
-										</div>
+								{/* AI Chat Option - Now always shown when challengeDoc exists */}
+								<div className="bg-gradient-to-r from-purple-50 to-indigo-50 p-6 rounded-lg shadow border border-purple-200">
+									<h3 className="text-lg font-medium text-gray-900 mb-2 flex items-center">
+										<span className="text-2xl mr-2">🤖</span>
+										AI Teaching Assistant
+									</h3>
+									<p className="text-gray-700 mb-4">
+										{challengeDoc.matches && challengeDoc.matches.length > 0
+											? "Want immediate help while waiting for peers? Chat with our AI assistant trained on teaching best practices."
+											: "No peer matches found right now, but our AI assistant is ready to help! Get instant support and personalized advice."
+										}
+									</p>
+									<button
+										onClick={handleAiChatClick}
+										className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-3 rounded-lg hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 flex items-center"
+									>
+										<span className="mr-2">Chat with AI Assistant</span>
+										<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+										</svg>
+									</button>
+									<div className="mt-3 text-sm text-gray-600">
+										<span className="font-medium">✨ Features:</span> Instant responses • 24/7 availability • Personalized advice • Resource recommendations
 									</div>
-								)}
+								</div>
 
-								{/* No options available */}
-								{!challengeDoc.matches?.length && !challengeDoc.aiChatRecommended && (
+								{/* No peer options available */}
+								{!challengeDoc.matches?.length && (
 									<div className="bg-yellow-50 p-6 rounded-lg shadow border border-yellow-200">
-										<h3 className="text-lg font-medium text-yellow-800 mb-2">⏳ Finding Support Options</h3>
+										<h3 className="text-lg font-medium text-yellow-800 mb-2">⏳ Finding Peer Matches</h3>
 										<p className="text-yellow-700">
-											We're working on finding the best support options for your challenge. Please check back in a moment.
+											We're working on finding peer matches for your challenge. In the meantime, try our AI assistant above for immediate help.
 										</p>
 									</div>
 								)}

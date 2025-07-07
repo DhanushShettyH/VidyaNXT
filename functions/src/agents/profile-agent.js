@@ -17,7 +17,6 @@ class ProfileAgent {
       Grades: ${grades.join(", ")}
       Location: ${location}
       Experience: ${experience} years
-      
       Generate a concise, professional summary (max 100 words) highlighting their teaching strengths and expertise.
     `;
 

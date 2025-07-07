@@ -10,21 +10,29 @@ setGlobalOptions({ maxInstances: 10 });
 
 // Import all function modules
 const authFunctions = require("./src/functions/auth");
-const teacherFunctions = require("./src/functions/teacher");
-const profileFunctions = require("./src/functions/profile");
 const triggerFunctions = require("./src/functions/triggers");
+
+// =============================================================================
+// CHALLENGE FUNCTIONS
+// =============================================================================
+const challengeFunction = require("./src/functions/challenge");
+
+const chatFunctions = require("./src/functions/chat");
+
+const wellnessFunctions = require("./src/functions/wellness");
 
 // Export all functions
 module.exports = {
   // Auth functions
   ...authFunctions,
 
-  // Teacher functions
-  ...teacherFunctions,
-
-  // Profile functions
-  ...profileFunctions,
-
   // Trigger functions
   ...triggerFunctions,
+
+  // Challenge functions
+  ...challengeFunction,
+
+  ...chatFunctions,
+
+  ...wellnessFunctions,
 };

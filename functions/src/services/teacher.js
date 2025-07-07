@@ -82,10 +82,46 @@ async function getTeacherProfile(teacherId) {
   return doc.data();
 }
 
+/**
+ * Helper function to get teacher profile <<POST CHALLENGE>>
+ */
+async function getTeacherProfile_(teacherId) {
+  try {
+    const profileSnap = await db
+      .collection("teacherProfiles")
+      .doc(teacherId)
+      .get();
+
+    if (profileSnap.exists) {
+      return profileSnap.data();
+    }
+    // Fallback: Get basic teacher data
+    const teacherSnap = await db.collection("teachers").doc(teacherId).get();
+    const basicProfile = teacherSnap.data();
+    if (basicProfile) {
+      return {
+        teacherId,
+        matchingCriteria: {
+          grades: basicProfile.grades || [],
+          location: basicProfile.location || "",
+          experienceLevel:
+            basicProfile.experienceYears < 3 ? "novice" : "experienced",
+        },
+      };
+    }
+    return { teacherId };
+  } catch (error) {
+    console.error(`Error getting teacher profile for ${teacherId}:`, error);
+    // logger.error(`Error getting teacher profile for ${teacherId}:`, error);
+    return { teacherId };
+  }
+}
+
 module.exports = {
   createTeacher,
   findTeacherByName,
   findTeacherByUid,
   updateTeacherLogin,
   getTeacherProfile,
+  getTeacherProfile_,
 };
