@@ -7,6 +7,7 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
+      disable: true, // This disables PWA completely
       registerType: "prompt",
       injectRegister: false,
 
