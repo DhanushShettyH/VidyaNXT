@@ -1,0 +1,99 @@
+Project Structure: VidyaNXT
+Path: C:\Users\hp\Documents\kali-linux-2024.4-vmware-amd64\kali-linux-2024.4-vmware-amd64.vmwarevm\shared_Files\hackathon\VidyaNXT
+============================================================
+
+├── 📁 .firebase/
+│   └── 📄 hosting.ZGlzdA.cache
+├── 📄 .firebaserc
+├── 📝 README.md
+├── 📜 eslint.config.js
+├── 📋 firebase.json
+├── 📋 firestore.indexes.json
+├── 📄 firestore.rules
+├── 🐍 folder_structure.py
+├── 📁 functions/
+│   ├── 📜 .eslintrc.js
+│   ├── 📜 index.js
+│   ├── 📋 package-lock.json
+│   ├── 📋 package.json
+│   └── 📁 src/
+│       ├── 📁 agents/
+│       │   ├── 📜 ai-chat-agent.js
+│       │   ├── 📜 calssification-agent.js
+│       │   ├── 📜 matching-agent.js
+│       │   ├── 📜 network-agent.js
+│       │   ├── 📜 orchestration-agent.js
+│       │   ├── 📜 profile-agent.js
+│       │   └── 📜 wellness-agent.js
+│       ├── 📁 breadboards/
+│       │   ├── 📜 matching-board.js
+│       │   ├── 📜 network-board.js
+│       │   └── 📜 profile-board.js
+│       ├── 📁 config/
+│       │   ├── 📜 constants.js
+│       │   └── 📜 gemini.js
+│       ├── 📁 functions/
+│       │   ├── 📜 auth.js
+│       │   ├── 📜 challenge.js
+│       │   ├── 📜 chat.js
+│       │   ├── 📜 triggers.js
+│       │   └── 📜 wellness.js
+│       ├── 📁 services/
+│       │   ├── 📜 ai.js
+│       │   ├── 📜 auth.js
+│       │   ├── 📜 chat.js
+│       │   ├── 📜 notifications.js
+│       │   ├── 📜 profile.js
+│       │   ├── 📜 teacher.js
+│       │   └── 📜 wellness.js
+│       └── 📁 utils/
+│           ├── 📜 helpers.js
+│           ├── 📜 logger.js
+│           └── 📜 validation.js
+├── 🌐 index.html
+├── 📋 package-lock.json
+├── 📋 package.json
+├── 📜 postcss.config.js
+├── 📁 public/
+│   ├── 🖼️ apple-touch-icon-180x180.png
+│   ├── 📄 favicon.ico
+│   ├── 📄 favicon.webp
+│   ├── 🌐 index.html
+│   ├── 🖼️ maskable-icon-512x512.png
+│   ├── 🖼️ pwa-192x192.png
+│   ├── 🖼️ pwa-512x512.png
+│   └── 🖼️ pwa-64x64.png
+├── 📜 pwa-assets.config.js
+├── 📁 src/
+│   ├── 🎨 App.css
+│   ├── ⚛️ App.jsx
+│   ├── 🎨 PWABadge.css
+│   ├── ⚛️ PWABadge.jsx
+│   ├── 📁 assets/
+│   │   └── 🖼️ react.svg
+│   ├── 📁 components/
+│   │   ├── ⚛️ ChatList.jsx
+│   │   ├── ⚛️ ErrorBoundary.jsx
+│   │   ├── ⚛️ Home.jsx
+│   │   ├── ⚛️ Login.jsx
+│   │   ├── ⚛️ RegisterTeacher.jsx
+│   │   ├── ⚛️ WellnessAlert.jsx
+│   │   ├── ⚛️ WellnessAnalytics.jsx
+│   │   ├── ⚛️ WellnessMetrics.jsx
+│   │   ├── ⚛️ WellnessNavigation.jsx
+│   │   ├── ⚛️ WellnessNotifications.jsx
+│   │   ├── ⚛️ WellnessRecommendations.jsx
+│   │   ├── ⚛️ WellnessTrendChart.jsx
+│   │   └── 📜 firebaseWellnessService.js
+│   ├── 📜 constants.js
+│   ├── 📜 firebase.js
+│   ├── 🎨 index.css
+│   ├── ⚛️ main.jsx
+│   └── 📁 pages/
+│       ├── ⚛️ AiChatWindow.jsx
+│       ├── ⚛️ ChatWindow.jsx
+│       ├── ⚛️ PeerAdvice.jsx
+│       ├── ⚛️ PeersList.jsx
+│       └── ⚛️ WellnessDashboard.jsx
+├── 📜 tailwind.config.js
+└── 📜 vite.config.js

@@ -1,0 +1,296 @@
+{
+  "training_data": [
+    {
+      "input": "How does the Peer Chat flow work in VidyaNXT?",
+      "output": {
+        "explanation": "The Peer Chat flow in VidyaNXT enables real-time communication between teachers and an AI peer through a comprehensive system involving peer listing, chat initiation, and real-time messaging. It's designed to foster collaboration among under-resourced Indian teachers.",
+        "code_example": "// PeersList component displays peers with unread counts\nconst handleChat = async (peerId) => {\n  const existing = conversations.find(c => c.members.includes(peerId));\n  if (existing) {\n    navigate(`/chat/${existing.id}`);\n  } else {\n    alert('No conversation found. Wait for the other user to start it.');\n  }\n};",
+        "technical_details": {
+          "components": ["PeersList.jsx", "ChatWindow.jsx", "startChatWith Cloud Function", "markAsRead Cloud Function", "incrementUnread Trigger"],
+          "tech_stack": ["React", "Firebase Cloud Functions", "Firestore", "React Router"],
+          "flow": [
+            "Display peers list with unread message counts",
+            "Handle navigation to existing conversations",
+            "Provide real-time chat interface",
+            "Automatically manage unread message counts",
+            "Include AI peer for immediate support"
+          ]
+        },
+        "implementation_notes": "Uses modular design with separated frontend components and backend logic, leveraging Firestore's real-time capabilities and serverless Cloud Functions for scalability."
+      }
+    },
+    {
+      "input": "What are the key components involved in the Peer Chat architecture?",
+      "output": {
+        "explanation": "The Peer Chat architecture consists of frontend React components for UI, backend Cloud Functions for business logic, and Firestore for real-time data management, following a modular, event-driven pattern.",
+        "code_example": "// Frontend Components\n// PeersList.jsx - displays peers with unread counts\n// ChatWindow.jsx - manages chat interface\n\n// Backend Functions\n// startChatWith - creates/finds conversations\n// markAsRead - resets unread counts\n// incrementUnread - auto-increments on new messages",
+        "technical_details": {
+          "components": ["PeersList Component", "ChatWindow Component", "App.jsx Router", "startChatWith Function", "markAsRead Function", "incrementUnread Trigger", "chat.js Services"],
+          "tech_stack": ["React Hooks", "Firebase Cloud Functions", "Firestore Real-time Database", "React Router", "Firebase Admin SDK"],
+          "flow": [
+            "React components handle UI and user interactions",
+            "Cloud Functions manage chat logic and operations",
+            "Firestore provides real-time data synchronization",
+            "Service functions encapsulate reusable chat logic",
+            "Event-driven triggers automate unread management"
+          ]
+        },
+        "implementation_notes": "Follows Agent Development Kit pattern with event-driven triggers and reusable service functions for maintainability and scalability."
+      }
+    },
+    {
+      "input": "How does real-time messaging work in the ChatWindow component?",
+      "output": {
+        "explanation": "Real-time messaging in ChatWindow uses Firestore's onSnapshot to listen for message updates, automatically displaying new messages and handling message sending through Firestore operations.",
+        "code_example": "// Real-time message listening\nconst q = query(\n  collection(db, 'conversations', convoId, 'messages'),\n  orderBy('createdAt', 'asc')\n);\n\nonSnapshot(q, (snap) => {\n  const newMessages = snap.docs.map(d => ({ id: d.id, ...d.data() }));\n  setMessages(newMessages);\n  // Auto-scroll to latest message\n  messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });\n});",
+        "technical_details": {
+          "components": ["ChatWindow.jsx", "Firestore messages subcollection", "onSnapshot listener", "sendMessage function"],
+          "tech_stack": ["React hooks (useState, useEffect, useRef)", "Firestore real-time database", "Firebase SDK"],
+          "flow": [
+            "Set up onSnapshot listener for messages collection",
+            "Automatically receive and display new messages",
+            "Handle message sending via addDoc to Firestore",
+            "Update conversation lastUpdated timestamp",
+            "Auto-scroll to latest message for UX"
+          ]
+        },
+        "implementation_notes": "Uses React refs for auto-scrolling and ensures seamless real-time experience with automatic message updates and proper state management."
+      }
+    },
+    {
+      "input": "How does the unread message count management work?",
+      "output": {
+        "explanation": "Unread message count management is handled through a combination of automatic increment triggers when messages are sent and manual reset when conversations are opened, providing accurate unread indicators.",
+        "code_example": "// Firestore trigger for auto-increment\nexports.incrementUnread = functions.firestore\n  .document('conversations/{convoId}/messages/{messageId}')\n  .onCreate(async (snap, context) => {\n    const message = snap.data();\n    const convoId = context.params.convoId;\n    const convoRef = admin.firestore().doc(`conversations/${convoId}`);\n    \n    // Increment unread count for recipient\n    await convoRef.update({\n      [`unreadCounts.${recipientId}`]: admin.firestore.FieldValue.increment(1)\n    });\n  });",
+        "technical_details": {
+          "components": ["incrementUnread Firestore Trigger", "markAsRead Cloud Function", "PeersList unread display", "ChatWindow markAsRead call"],
+          "tech_stack": ["Firebase Cloud Functions", "Firestore Triggers", "Firebase Admin SDK", "React Frontend"],
+          "flow": [
+            "New message triggers incrementUnread function",
+            "Recipient's unread count incremented automatically",
+            "PeersList displays unread counts in real-time",
+            "Opening conversation calls markAsRead function",
+            "Unread count reset to zero for current user"
+          ]
+        },
+        "implementation_notes": "Event-driven approach ensures accurate unread counts without manual intervention, with real-time updates reflected in the UI through Firestore listeners."
+      }
+    },
+    {
+      "input": "What is the startChatWith Cloud Function and how does it work?",
+      "output": {
+        "explanation": "The startChatWith Cloud Function finds or creates a one-on-one conversation between two teachers and adds them to each other's peer network, enabling chat initiation and peer relationship management.",
+        "code_example": "// startChatWith Cloud Function\nexports.startChatWith = functions.https.onCall(async (data, context) => {\n  const { peerId, teacherId } = data;\n  \n  // Find existing conversation\n  let conversation = await findConversation(teacherId, peerId);\n  \n  if (!conversation) {\n    // Create new conversation\n    conversation = await createConversation(teacherId, peerId);\n  }\n  \n  // Add peers to each other's network\n  await addPeersToNetwork(teacherId, peerId);\n  \n  return { convoId: conversation.id };\n});",
+        "technical_details": {
+          "components": ["startChatWith Cloud Function", "findConversation service", "createConversation service", "addPeersToNetwork service"],
+          "tech_stack": ["Firebase Cloud Functions", "Firebase Admin SDK", "Firestore", "HTTPS Callable Functions"],
+          "flow": [
+            "Accept teacherId and peerId parameters",
+            "Search for existing conversation between users",
+            "Create new conversation if none exists",
+            "Add participants to each other's peer networks",
+            "Return conversation ID for navigation"
+          ]
+        },
+        "implementation_notes": "Uses service functions for modularity and ensures bidirectional peer relationships are established when conversations are created."
+      }
+    },
+    {
+      "input": "How does the PeersList component handle AI peer integration?",
+      "output": {
+        "explanation": "The PeersList component automatically includes an AI peer (AI_PEER_ID) in the peer list if not already present, ensuring AI assistance is always available to teachers with a dedicated chat route.",
+        "code_example": "// AI peer integration in PeersList\nconst peers = teacherData?.peers || [];\nconst withAi = peers.includes(AI_PEER_ID) ? peers : [AI_PEER_ID, ...peers];\n\n// Special handling for AI peer\nconst handleChat = async (peerId) => {\n  if (peerId === AI_PEER_ID) {\n    navigate('/chat/ai');\n    return;\n  }\n  \n  // Regular peer chat logic\n  const existing = conversations.find(c => c.members.includes(peerId));\n  if (existing) {\n    navigate(`/chat/${existing.id}`);\n  }\n};",
+        "technical_details": {
+          "components": ["PeersList.jsx", "AI_PEER_ID constant", "App.jsx routing", "AI chat route"],
+          "tech_stack": ["React", "React Router", "Constants configuration", "Firestore"],
+          "flow": [
+            "Check if AI_PEER_ID exists in teacher's peers array",
+            "Add AI peer to beginning of list if not present",
+            "Display AI peer with special routing to /chat/ai",
+            "Handle AI peer clicks differently from regular peers",
+            "Ensure AI assistance is always accessible"
+          ]
+        },
+        "implementation_notes": "AI peer integration provides fallback support and ensures teachers always have access to AI assistance, with special routing and handling separate from regular peer conversations."
+      }
+    },
+    {
+      "input": "What are the key service functions in chat.js and their purposes?",
+      "output": {
+        "explanation": "The chat.js service file contains utility functions that encapsulate reusable chat logic, including conversation management, message handling, and peer network operations for maintainable code organization.",
+        "code_example": "// Key service functions in chat.js\nconst findConversation = async (teacherId, peerId) => {\n  const convosRef = admin.firestore().collection('conversations');\n  const query = convosRef.where('members', 'array-contains-any', [teacherId, peerId]);\n  const snap = await query.get();\n  return snap.docs.find(doc => doc.data().members.includes(teacherId) && doc.data().members.includes(peerId));\n};\n\nconst createConversation = async (teacherId, peerId) => {\n  const convosRef = admin.firestore().collection('conversations');\n  const newConvo = await convosRef.add({\n    members: [teacherId, peerId],\n    unreadCounts: { [teacherId]: 0, [peerId]: 0 },\n    lastUpdated: admin.firestore.FieldValue.serverTimestamp()\n  });\n  return newConvo;\n};",
+        "technical_details": {
+          "components": ["findConversation", "createConversation", "getConversationMessages", "addMessage", "updateConversationActivity", "addPeersToNetwork"],
+          "tech_stack": ["Firebase Admin SDK", "Firestore", "JavaScript async/await", "Firestore Query API"],
+          "flow": [
+            "findConversation - locate existing chats between users",
+            "createConversation - initialize new chat with proper structure",
+            "getConversationMessages - retrieve message history",
+            "addMessage - append new messages to conversation",
+            "updateConversationActivity - track last activity",
+            "addPeersToNetwork - manage peer relationships"
+          ]
+        },
+        "implementation_notes": "Service functions promote code reusability, maintainability, and separation of concerns, with each function handling specific chat-related operations."
+      }
+    },
+    {
+      "input": "How does the ChatWindow component handle message sending?",
+      "output": {
+        "explanation": "The ChatWindow component handles message sending through a form submission that adds messages to Firestore, updates conversation activity, and provides user feedback with loading states and input validation.",
+        "code_example": "// Message sending in ChatWindow\nconst sendMessage = async (e) => {\n  e.preventDefault();\n  if (!newMsg.trim() || !convoId) return;\n  \n  try {\n    // Add message to Firestore\n    await addDoc(collection(db, 'conversations', convoId, 'messages'), {\n      text: newMsg,\n      sender: teacherId,\n      createdAt: serverTimestamp()\n    });\n    \n    // Update conversation activity\n    await setDoc(doc(db, 'conversations', convoId), {\n      lastUpdated: serverTimestamp()\n    }, { merge: true });\n    \n    setNewMsg(''); // Clear input\n  } catch (error) {\n    console.error('Error sending message:', error);\n  }\n};",
+        "technical_details": {
+          "components": ["ChatWindow.jsx", "sendMessage function", "Firestore messages subcollection", "Form validation"],
+          "tech_stack": ["React hooks", "Firestore addDoc", "serverTimestamp", "Form handling"],
+          "flow": [
+            "Prevent default form submission",
+            "Validate message content and conversation ID",
+            "Add message to messages subcollection",
+            "Update conversation's lastUpdated timestamp",
+            "Clear input field after successful send",
+            "Handle errors gracefully"
+          ]
+        },
+        "implementation_notes": "Uses proper form handling with validation, error handling, and optimistic UI updates for better user experience."
+      }
+    },
+    {
+      "input": "What routing configuration is used for the Peer Chat flow?",
+      "output": {
+        "explanation": "The Peer Chat flow uses React Router for navigation with specific routes for peer listing, individual conversations, and AI chat, enabling seamless navigation between different chat interfaces.",
+        "code_example": "// App.jsx routing configuration\nimport { BrowserRouter as Router, Routes, Route } from 'react-router-dom';\n\nfunction App() {\n  return (\n    <Router>\n      <Routes>\n        <Route path=\"/peers\" element={<PeersList />} />\n        <Route path=\"/chat/:convoId\" element={<ChatWindow />} />\n        <Route path=\"/chat/list\" element={<PeersList />} />\n        <Route path=\"/chat/ai\" element={<ChatWindow />} />\n      </Routes>\n    </Router>\n  );\n}",
+        "technical_details": {
+          "components": ["App.jsx", "React Router", "PeersList component", "ChatWindow component"],
+          "tech_stack": ["React Router DOM", "BrowserRouter", "Routes", "Route", "useNavigate", "useParams"],
+          "flow": [
+            "/peers - displays peer list with unread counts",
+            "/chat/:convoId - opens specific conversation",
+            "/chat/list - alternative peer list route",
+            "/chat/ai - dedicated AI peer chat interface",
+            "Dynamic routing with conversation ID parameters"
+          ]
+        },
+        "implementation_notes": "Uses parameterized routes for dynamic conversation loading and separate AI chat route for specialized AI interaction handling."
+      }
+    },
+    {
+      "input": "How does the markAsRead Cloud Function work?",
+      "output": {
+        "explanation": "The markAsRead Cloud Function resets the unread message count for a specific teacher in a conversation when they open the chat, ensuring accurate unread indicators and improving user experience.",
+        "code_example": "// markAsRead Cloud Function\nexports.markAsRead = functions.https.onCall(async (data, context) => {\n  const { convoId, teacherId } = data;\n  \n  if (!context.auth) {\n    throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');\n  }\n  \n  const convoRef = admin.firestore().doc(`conversations/${convoId}`);\n  \n  await convoRef.update({\n    [`unreadCounts.${teacherId}`]: 0\n  });\n  \n  return { success: true };\n});",
+        "technical_details": {
+          "components": ["markAsRead Cloud Function", "Firestore conversation document", "Authentication check", "Dynamic field update"],
+          "tech_stack": ["Firebase Cloud Functions", "HTTPS Callable", "Firebase Admin SDK", "Firestore", "Authentication"],
+          "flow": [
+            "Receive convoId and teacherId parameters",
+            "Verify user authentication",
+            "Get conversation document reference",
+            "Reset unread count to 0 for specific teacher",
+            "Return success confirmation"
+          ]
+        },
+        "implementation_notes": "Called automatically when ChatWindow opens, includes proper authentication checks and uses dynamic field updates for efficient Firestore operations."
+      }
+    },
+    {
+      "input": "What are the key features and capabilities of the Peer Chat system?",
+      "output": {
+        "explanation": "The Peer Chat system provides comprehensive real-time communication capabilities including peer listing with unread counts, AI integration, automatic unread management, and seamless navigation between conversations.",
+        "code_example": "// Key capabilities demonstrated\n// 1. Peer listing with unread counts\nconst unreadCount = unreadMap[peerId] || 0;\n\n// 2. AI peer integration\nconst withAi = peers.includes(AI_PEER_ID) ? peers : [AI_PEER_ID, ...peers];\n\n// 3. Real-time messaging\nonSnapshot(messagesQuery, (snap) => {\n  setMessages(snap.docs.map(d => ({ id: d.id, ...d.data() })));\n});\n\n// 4. Automatic unread management\nconst fn = httpsCallable(functions, 'markAsRead');\nawait fn({ convoId, teacherId });",
+        "technical_details": {
+          "components": ["Peer listing", "AI integration", "Real-time messaging", "Unread management", "Chat navigation", "Message history"],
+          "tech_stack": ["React", "Firebase", "Firestore", "Cloud Functions", "Real-time listeners"],
+          "flow": [
+            "Display peers with live unread counts",
+            "Navigate to existing or new conversations",
+            "Provide real-time message updates",
+            "Auto-manage unread message indicators",
+            "Include AI peer for immediate support",
+            "Ensure seamless user experience"
+          ]
+        },
+        "implementation_notes": "Designed specifically for under-resourced Indian schools to foster teacher collaboration with comprehensive real-time communication features."
+      }
+    },
+    {
+      "input": "How can I modify the Peer Chat flow to add push notifications?",
+      "output": {
+        "explanation": "To add push notifications to the Peer Chat flow, you need to integrate the Notification API in the ChatWindow component and request permission for notifications when new messages arrive.",
+        "code_example": "// Add notification logic in ChatWindow\nuseEffect(() => {\n  // Request notification permission\n  if ('Notification' in window) {\n    Notification.requestPermission();\n  }\n}, []);\n\n// Modify onSnapshot listener for notifications\nonSnapshot(messagesQuery, (snap) => {\n  const newMessages = snap.docs.map(d => ({ id: d.id, ...d.data() }));\n  const latest = newMessages[newMessages.length - 1];\n  \n  if (latest && latest.sender !== teacherId && document.hidden) {\n    if (Notification.permission === 'granted') {\n      new Notification(`New message from ${peerName}`, {\n        body: latest.text,\n        icon: '/icon.png'\n      });\n    }\n  }\n  \n  setMessages(newMessages);\n});",
+        "technical_details": {
+          "components": ["ChatWindow.jsx", "Notification API", "onSnapshot listener", "Document visibility"],
+          "tech_stack": ["Web Notifications API", "React useEffect", "Firestore real-time listeners", "Browser APIs"],
+          "flow": [
+            "Request notification permission on component mount",
+            "Monitor for new messages in real-time listener",
+            "Check if message is from another user",
+            "Verify page is not visible (document.hidden)",
+            "Create notification with sender name and message",
+            "Include app icon and proper formatting"
+          ]
+        },
+        "implementation_notes": "Only shows notifications when the page is not visible to avoid spam, includes permission handling and proper message formatting for better UX."
+      }
+    },
+    {
+      "input": "What error handling patterns are used in the Peer Chat implementation?",
+      "output": {
+        "explanation": "The Peer Chat implementation uses comprehensive error handling including try-catch blocks, authentication checks, validation, and graceful fallbacks to ensure robust user experience.",
+        "code_example": "// Error handling patterns\n// 1. Authentication check in Cloud Functions\nif (!context.auth) {\n  throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');\n}\n\n// 2. Try-catch in message sending\nconst sendMessage = async (e) => {\n  e.preventDefault();\n  try {\n    await addDoc(collection(db, 'conversations', convoId, 'messages'), messageData);\n    setNewMsg('');\n  } catch (error) {\n    console.error('Error sending message:', error);\n    // Could add user notification here\n  }\n};\n\n// 3. Validation checks\nif (!newMsg.trim() || !convoId) return;\n\n// 4. Graceful fallback for missing data\nconst peers = teacherData?.peers || [];",
+        "technical_details": {
+          "components": ["Cloud Functions authentication", "Frontend try-catch blocks", "Input validation", "Graceful fallbacks"],
+          "tech_stack": ["Firebase Auth", "JavaScript error handling", "React error boundaries", "Firestore error handling"],
+          "flow": [
+            "Verify authentication before function execution",
+            "Validate input data and required parameters",
+            "Wrap async operations in try-catch blocks",
+            "Provide meaningful error messages",
+            "Use fallback values for missing data",
+            "Log errors for debugging and monitoring"
+          ]
+        },
+        "implementation_notes": "Follows defensive programming practices with multiple layers of error handling to prevent crashes and provide smooth user experience even when errors occur."
+      }
+    },
+    {
+      "input": "How does the data flow work between PeersList and ChatWindow components?",
+      "output": {
+        "explanation": "The data flow between PeersList and ChatWindow components uses React Router for navigation, sessionStorage for teacher data persistence, and Firestore for real-time conversation data synchronization.",
+        "code_example": "// Data flow from PeersList to ChatWindow\n// 1. PeersList navigation\nconst handleChat = async (peerId) => {\n  const existing = conversations.find(c => c.members.includes(peerId));\n  if (existing) {\n    navigate(`/chat/${existing.id}`); // Pass convoId via URL\n  }\n};\n\n// 2. ChatWindow receives convoId from URL params\nconst { convoId } = useParams();\nconst teacherData = JSON.parse(sessionStorage.getItem('teacherData'));\n\n// 3. ChatWindow fetches conversation data\nuseEffect(() => {\n  if (convoId) {\n    const messagesRef = collection(db, 'conversations', convoId, 'messages');\n    const q = query(messagesRef, orderBy('createdAt', 'asc'));\n    \n    const unsubscribe = onSnapshot(q, (snapshot) => {\n      const msgs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));\n      setMessages(msgs);\n    });\n    \n    return unsubscribe;\n  }\n}, [convoId]);",
+        "technical_details": {
+          "components": ["PeersList navigation", "React Router params", "ChatWindow data fetching", "sessionStorage", "Firestore listeners"],
+          "tech_stack": ["React Router", "useParams hook", "sessionStorage", "Firestore onSnapshot", "React useEffect"],
+          "flow": [
+            "PeersList finds existing conversation",
+            "Navigate to ChatWindow with convoId parameter",
+            "ChatWindow extracts convoId from URL params",
+            "Fetch teacher data from sessionStorage",
+            "Set up real-time listener for messages",
+            "Update UI with live message data"
+          ]
+        },
+        "implementation_notes": "Uses URL parameters for conversation ID passing and sessionStorage for teacher data persistence, ensuring data consistency across component navigation."
+      }
+    },
+    {
+      "input": "What are the best practices for implementing the Peer Chat system?",
+      "output": {
+        "explanation": "Best practices for implementing the Peer Chat system include proper error handling, security rules, performance optimization, user experience enhancements, and maintainable code structure.",
+        "code_example": "// Best practices implementation\n// 1. Error handling with user feedback\nconst sendMessage = async (e) => {\n  e.preventDefault();\n  setIsSending(true);\n  \n  try {\n    await addDoc(collection(db, 'conversations', convoId, 'messages'), messageData);\n    setNewMsg('');\n    setError('');\n  } catch (error) {\n    setError('Failed to send message. Please try again.');\n    console.error('Send message error:', error);\n  } finally {\n    setIsSending(false);\n  }\n};\n\n// 2. Firestore security rules\nrules_version = '2';\nservice cloud.firestore {\n  match /databases/{database}/documents {\n    match /conversations/{convoId} {\n      allow read, write: if request.auth != null && \n        request.auth.uid in resource.data.members;\n    }\n  }\n}\n\n// 3. Performance optimization\nconst messagesQuery = useMemo(() => \n  query(collection(db, 'conversations', convoId, 'messages'), \n        orderBy('createdAt', 'asc')),\n  [convoId]\n);",
+        "technical_details": {
+          "components": ["Error handling", "Security rules", "Performance optimization", "User feedback", "Loading states"],
+          "tech_stack": ["Firestore Security Rules", "React useMemo", "Loading states", "Error boundaries", "Input validation"],
+          "flow": [
+            "Implement comprehensive error handling",
+            "Add proper Firestore security rules",
+            "Optimize queries with useMemo",
+            "Provide user feedback and loading states",
+            "Cache peer names to reduce queries",
+            "Use proper validation and sanitization"
+          ]
+        },
+        "implementation_notes": "Focus on security, performance, and user experience with proper error handling, optimized queries, and comprehensive validation throughout the system."
+      }
+    }
+  ]
+}

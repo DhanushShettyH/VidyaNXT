@@ -1,0 +1,260 @@
+{
+  "training_data": [
+    {
+      "input": "How does teacher login work in VidyaNXT?",
+      "output": {
+        "explanation": "The teacher login in VidyaNXT is a multi-step authentication process that involves React frontend, Firebase Authentication, and Cloud Functions backend. The process ensures secure access to the platform with profile verification and session management.",
+        "code_example": "const handleSubmit = async (e) => {\n  e.preventDefault();\n  const userCredential = await signInWithEmailAndPassword(auth, email, password);\n  const loginTeacher = httpsCallable(functions, 'loginTeacher');\n  const result = await loginTeacher({ uid: userCredential.user.uid });\n  sessionStorage.setItem('teacherData', JSON.stringify(result.data));\n  navigate('/home');\n};",
+        "technical_details": {
+          "components": ["Login.jsx", "loginTeacher Cloud Function", "findTeacherByUid service", "updateTeacherLogin service"],
+          "tech_stack": ["React", "Firebase Authentication", "Cloud Functions", "Firestore"],
+          "flow": [
+            "User enters email/password in Login component",
+            "Firebase Authentication validates credentials",
+            "loginTeacher Cloud Function called with UID",
+            "findTeacherByUid retrieves profile from Firestore",
+            "updateTeacherLogin updates login details",
+            "Teacher data stored in sessionStorage",
+            "User redirected to /home"
+          ]
+        },
+        "implementation_notes": "Uses sessionStorage for quick access during session, includes loading states and artificial delays for better UX. The system tracks login activity and updates last login time."
+      }
+    },
+    {
+      "input": "What are the required parameters for the loginTeacher Cloud Function?",
+      "output": {
+        "explanation": "The loginTeacher Cloud Function requires authentication context and automatically extracts the UID from the authenticated user. No manual parameters are needed as Firebase Authentication middleware handles security.",
+        "code_example": "exports.loginTeacher = onCall(async (request) => {\n  if (!request.auth) {\n    throw new HttpsError('unauthenticated', 'User must be authenticated');\n  }\n  const uid = request.auth.uid;\n  // Process with authenticated user's UID\n});",
+        "technical_details": {
+          "components": ["Firebase Authentication", "Cloud Functions", "request.auth"],
+          "tech_stack": ["Firebase Cloud Functions", "Firebase Authentication"],
+          "flow": [
+            "User must be authenticated first",
+            "Function checks request.auth for valid login context",
+            "UID extracted from request.auth.uid",
+            "Function processes with authenticated user's UID"
+          ]
+        },
+        "implementation_notes": "No manual UID parameter needed - security handled by Firebase Authentication middleware. The function automatically receives the authenticated user's context."
+      }
+    },
+    {
+      "input": "What is the architecture pattern used in VidyaNXT login system?",
+      "output": {
+        "explanation": "VidyaNXT uses a modular, serverless architecture with clear separation of concerns. The frontend handles UI and user interactions, while the backend manages authentication, data retrieval, and business logic through Cloud Functions.",
+        "code_example": "// Frontend - Login.jsx\nconst Login = () => {\n  const [email, setEmail] = useState('');\n  const [password, setPassword] = useState('');\n  // Component logic\n};\n\n// Backend - auth.js\nexports.loginTeacher = onCall(async (request) => {\n  const teacher = await findTeacherByUid(uid);\n  await updateTeacherLogin(teacher.id);\n  return teacher;\n});",
+        "technical_details": {
+          "components": ["React Frontend", "Firebase Cloud Functions", "Firestore Database", "Service Layer"],
+          "tech_stack": ["React", "Firebase Authentication", "Cloud Functions", "Firestore"],
+          "flow": [
+            "Modular design separates frontend and backend",
+            "Serverless backend using Firebase Cloud Functions",
+            "Service layer abstracts database operations",
+            "Authentication handled by Firebase Auth"
+          ]
+        },
+        "implementation_notes": "The architecture is designed for scalability and maintainability, with clear separation between UI components, authentication logic, and data services."
+      }
+    },
+    {
+      "input": "How does the findTeacherByUid service function work?",
+      "output": {
+        "explanation": "The findTeacherByUid service function queries the Firestore 'teachers' collection to retrieve a teacher's profile based on their authenticated UID. It uses the ownerUid field to match the authenticated user.",
+        "code_example": "const findTeacherByUid = async (uid) => {\n  const teachersRef = db.collection('teachers');\n  const query = teachersRef.where('ownerUid', '==', uid);\n  const snapshot = await query.get();\n  if (snapshot.empty) {\n    throw new Error('Teacher not found');\n  }\n  return snapshot.docs[0].data();\n};",
+        "technical_details": {
+          "components": ["Firestore Database", "teachers collection", "query system"],
+          "tech_stack": ["Firestore", "Firebase Admin SDK"],
+          "flow": [
+            "Create reference to 'teachers' collection",
+            "Query by ownerUid field matching authenticated UID",
+            "Execute query and get snapshot",
+            "Return teacher data or throw error if not found"
+          ]
+        },
+        "implementation_notes": "The function uses Firestore's where clause for efficient querying and includes error handling for cases where no teacher profile exists."
+      }
+    },
+    {
+      "input": "What user experience enhancements are implemented in the login flow?",
+      "output": {
+        "explanation": "The VidyaNXT login flow includes several UX enhancements to improve user perception and provide feedback during the authentication process. These include loading states, progress messages, and artificial delays.",
+        "code_example": "const [loading, setLoading] = useState(false);\nconst [loadingMessage, setLoadingMessage] = useState('');\n\nconst handleSubmit = async (e) => {\n  setLoading(true);\n  setLoadingMessage('Verifying your credentials...');\n  // Authentication logic\n  setLoadingMessage('Retrieving your profile...');\n  // Profile retrieval\n  setTimeout(() => {\n    navigate('/home');\n  }, 1000); // Artificial delay for smooth transition\n};",
+        "technical_details": {
+          "components": ["Loading states", "Progress messages", "Error handling", "Navigation"],
+          "tech_stack": ["React hooks", "useState", "useNavigate"],
+          "flow": [
+            "Display loading indicator during authentication",
+            "Show progress messages for different stages",
+            "Handle errors with user-friendly messages",
+            "Smooth transition to home page"
+          ]
+        },
+        "implementation_notes": "Includes artificial delays to improve perceived responsiveness and provides clear feedback at each stage of the login process."
+      }
+    },
+    {
+      "input": "How is session management handled in the VidyaNXT login system?",
+      "output": {
+        "explanation": "Session management in VidyaNXT uses browser sessionStorage to store teacher data locally after successful authentication. This approach provides quick access to user information during the session without requiring repeated server calls.",
+        "code_example": "// Store teacher data after successful login\nsessionStorage.setItem('teacherData', JSON.stringify(result.data));\n\n// Retrieve teacher data in other components\nconst teacherData = JSON.parse(sessionStorage.getItem('teacherData'));\n\n// Check if user is logged in\nif (!sessionStorage.getItem('teacherData')) {\n  navigate('/login');\n}",
+        "technical_details": {
+          "components": ["sessionStorage", "Login component", "Navigation system"],
+          "tech_stack": ["Browser Storage API", "React Router"],
+          "flow": [
+            "Successful login stores teacher data in sessionStorage",
+            "Components access stored data for user info",
+            "Navigation checks session data for authentication",
+            "Session data cleared when browser closes"
+          ]
+        },
+        "implementation_notes": "Uses sessionStorage instead of localStorage for security - data is automatically cleared when the browser session ends. Provides quick access to user data without server round trips."
+      }
+    },
+    {
+      "input": "What error handling mechanisms are implemented in the login flow?",
+      "output": {
+        "explanation": "The VidyaNXT login flow implements comprehensive error handling for various failure scenarios including authentication errors, missing profiles, and network issues. Each error type has specific user-friendly messages.",
+        "code_example": "try {\n  const userCredential = await signInWithEmailAndPassword(auth, email, password);\n  // Success logic\n} catch (error) {\n  switch (error.code) {\n    case 'auth/user-not-found':\n      setError('No user found. Please register.');\n      break;\n    case 'auth/wrong-password':\n      setError('Invalid password.');\n      break;\n    case 'auth/invalid-email':\n      setError('Invalid email format.');\n      break;\n    default:\n      setError('Login failed. Please try again.');\n  }\n}",
+        "technical_details": {
+          "components": ["Error state management", "Firebase Auth errors", "User feedback"],
+          "tech_stack": ["React useState", "Firebase Authentication", "Error handling"],
+          "flow": [
+            "Try-catch blocks wrap authentication calls",
+            "Firebase error codes mapped to user messages",
+            "Error state updated and displayed to user",
+            "Loading states cleared on error"
+          ]
+        },
+        "implementation_notes": "Provides specific error messages for different failure scenarios, improving user understanding and reducing support requests."
+      }
+    },
+    {
+      "input": "How does the updateTeacherLogin service function work?",
+      "output": {
+        "explanation": "The updateTeacherLogin service function updates the teacher's login-related information in Firestore, including last login time, login count, and active status. This helps track user activity and engagement.",
+        "code_example": "const updateTeacherLogin = async (teacherId) => {\n  const teacherRef = db.collection('teachers').doc(teacherId);\n  await teacherRef.update({\n    lastLogin: admin.firestore.FieldValue.serverTimestamp(),\n    loginCount: admin.firestore.FieldValue.increment(1),\n    isActive: true,\n    updatedAt: admin.firestore.FieldValue.serverTimestamp()\n  });\n};",
+        "technical_details": {
+          "components": ["Firestore document update", "Server timestamps", "Field increments"],
+          "tech_stack": ["Firestore", "Firebase Admin SDK", "FieldValue operations"],
+          "flow": [
+            "Get reference to teacher document",
+            "Update lastLogin with server timestamp",
+            "Increment loginCount by 1",
+            "Set isActive status to true",
+            "Update modifiedAt timestamp"
+          ]
+        },
+        "implementation_notes": "Uses Firestore's FieldValue operations for atomic updates and server timestamps for consistent time tracking across different time zones."
+      }
+    },
+    {
+      "input": "What are the key React hooks used in the Login component?",
+      "output": {
+        "explanation": "The Login component uses several React hooks for state management, navigation, and form handling. These hooks provide the reactive functionality needed for a modern authentication interface.",
+        "code_example": "import { useState } from 'react';\nimport { useNavigate } from 'react-router-dom';\n\nconst Login = () => {\n  const [email, setEmail] = useState('');\n  const [password, setPassword] = useState('');\n  const [error, setError] = useState('');\n  const [loading, setLoading] = useState(false);\n  const [loadingMessage, setLoadingMessage] = useState('');\n  const navigate = useNavigate();\n  \n  // Component logic\n};",
+        "technical_details": {
+          "components": ["useState for state management", "useNavigate for routing"],
+          "tech_stack": ["React hooks", "React Router"],
+          "flow": [
+            "useState manages form inputs and component state",
+            "useNavigate handles programmatic navigation",
+            "State updates trigger re-renders",
+            "Navigation occurs after successful authentication"
+          ]
+        },
+        "implementation_notes": "Follows React functional component patterns with hooks for clean, maintainable code. State management is kept simple with individual useState calls for each state variable."
+      }
+    },
+    {
+      "input": "How is the Progressive Web App (PWA) integration handled in the login flow?",
+      "output": {
+        "explanation": "The VidyaNXT login system is part of a Progressive Web App configuration, providing offline capabilities and app-like experience. The React application is configured with PWA features for better mobile and desktop integration.",
+        "code_example": "// PWA configuration in manifest.json\n{\n  \"name\": \"VidyaNXT\",\n  \"short_name\": \"VidyaNXT\",\n  \"start_url\": \"/login\",\n  \"display\": \"standalone\",\n  \"background_color\": \"#ffffff\",\n  \"theme_color\": \"#000000\"\n}\n\n// Service worker registration\nif ('serviceWorker' in navigator) {\n  navigator.serviceWorker.register('/sw.js');\n}",
+        "technical_details": {
+          "components": ["PWA manifest", "Service worker", "React PWA setup"],
+          "tech_stack": ["PWA", "Service Worker API", "React"],
+          "flow": [
+            "PWA manifest defines app properties",
+            "Service worker handles offline functionality",
+            "Login page serves as entry point",
+            "App can be installed on devices"
+          ]
+        },
+        "implementation_notes": "PWA configuration allows the app to work offline and be installed on devices, providing a native app-like experience for teachers accessing the platform."
+      }
+    },
+    {
+      "input": "What database schema is used for teacher profiles in Firestore?",
+      "output": {
+        "explanation": "The teacher profiles in VidyaNXT are stored in a Firestore 'teachers' collection with specific fields for authentication, profile information, and login tracking. The schema supports the authentication flow and user management.",
+        "code_example": "// Teacher document structure in Firestore\n{\n  id: \"teacher_doc_id\",\n  ownerUid: \"firebase_auth_uid\",\n  displayName: \"Teacher Name\",\n  email: \"teacher@example.com\",\n  grades: [\"9\", \"10\", \"11\"],\n  subjects: [\"Mathematics\", \"Physics\"],\n  lastLogin: timestamp,\n  loginCount: 5,\n  isActive: true,\n  createdAt: timestamp,\n  updatedAt: timestamp\n}",
+        "technical_details": {
+          "components": ["Firestore collection", "Document structure", "Field types"],
+          "tech_stack": ["Firestore", "Firebase Authentication"],
+          "flow": [
+            "ownerUid links to Firebase Auth user",
+            "Profile fields store teacher information",
+            "Login tracking fields updated on each login",
+            "Timestamps track creation and updates"
+          ]
+        },
+        "implementation_notes": "The schema separates authentication (ownerUid) from profile data, allowing for flexible user management and profile updates independent of authentication changes."
+      }
+    },
+    {
+      "input": "How does the frontend communicate with Firebase Cloud Functions?",
+      "output": {
+        "explanation": "The frontend communicates with Firebase Cloud Functions using the Firebase SDK's httpsCallable method. This provides a type-safe way to call serverless functions from the React application.",
+        "code_example": "import { getFunctions, httpsCallable } from 'firebase/functions';\n\nconst functions = getFunctions();\nconst loginTeacher = httpsCallable(functions, 'loginTeacher');\n\nconst handleSubmit = async (e) => {\n  try {\n    const result = await loginTeacher({ uid: userCredential.user.uid });\n    if (result.data.success) {\n      // Handle success\n    }\n  } catch (error) {\n    // Handle error\n  }\n};",
+        "technical_details": {
+          "components": ["Firebase Functions SDK", "httpsCallable", "Cloud Functions"],
+          "tech_stack": ["Firebase SDK", "Cloud Functions", "React"],
+          "flow": [
+            "Initialize Firebase Functions instance",
+            "Create callable function reference",
+            "Call function with parameters",
+            "Handle response or errors"
+          ]
+        },
+        "implementation_notes": "Uses Firebase SDK for seamless integration with Cloud Functions, providing automatic serialization/deserialization and error handling."
+      }
+    },
+    {
+      "input": "What security measures are implemented in the VidyaNXT login system?",
+      "output": {
+        "explanation": "The VidyaNXT login system implements multiple security layers including Firebase Authentication, server-side validation, and secure session management. The system ensures only authenticated users can access protected resources.",
+        "code_example": "// Frontend - Firebase Authentication\nconst userCredential = await signInWithEmailAndPassword(auth, email, password);\n\n// Backend - Authentication check\nexports.loginTeacher = onCall(async (request) => {\n  if (!request.auth) {\n    throw new HttpsError('unauthenticated', 'User must be authenticated');\n  }\n  const uid = request.auth.uid;\n  // Verified user can proceed\n});",
+        "technical_details": {
+          "components": ["Firebase Authentication", "Cloud Functions auth", "Session management"],
+          "tech_stack": ["Firebase Auth", "Cloud Functions", "HTTPS"],
+          "flow": [
+            "Firebase Auth handles credential verification",
+            "Cloud Functions verify authenticated context",
+            "Session data stored securely in browser",
+            "HTTPS ensures encrypted communication"
+          ]
+        },
+        "implementation_notes": "Multi-layered security with client-side and server-side validation, ensuring users are properly authenticated before accessing protected resources."
+      }
+    },
+    {
+      "input": "How can developers extend the VidyaNXT login system for additional features?",
+      "output": {
+        "explanation": "The VidyaNXT login system is designed with modularity in mind, making it easy to extend with additional features like multi-factor authentication, social login, or profile validation. The separation of concerns allows for clean extensions.",
+        "code_example": "// Extend handleSubmit for additional validation\nconst handleSubmit = async (e) => {\n  e.preventDefault();\n  \n  // Add custom validation\n  if (!validateEmailDomain(email)) {\n    setError('Please use your school email domain');\n    return;\n  }\n  \n  // Existing authentication flow\n  const userCredential = await signInWithEmailAndPassword(auth, email, password);\n  \n  // Add MFA check\n  if (needsMFA(userCredential.user)) {\n    await handleMFAVerification();\n  }\n  \n  // Continue with existing flow\n};",
+        "technical_details": {
+          "components": ["Extensible validation", "Modular architecture", "Plugin system"],
+          "tech_stack": ["React", "Firebase Auth", "Custom validation"],
+          "flow": [
+            "Add custom validation before authentication",
+            "Extend authentication flow with additional checks",
+            "Maintain existing error handling patterns",
+            "Preserve user experience enhancements"
+          ]
+        },
+        "implementation_notes": "The modular design allows developers to add features at any point in the authentication flow without breaking existing functionality."
+      }
+    }
+  ]
+}

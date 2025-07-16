@@ -1,0 +1,250 @@
+{
+  "training_data": [
+    {
+      "input": "How does the notification sending system work in VidyaNXT?",
+      "output": {
+        "explanation": "The VidyaNXT notification system is a Firebase Cloud Function that sends push notifications to teachers using Firebase Cloud Messaging (FCM). It retrieves teacher FCM tokens from Firestore and delivers notifications with customizable content for real-time communication.",
+        "code_example": "async function sendNotification(teacherId, notificationData) {\n  try {\n    const teacherDoc = await db.collection('teachers').doc(teacherId).get();\n    if (teacherDoc.exists && teacherDoc.data().fcm_token) {\n      const message = {\n        token: teacherDoc.data().fcm_token,\n        notification: notificationData,\n        data: { type: notificationData.type || 'general' }\n      };\n      await admin.messaging().send(message);\n    }\n  } catch (error) {\n    console.error('Notification failed:', error);\n  }\n}",
+        "technical_details": {
+          "components": ["Firebase Cloud Functions", "Firestore", "Firebase Cloud Messaging", "teachers collection"],
+          "tech_stack": ["Firebase Admin SDK", "Node.js", "Firebase Cloud Functions", "Firestore"],
+          "flow": [
+            "Function receives teacherId and notificationData parameters",
+            "Queries Firestore teachers collection for teacher document",
+            "Validates teacher exists and has FCM token",
+            "Constructs FCM message payload",
+            "Sends notification via Firebase Cloud Messaging",
+            "Logs success or error outcomes"
+          ]
+        },
+        "implementation_notes": "Uses serverless architecture with automatic scaling, implements async/await for non-blocking operations, and includes comprehensive error handling for production reliability."
+      }
+    },
+    {
+      "input": "What are the required parameters for the sendNotification function?",
+      "output": {
+        "explanation": "The sendNotification function requires two parameters: teacherId (string) to identify the recipient teacher, and notificationData (object) containing the notification content including title, body, and optional type.",
+        "code_example": "// Function signature\nasync function sendNotification(teacherId, notificationData)\n\n// Example usage\nconst teacherId = 'teacher123';\nconst notificationData = {\n  title: 'Wellness Alert',\n  body: 'Your stress level seems elevated. Take a break.',\n  type: 'wellness'\n};\n\nawait sendNotification(teacherId, notificationData);",
+        "technical_details": {
+          "components": ["teacherId parameter", "notificationData object", "FCM message structure"],
+          "tech_stack": ["JavaScript", "Firebase Cloud Functions"],
+          "flow": [
+            "teacherId validates against Firestore teachers collection",
+            "notificationData.title becomes FCM notification title",
+            "notificationData.body becomes FCM notification body",
+            "notificationData.type becomes FCM data payload"
+          ]
+        },
+        "implementation_notes": "teacherId must match an existing document in the teachers collection, and notificationData.type is optional with 'general' as default fallback."
+      }
+    },
+    {
+      "input": "How is error handling implemented in the notification system?",
+      "output": {
+        "explanation": "The notification system uses comprehensive error handling with try-catch blocks, existence validation, and detailed logging to ensure robust operation even when failures occur.",
+        "code_example": "try {\n  const teacherDoc = await db.collection('teachers').doc(teacherId).get();\n  \n  if (!teacherDoc.exists) {\n    console.error('Teacher not found:', teacherId);\n    return;\n  }\n  \n  const fcmToken = teacherDoc.data().fcm_token;\n  if (!fcmToken) {\n    console.error('No FCM token for teacher:', teacherId);\n    return;\n  }\n  \n  await admin.messaging().send(message);\n  console.log('Notification sent successfully to:', teacherId);\n} catch (error) {\n  console.error('Notification failed:', error.message);\n}",
+        "technical_details": {
+          "components": ["try-catch blocks", "document existence validation", "FCM token validation", "error logging"],
+          "tech_stack": ["JavaScript error handling", "Firebase Admin SDK", "Console logging"],
+          "flow": [
+            "Wrap all operations in try-catch block",
+            "Check if teacher document exists in Firestore",
+            "Validate FCM token is present and valid",
+            "Log specific error types for debugging",
+            "Ensure function exits gracefully on errors"
+          ]
+        },
+        "implementation_notes": "Prevents crashes by catching all async operations, provides specific error messages for different failure scenarios, and logs errors without exposing sensitive data."
+      }
+    },
+    {
+      "input": "What is the database structure for storing teacher FCM tokens?",
+      "output": {
+        "explanation": "Teacher FCM tokens are stored in a Firestore collection called 'teachers' where each document represents a teacher and contains an 'fcm_token' field along with other teacher information.",
+        "code_example": "// Firestore structure\ndb.collection('teachers').doc('teacher123').get()\n\n// Expected document structure\n{\n  fcm_token: 'fA4G7j2K...', // FCM registration token\n  name: 'John Doe',\n  email: 'john@school.edu',\n  school_id: 'school456',\n  // other teacher fields\n}",
+        "technical_details": {
+          "components": ["teachers collection", "fcm_token field", "teacher document structure"],
+          "tech_stack": ["Firestore", "Firebase Admin SDK", "NoSQL document structure"],
+          "flow": [
+            "Teachers collection stores individual teacher documents",
+            "Each document uses teacherId as document ID",
+            "fcm_token field contains FCM registration token",
+            "Token is retrieved during notification sending process"
+          ]
+        },
+        "implementation_notes": "FCM tokens should be updated when teachers reinstall the app or change devices, and tokens have expiration dates requiring periodic refresh."
+      }
+    },
+    {
+      "input": "How can I extend the notification system to support multiple teachers?",
+      "output": {
+        "explanation": "To support multiple teachers, modify the function to accept an array of teacherIds and iterate through each one, sending individual notifications while maintaining error handling for each recipient.",
+        "code_example": "async function sendNotificationToMultiple(teacherIds, notificationData) {\n  const results = [];\n  \n  for (const teacherId of teacherIds) {\n    try {\n      const teacherDoc = await db.collection('teachers').doc(teacherId).get();\n      \n      if (teacherDoc.exists && teacherDoc.data().fcm_token) {\n        const message = {\n          token: teacherDoc.data().fcm_token,\n          notification: notificationData,\n          data: { type: notificationData.type || 'general', teacher_id: teacherId }\n        };\n        \n        await admin.messaging().send(message);\n        results.push({ teacherId, status: 'sent' });\n      } else {\n        results.push({ teacherId, status: 'failed', reason: 'no_token' });\n      }\n    } catch (error) {\n      results.push({ teacherId, status: 'error', error: error.message });\n    }\n  }\n  \n  return results;\n}",
+        "technical_details": {
+          "components": ["array iteration", "individual error handling", "result tracking", "batch processing"],
+          "tech_stack": ["JavaScript arrays", "for...of loops", "Firebase Cloud Functions", "FCM individual sends"],
+          "flow": [
+            "Accept array of teacherIds as parameter",
+            "Iterate through each teacherId individually",
+            "Apply same validation and sending logic per teacher",
+            "Track success/failure results for each teacher",
+            "Return comprehensive results array"
+          ]
+        },
+        "implementation_notes": "For very large teacher lists, consider using FCM batch sending API for better performance, and implement rate limiting to avoid exceeding Firebase quotas."
+      }
+    },
+    {
+      "input": "What are the integration points for the notification system in VidyaNXT?",
+      "output": {
+        "explanation": "The notification system integrates with multiple VidyaNXT components including the Wellness Agent for stress alerts, Network Agent for peer updates, and can be triggered by various frontend actions or backend processes.",
+        "code_example": "// Integration with Wellness Agent\nconst notificationData = {\n  title: 'Wellness Alert',\n  body: 'Your stress level seems elevated. Consider taking a break.',\n  type: 'wellness'\n};\nawait sendNotification(teacherId, notificationData);\n\n// Integration with Network Agent\nconst peerNotification = {\n  title: 'New Peer Connection',\n  body: 'A fellow teacher wants to connect with you.',\n  type: 'peer_connection'\n};\nawait sendNotification(teacherId, peerNotification);",
+        "technical_details": {
+          "components": ["Wellness Agent", "Network Agent", "Frontend triggers", "Backend processes", "Multi-agent architecture"],
+          "tech_stack": ["Agent Development Kit", "Firebase Cloud Functions", "React PWA", "Firebase Admin SDK"],
+          "flow": [
+            "Wellness Agent detects stress patterns and triggers notifications",
+            "Network Agent handles peer connections and sends updates",
+            "Frontend actions can trigger backend notification calls",
+            "Other backend processes can invoke notification function",
+            "System supports various notification types for different contexts"
+          ]
+        },
+        "implementation_notes": "Uses a modular, reusable design that can be called from any part of the VidyaNXT system, supporting different notification types for contextual messaging."
+      }
+    },
+    {
+      "input": "How do I troubleshoot notification sending failures?",
+      "output": {
+        "explanation": "Troubleshooting notification failures involves checking common issues like teacher existence, FCM token validity, network connectivity, and examining Cloud Function logs for specific error messages.",
+        "code_example": "// Debug steps\n// 1. Check if teacher exists\nconst teacherDoc = await db.collection('teachers').doc(teacherId).get();\nconsole.log('Teacher exists:', teacherDoc.exists);\n\n// 2. Verify FCM token\nconst fcmToken = teacherDoc.data()?.fcm_token;\nconsole.log('FCM Token present:', !!fcmToken);\n\n// 3. Test with sample data\nconst testNotification = {\n  title: 'Test Notification',\n  body: 'This is a test message',\n  type: 'test'\n};\n\n// 4. Enhanced error logging\ntry {\n  await admin.messaging().send(message);\n  console.log('Notification sent successfully');\n} catch (error) {\n  console.error('FCM Error Details:', {\n    code: error.code,\n    message: error.message,\n    details: error.details\n  });\n}",
+        "technical_details": {
+          "components": ["Cloud Function logs", "Firestore queries", "FCM error codes", "Debug logging"],
+          "tech_stack": ["Firebase Console", "Cloud Functions logging", "FCM debugging", "Firestore debugging"],
+          "flow": [
+            "Check Cloud Function execution logs",
+            "Verify teacher document exists in Firestore",
+            "Validate FCM token is present and not expired",
+            "Test with known working teacherId and data",
+            "Examine specific FCM error codes and messages"
+          ]
+        },
+        "implementation_notes": "Common issues include expired FCM tokens, missing teacher documents, network connectivity problems, and invalid notification payload structures."
+      }
+    },
+    {
+      "input": "What security considerations are important for the notification system?",
+      "output": {
+        "explanation": "Security considerations include protecting FCM tokens, validating input parameters, securing Cloud Function access, and ensuring notifications don't expose sensitive information.",
+        "code_example": "// Input validation\nfunction validateNotificationData(notificationData) {\n  if (!notificationData || typeof notificationData !== 'object') {\n    throw new Error('Invalid notification data');\n  }\n  \n  if (!notificationData.title || !notificationData.body) {\n    throw new Error('Title and body are required');\n  }\n  \n  // Sanitize content\n  return {\n    title: notificationData.title.substring(0, 100),\n    body: notificationData.body.substring(0, 500),\n    type: notificationData.type || 'general'\n  };\n}\n\n// Secure function call\nexports.sendNotification = functions.https.onCall(async (data, context) => {\n  // Verify authentication\n  if (!context.auth) {\n    throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');\n  }\n  \n  // Validate and sanitize input\n  const sanitizedData = validateNotificationData(data.notificationData);\n  \n  // Proceed with notification\n  await sendNotification(data.teacherId, sanitizedData);\n});",
+        "technical_details": {
+          "components": ["Input validation", "Authentication checks", "Data sanitization", "Error handling"],
+          "tech_stack": ["Firebase Authentication", "Cloud Functions security", "Input validation", "Data sanitization"],
+          "flow": [
+            "Validate user authentication before processing",
+            "Sanitize and validate all input parameters",
+            "Limit notification content length",
+            "Ensure FCM tokens are securely stored",
+            "Log security events without exposing sensitive data"
+          ]
+        },
+        "implementation_notes": "Never expose FCM tokens in client-side code, validate all inputs to prevent injection attacks, and implement proper authentication checks for function access."
+      }
+    },
+    {
+      "input": "How can I add analytics tracking to the notification system?",
+      "output": {
+        "explanation": "Analytics tracking can be added by integrating with external analytics services or storing notification metrics in Firestore, tracking both successful sends and failures for performance monitoring.",
+        "code_example": "async function sendNotificationWithAnalytics(teacherId, notificationData) {\n  const startTime = Date.now();\n  \n  try {\n    // Send notification\n    const teacherDoc = await db.collection('teachers').doc(teacherId).get();\n    \n    if (teacherDoc.exists && teacherDoc.data().fcm_token) {\n      const message = {\n        token: teacherDoc.data().fcm_token,\n        notification: notificationData,\n        data: { type: notificationData.type || 'general' }\n      };\n      \n      await admin.messaging().send(message);\n      \n      // Log success analytics\n      await logNotificationAnalytics({\n        teacherId,\n        type: notificationData.type,\n        status: 'sent',\n        duration: Date.now() - startTime,\n        timestamp: admin.firestore.FieldValue.serverTimestamp()\n      });\n      \n    } else {\n      // Log failure analytics\n      await logNotificationAnalytics({\n        teacherId,\n        type: notificationData.type,\n        status: 'failed',\n        reason: 'no_token',\n        duration: Date.now() - startTime,\n        timestamp: admin.firestore.FieldValue.serverTimestamp()\n      });\n    }\n  } catch (error) {\n    // Log error analytics\n    await logNotificationAnalytics({\n      teacherId,\n      type: notificationData.type,\n      status: 'error',\n      error: error.message,\n      duration: Date.now() - startTime,\n      timestamp: admin.firestore.FieldValue.serverTimestamp()\n    });\n  }\n}\n\nasync function logNotificationAnalytics(data) {\n  await db.collection('notification_analytics').add(data);\n}",
+        "technical_details": {
+          "components": ["Analytics logging", "Performance tracking", "Error metrics", "Firestore analytics collection"],
+          "tech_stack": ["Firestore", "Analytics tracking", "Performance monitoring", "Error logging"],
+          "flow": [
+            "Record notification attempt start time",
+            "Track notification sending outcome",
+            "Log performance metrics (duration)",
+            "Store analytics data in Firestore collection",
+            "Include error details for failed notifications"
+          ]
+        },
+        "implementation_notes": "Create a separate analytics collection to avoid impacting main functionality, implement async logging to prevent blocking notification sending, and consider data retention policies for analytics data."
+      }
+    },
+    {
+      "input": "What are the best practices for FCM token management in VidyaNXT?",
+      "output": {
+        "explanation": "FCM token management involves regular token refresh, handling token expiration, updating tokens when users reinstall apps, and maintaining clean token storage in Firestore.",
+        "code_example": "// Token refresh handling\nasync function updateTeacherFCMToken(teacherId, newToken) {\n  try {\n    await db.collection('teachers').doc(teacherId).update({\n      fcm_token: newToken,\n      token_updated: admin.firestore.FieldValue.serverTimestamp()\n    });\n    console.log('FCM token updated for teacher:', teacherId);\n  } catch (error) {\n    console.error('Failed to update FCM token:', error);\n  }\n}\n\n// Token validation before sending\nasync function validateAndSendNotification(teacherId, notificationData) {\n  const teacherDoc = await db.collection('teachers').doc(teacherId).get();\n  \n  if (!teacherDoc.exists) {\n    throw new Error('Teacher not found');\n  }\n  \n  const teacherData = teacherDoc.data();\n  const fcmToken = teacherData.fcm_token;\n  \n  if (!fcmToken) {\n    throw new Error('No FCM token available');\n  }\n  \n  // Check token age (optional)\n  const tokenAge = Date.now() - teacherData.token_updated?.toDate()?.getTime();\n  if (tokenAge > 30 * 24 * 60 * 60 * 1000) { // 30 days\n    console.warn('FCM token may be stale for teacher:', teacherId);\n  }\n  \n  // Proceed with notification\n  const message = {\n    token: fcmToken,\n    notification: notificationData,\n    data: { type: notificationData.type || 'general' }\n  };\n  \n  await admin.messaging().send(message);\n}",
+        "technical_details": {
+          "components": ["Token refresh mechanism", "Token validation", "Firestore token storage", "Token age tracking"],
+          "tech_stack": ["Firebase Cloud Messaging", "Firestore", "Frontend token refresh", "Backend validation"],
+          "flow": [
+            "Frontend generates new FCM token on app startup",
+            "Update Firestore with new token and timestamp",
+            "Validate token presence before sending notifications",
+            "Handle token expiration gracefully",
+            "Monitor token age and refresh proactively"
+          ]
+        },
+        "implementation_notes": "Implement token refresh on app startup and when tokens expire, store token update timestamps for monitoring, and handle token validation failures gracefully without crashing the notification system."
+      }
+    },
+    {
+      "input": "How do I implement notification batching for better performance?",
+      "output": {
+        "explanation": "Notification batching improves performance by grouping multiple notifications into single FCM requests, reducing API calls and improving delivery efficiency for large teacher groups.",
+        "code_example": "async function sendBatchNotifications(teacherIds, notificationData) {\n  const batchSize = 500; // FCM batch limit\n  const batches = [];\n  \n  // Split teachers into batches\n  for (let i = 0; i < teacherIds.length; i += batchSize) {\n    batches.push(teacherIds.slice(i, i + batchSize));\n  }\n  \n  const results = [];\n  \n  for (const batch of batches) {\n    try {\n      // Get all teacher documents in batch\n      const teacherDocs = await Promise.all(\n        batch.map(id => db.collection('teachers').doc(id).get())\n      );\n      \n      // Build messages for valid teachers\n      const messages = teacherDocs\n        .filter(doc => doc.exists && doc.data().fcm_token)\n        .map(doc => ({\n          token: doc.data().fcm_token,\n          notification: notificationData,\n          data: { \n            type: notificationData.type || 'general',\n            teacher_id: doc.id\n          }\n        }));\n      \n      // Send batch\n      if (messages.length > 0) {\n        const batchResponse = await admin.messaging().sendAll(messages);\n        \n        // Process batch results\n        batchResponse.responses.forEach((response, index) => {\n          results.push({\n            teacherId: batch[index],\n            success: response.success,\n            error: response.error?.message\n          });\n        });\n      }\n    } catch (error) {\n      console.error('Batch sending failed:', error);\n      // Mark entire batch as failed\n      batch.forEach(teacherId => {\n        results.push({\n          teacherId,\n          success: false,\n          error: error.message\n        });\n      });\n    }\n  }\n  \n  return results;\n}",
+        "technical_details": {
+          "components": ["Batch processing", "FCM sendAll API", "Parallel document retrieval", "Result aggregation"],
+          "tech_stack": ["Firebase Cloud Messaging", "Promise.all", "Array batching", "Error handling"],
+          "flow": [
+            "Split large teacher lists into manageable batches",
+            "Retrieve teacher documents in parallel",
+            "Filter for valid teachers with FCM tokens",
+            "Use FCM sendAll for batch sending",
+            "Process and aggregate batch results"
+          ]
+        },
+        "implementation_notes": "Respect FCM batch limits (500 messages per batch), implement proper error handling for partial failures, and consider rate limiting to avoid exceeding Firebase quotas."
+      }
+    },
+    {
+      "input": "What notification types are supported in VidyaNXT and how are they handled?",
+      "output": {
+        "explanation": "VidyaNXT supports various notification types including wellness alerts, peer connections, system updates, and general notifications, each with specific handling and routing logic.",
+        "code_example": "// Notification type definitions\nconst NOTIFICATION_TYPES = {\n  WELLNESS: 'wellness',\n  PEER_CONNECTION: 'peer_connection',\n  SYSTEM_UPDATE: 'system_update',\n  GENERAL: 'general',\n  CHALLENGE: 'challenge',\n  ACHIEVEMENT: 'achievement'\n};\n\n// Type-specific notification handling\nasync function sendTypedNotification(teacherId, type, customData) {\n  let notificationData;\n  \n  switch (type) {\n    case NOTIFICATION_TYPES.WELLNESS:\n      notificationData = {\n        title: 'Wellness Alert',\n        body: customData.message || 'Check your wellness status',\n        type: 'wellness',\n        data: {\n          stress_level: customData.stressLevel,\n          recommendation: customData.recommendation\n        }\n      };\n      break;\n      \n    case NOTIFICATION_TYPES.PEER_CONNECTION:\n      notificationData = {\n        title: 'New Peer Connection',\n        body: `${customData.peerName} wants to connect with you`,\n        type: 'peer_connection',\n        data: {\n          peer_id: customData.peerId,\n          connection_type: customData.connectionType\n        }\n      };\n      break;\n      \n    case NOTIFICATION_TYPES.CHALLENGE:\n      notificationData = {\n        title: 'New Challenge Available',\n        body: customData.challengeTitle,\n        type: 'challenge',\n        data: {\n          challenge_id: customData.challengeId,\n          difficulty: customData.difficulty\n        }\n      };\n      break;\n      \n    default:\n      notificationData = {\n        title: customData.title || 'VidyaNXT Update',\n        body: customData.body || 'You have a new update',\n        type: 'general'\n      };\n  }\n  \n  await sendNotification(teacherId, notificationData);\n}",
+        "technical_details": {
+          "components": ["Notification type constants", "Type-specific handlers", "Custom data mapping", "Default fallbacks"],
+          "tech_stack": ["JavaScript switch statements", "FCM data payloads", "Type definitions", "Custom data structures"],
+          "flow": [
+            "Define notification type constants",
+            "Create type-specific notification data",
+            "Map custom data to notification payload",
+            "Include type-specific data in FCM message",
+            "Handle unknown types with default behavior"
+          ]
+        },
+        "implementation_notes": "Each notification type can have custom data fields, specific UI handling on the frontend, and different user interaction patterns based on the notification context."
+      }
+    },
+    {
+      "input": "How do I monitor notification delivery rates and performance?",
+      "output": {
+        "explanation": "Monitoring notification delivery involves tracking send success rates, measuring delivery times, analyzing failure patterns, and creating dashboards for real-time performance insights.",
+        "code_example": "// Performance monitoring implementation\nasync function monitoredSendNotification(teacherId, notificationData) {\n  const startTime = Date.now();\n  const notificationId = `notif_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;\n  \n  try {\n    // Log notification attempt\n    await db.collection('notification_metrics').doc(notificationId).set({\n      teacher_id: teacherId,\n      type: notificationData.type || 'general',\n      status: 'attempting',\n      created_at: admin.firestore.FieldValue.serverTimestamp(),\n      start_time: startTime\n    });\n    \n    // Send notification\n    const teacherDoc = await db.collection('teachers').doc(teacherId).get();\n    \n    if (!teacherDoc.exists) {\n      throw new Error('Teacher not found');\n    }\n    \n    const fcmToken = teacherDoc.data().fcm_token;\n    if (!fcmToken) {\n      throw new Error('No FCM token');\n    }\n    \n    const message = {\n      token: fcmToken,\n      notification: notificationData,\n      data: { \n        type: notificationData.type || 'general',\n        notification_id: notificationId\n      }\n    };\n    \n    await admin.messaging().send(message);\n    \n    // Log success\n    await db.collection('notification_metrics').doc(notificationId).update({\n      status: 'sent',\n      duration: Date.now() - startTime,\n      completed_at: admin.firestore.FieldValue.serverTimestamp()\n    });\n    \n  } catch (error) {\n    // Log failure\n    await db.collection('notification_metrics').doc(notificationId).update({\n      status: 'failed',\n      error: error.message,\n      duration: Date.now() - startTime,\n      completed_at: admin.firestore.FieldValue.serverTimestamp()\n    });\n    \n    throw error;\n  }\n}\n\n// Analytics query functions\nasync function getNotificationStats(timeframe = 24) {\n  const hoursAgo = new Date(Date.now() - timeframe * 60 * 60 * 1000);\n  \n  const snapshot = await db.collection('notification_metrics')\n    .where('created_at', '>=', hoursAgo)\n    .get();\n  \n  const stats = {\n    total: 0,\n    sent: 0,\n    failed: 0,\n    averageDuration: 0,\n    typeBreakdown: {}\n  };\n  \n  let totalDuration = 0;\n  \n  snapshot.forEach(doc => {\n    const data = doc.data();\n    stats.total++;\n    \n    if (data.status === 'sent') {\n      stats.sent++;\n    } else if (data.status === 'failed') {\n      stats.failed++;\n    }\n    \n    if (data.duration) {\n      totalDuration += data.duration;\n    }\n    \n    const type = data.type || 'general';\n    stats.typeBreakdown[type] = (stats.typeBreakdown[type] || 0) + 1;\n  });\n  \n  stats.averageDuration = stats.total > 0 ? totalDuration / stats.total : 0;\n  stats.successRate = stats.total > 0 ? (stats.sent / stats.total) * 100 : 0;\n  \n  return stats;\n}",
+        "technical_details": {
+          "components": ["Performance metrics collection", "Success rate tracking", "Duration monitoring", "Error pattern analysis"],
+          "tech_stack": ["Firestore analytics", "Performance monitoring", "Statistical analysis", "Dashboard queries"],
+          "flow": [
+            "Generate unique notification ID for tracking",
+            "Log notification attempt with timestamp",
+            "Track notification sending duration",
+            "Record success or failure status",
+            "Aggregate metrics for dashboard display"
+          ]
+        },
+        "implementation_notes": "Implement automated alerts for low delivery rates, create regular cleanup jobs for old metrics data, and consider using Firebase Analytics for deeper insights into notification performance."
+      }
+    }
+  ]
+}

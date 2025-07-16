@@ -1,0 +1,290 @@
+{
+  "training_data": [
+    {
+      "input": "What is the Peer Advice flow in VidyaNXT and what functionality does it provide?",
+      "output": {
+        "explanation": "The Peer Advice flow is a core feature of VidyaNXT that enables teachers to post challenges they face in their professional environment. The system processes these challenges through AI-driven classification, matches teachers with peers who have relevant expertise, and provides AI-powered recommendations to address the issues.",
+        "code_example": "const handleSubmit = async (e) => {\n  e.preventDefault();\n  const postChallenge = httpsCallable(functions, 'postChallenge');\n  await postChallenge({ text: challengeText, teacherId: auth.currentUser.uid });\n};",
+        "technical_details": {
+          "components": ["PeerAdvice.jsx", "postChallenge Cloud Function", "ClassificationAgent", "MatchingAgent", "OrchestrationAgent"],
+          "tech_stack": ["React", "Firebase Cloud Functions", "Firestore", "Google Gemini AI", "Firebase Authentication"],
+          "flow": [
+            "Teacher submits challenge via React form",
+            "postChallenge Cloud Function creates Firestore document",
+            "ClassificationAgent categorizes challenge using Gemini AI",
+            "MatchingAgent finds suitable peers",
+            "OrchestrationAgent determines response strategy",
+            "Frontend updates in real-time via Firestore listeners"
+          ]
+        },
+        "implementation_notes": "Facilitates peer collaboration and AI-assisted problem-solving specifically for educators in under-resourced Indian schools with multi-grade classrooms"
+      }
+    },
+    {
+      "input": "How does the PeerAdvice React component manage state and handle real-time updates?",
+      "output": {
+        "explanation": "The PeerAdvice component uses React hooks for state management and Firestore's onSnapshot for real-time updates. It manages challenge text, processing status, and peer match display with automatic UI updates.",
+        "code_example": "const [challengeText, setChallengeText] = useState('');\nconst [challengeDoc, setChallengeDoc] = useState(null);\n\nuseEffect(() => {\n  const unsubscribe = onSnapshot(doc(db, 'challenges', challengeId), (snap) => {\n    setChallengeDoc(snap.data());\n  });\n  return () => unsubscribe();\n}, [challengeId]);",
+        "technical_details": {
+          "components": ["useState", "useEffect", "onSnapshot", "Firestore"],
+          "tech_stack": ["React Hooks", "Firebase SDK", "Firestore"],
+          "flow": [
+            "useState manages challenge input and status",
+            "useEffect sets up Firestore subscription",
+            "onSnapshot listens for document changes",
+            "UI updates automatically when status changes",
+            "Cleanup function prevents memory leaks"
+          ]
+        },
+        "implementation_notes": "Real-time subscription ensures UI reflects challenge processing stages from POSTED to ORCHESTRATED without manual refresh"
+      }
+    },
+    {
+      "input": "What are the three AI agents in the PostChallenge flow and what does each one do?",
+      "output": {
+        "explanation": "The PostChallenge flow uses three specialized AI agents powered by Google Gemini AI: ClassificationAgent for categorizing challenges, MatchingAgent for finding suitable peers, and OrchestrationAgent for determining response strategies.",
+        "code_example": "// ClassificationAgent usage\nconst classification = await ClassificationAgent.classify(challengeText);\n// Returns: { category: 'classroom management', urgency: 'high' }\n\n// MatchingAgent usage\nconst matches = await MatchingAgent.findMatches(classification, teacherProfile);\n\n// OrchestrationAgent usage\nconst strategy = await OrchestrationAgent.orchestrate(matches, challenge);",
+        "technical_details": {
+          "components": ["ClassificationAgent", "MatchingAgent", "OrchestrationAgent", "Google Gemini AI"],
+          "tech_stack": ["Google Gemini AI", "Firebase Cloud Functions", "Firestore"],
+          "flow": [
+            "ClassificationAgent categorizes challenge into predefined types",
+            "MatchingAgent queries teacher profiles for suitable peers",
+            "OrchestrationAgent analyzes matches and recommends strategy",
+            "Each agent uses Gemini AI for intelligent processing",
+            "Agents work sequentially through Firebase triggers"
+          ]
+        },
+        "implementation_notes": "Agent-based design ensures modular, maintainable AI processing with fallback logic if AI fails"
+      }
+    },
+    {
+      "input": "How does the challenge processing pipeline work through Firebase triggers?",
+      "output": {
+        "explanation": "The challenge processing pipeline uses Firebase Cloud Functions with event-driven triggers that automatically process challenges through classification, matching, and orchestration stages based on Firestore document changes.",
+        "code_example": "exports.classificationTrigger = onDocumentCreated('/challenges/{challengeId}', async (event) => {\n  const challenge = event.data.data();\n  const classification = await ClassificationAgent.classify(challenge.text);\n  await updateChallengeStatus(challengeId, 'CLASSIFIED', { classification });\n});\n\nexports.matchingTrigger = onDocumentUpdated('/challenges/{challengeId}', async (event) => {\n  if (event.data.after.data().status === 'CLASSIFIED') {\n    const matches = await MatchingAgent.findMatches(challenge);\n    await updateChallengeStatus(challengeId, 'MATCHED', { matches });\n  }\n});",
+        "technical_details": {
+          "components": ["onDocumentCreated", "onDocumentUpdated", "updateChallengeStatus", "Firestore triggers"],
+          "tech_stack": ["Firebase Cloud Functions", "Firestore", "Event-driven architecture"],
+          "flow": [
+            "Document creation triggers classification",
+            "Status update to CLASSIFIED triggers matching",
+            "Status update to MATCHED triggers orchestration",
+            "Each trigger updates document with results",
+            "Frontend receives real-time updates"
+          ]
+        },
+        "implementation_notes": "Serverless architecture ensures automatic processing without manual intervention, with each stage triggered by the previous completion"
+      }
+    },
+    {
+      "input": "What parameters does the postChallenge Cloud Function accept and what does it return?",
+      "output": {
+        "explanation": "The postChallenge Cloud Function accepts challenge text, teacher ID, and optional urgency level, then creates a Firestore document with initial status and returns the challenge ID for frontend tracking.",
+        "code_example": "exports.postChallenge = onCall(async (request) => {\n  const { text, teacherId, urgency = 'medium' } = request.data;\n  \n  const challengeRef = await db.collection('challenges').add({\n    text,\n    teacherId,\n    urgency,\n    status: 'POSTED',\n    createdAt: new Date().toISOString()\n  });\n  \n  return { challengeId: challengeRef.id };\n});",
+        "technical_details": {
+          "components": ["onCall", "Firestore collection", "document creation"],
+          "tech_stack": ["Firebase Cloud Functions", "Firestore", "Firebase Authentication"],
+          "flow": [
+            "Function receives text, teacherId, and optional urgency",
+            "Creates new document in challenges collection",
+            "Sets initial status to POSTED",
+            "Returns challengeId for frontend tracking",
+            "Triggers classification process automatically"
+          ]
+        },
+        "implementation_notes": "Requires authentication via request.auth, defaults urgency to medium if not specified, and automatically triggers the processing pipeline"
+      }
+    },
+    {
+      "input": "How does the MatchingAgent find suitable peers and avoid self-matching?",
+      "output": {
+        "explanation": "The MatchingAgent queries teacher profiles from Firestore and uses Gemini AI to match based on grade level, expertise, and location while implementing logic to prevent teachers from being matched with themselves.",
+        "code_example": "const findMatches = async (classification, teacherProfile) => {\n  const teachersSnapshot = await db.collection('teachers')\n    .where('gradeLevel', '==', teacherProfile.gradeLevel)\n    .get();\n  \n  const potentialMatches = teachersSnapshot.docs\n    .filter(doc => doc.id !== teacherProfile.id) // Avoid self-matching\n    .map(doc => ({ id: doc.id, ...doc.data() }));\n  \n  const matches = await geminiAI.findBestMatches(classification, potentialMatches);\n  return matches;\n};",
+        "technical_details": {
+          "components": ["Firestore queries", "Gemini AI matching", "teacher profiles", "filter logic"],
+          "tech_stack": ["Firestore", "Google Gemini AI", "Firebase Cloud Functions"],
+          "flow": [
+            "Query teachers collection for potential matches",
+            "Filter out the requesting teacher to avoid self-matching",
+            "Use Gemini AI to analyze compatibility",
+            "Return ranked list of suitable peers",
+            "Fallback to manual logic if AI fails"
+          ]
+        },
+        "implementation_notes": "Includes robustness with fallback manual matching logic and ensures no teacher is matched with themselves through explicit filtering"
+      }
+    },
+    {
+      "input": "How does the frontend handle peer chat initiation and AI chat recommendations?",
+      "output": {
+        "explanation": "The frontend provides buttons for both peer chat and AI chat, with peer chat calling startChatWith function and AI chat using challenge context. The UI adapts based on whether peer matches are available or AI chat is recommended.",
+        "code_example": "const startChatWithPeer = async (peerId) => {\n  const fn = httpsCallable(functions, 'startChatWith');\n  const { data } = await fn({ peerId, teacherId: auth.currentUser.uid });\n  navigate(`/chat/${data.convoId}`);\n};\n\nconst handleAiChatClick = async () => {\n  const aiSession = challengeDoc.aiSession;\n  navigate(`/ai-chat/${aiSession.sessionId}`);\n};\n\n// UI rendering\n{challengeDoc?.matches?.map((match) => (\n  <button onClick={() => startChatWithPeer(match.peerId)}>\n    Chat with {peerNames[match.peerId]}\n  </button>\n))}\n\n{challengeDoc?.aiChatRecommended && (\n  <button onClick={handleAiChatClick}>Start AI Chat</button>\n)}",
+        "technical_details": {
+          "components": ["startChatWith function", "AI chat navigation", "peer match display", "conditional rendering"],
+          "tech_stack": ["React", "Firebase Cloud Functions", "React Router", "httpsCallable"],
+          "flow": [
+            "Display peer matches with chat buttons",
+            "startChatWithPeer creates conversation and navigates",
+            "Show AI chat button if recommended",
+            "Navigate to appropriate chat interface",
+            "Async fetch peer names for display"
+          ]
+        },
+        "implementation_notes": "Uses React Router navigation and handles both peer-to-peer and AI chat scenarios with appropriate context passing"
+      }
+    },
+    {
+      "input": "What is the AIProcessingLoader component and how does it enhance user experience?",
+      "output": {
+        "explanation": "The AIProcessingLoader is a custom React component that displays an animated loading screen during AI processing, providing visual feedback to users while challenges are being classified, matched, and orchestrated.",
+        "code_example": "const AIProcessingLoader = () => {\n  return (\n    <div className=\"processing-container\">\n      <div className=\"spinner-animation\"></div>\n      <p>AI is processing your challenge...</p>\n      <p>Finding the best matches for you</p>\n    </div>\n  );\n};\n\n// Usage in PeerAdvice component\n{processingStatus && <AIProcessingLoader />}",
+        "technical_details": {
+          "components": ["AIProcessingLoader", "CSS animations", "loading state management"],
+          "tech_stack": ["React", "CSS", "State management"],
+          "flow": [
+            "Component renders during processing status",
+            "Displays animated spinner and messages",
+            "Hides when processing completes",
+            "Provides visual feedback for AI operations",
+            "Improves perceived performance"
+          ]
+        },
+        "implementation_notes": "Enhances UX by providing visual feedback during AI processing, reducing perceived wait time and keeping users engaged"
+      }
+    },
+    {
+      "input": "How does the OrchestrationAgent determine response strategies and create AI sessions?",
+      "output": {
+        "explanation": "The OrchestrationAgent analyzes the quality of peer matches and challenge complexity to determine whether to recommend peer connections or AI chat sessions. It creates personalized AI sessions with specific personas if needed.",
+        "code_example": "const orchestrate = async (matches, challenge) => {\n  const strategy = await geminiAI.analyzeStrategy({\n    matchQuality: matches.length,\n    urgency: challenge.urgency,\n    complexity: challenge.classification.complexity\n  });\n  \n  if (strategy.recommendAI || matches.length < 2) {\n    const aiSession = await createAISession({\n      challengeContext: challenge.text,\n      teacherProfile: challenge.teacherProfile,\n      persona: strategy.recommendedPersona\n    });\n    \n    return {\n      strategy: 'AI_CHAT',\n      aiSession,\n      aiChatRecommended: true\n    };\n  }\n  \n  return {\n    strategy: 'PEER_SUPPORT',\n    matches,\n    aiChatRecommended: false\n  };\n};",
+        "technical_details": {
+          "components": ["strategy analysis", "AI session creation", "persona assignment", "Gemini AI"],
+          "tech_stack": ["Google Gemini AI", "Firestore", "Firebase Cloud Functions"],
+          "flow": [
+            "Analyze match quality and challenge urgency",
+            "Determine optimal response strategy",
+            "Create AI session if peers insufficient",
+            "Assign appropriate AI persona",
+            "Update challenge with orchestration results"
+          ]
+        },
+        "implementation_notes": "Balances peer support with AI assistance based on urgency and match quality, creating personalized AI experiences when needed"
+      }
+    },
+    {
+      "input": "What authentication checks are performed in the PeerAdvice component?",
+      "output": {
+        "explanation": "The PeerAdvice component performs authentication checks using Firebase Authentication to ensure only logged-in teachers can access the feature, redirecting unauthenticated users to the login page.",
+        "code_example": "import { auth } from '../firebase-config';\nimport { useNavigate } from 'react-router-dom';\n\nconst PeerAdvice = () => {\n  const navigate = useNavigate();\n  \n  useEffect(() => {\n    if (!auth.currentUser) {\n      navigate('/login');\n      return;\n    }\n  }, [navigate]);\n  \n  const handleSubmit = async (e) => {\n    e.preventDefault();\n    if (!auth.currentUser) {\n      alert('Please log in to post a challenge');\n      return;\n    }\n    // Proceed with challenge submission\n  };\n};",
+        "technical_details": {
+          "components": ["Firebase Authentication", "useNavigate", "auth.currentUser"],
+          "tech_stack": ["Firebase Authentication", "React Router", "React hooks"],
+          "flow": [
+            "Check auth.currentUser on component mount",
+            "Redirect to /login if not authenticated",
+            "Verify authentication before form submission",
+            "Display appropriate error messages",
+            "Prevent unauthorized access to features"
+          ]
+        },
+        "implementation_notes": "Ensures security by checking authentication both on component load and before critical operations like challenge submission"
+      }
+    },
+    {
+      "input": "How does the system handle errors and provide fallback logic in the AI agents?",
+      "output": {
+        "explanation": "The AI agents implement robust error handling with fallback logic to ensure system reliability. If Gemini AI fails, agents fall back to manual logic to continue processing challenges without complete failure.",
+        "code_example": "const classifyChallenge = async (challengeText) => {\n  try {\n    const geminiResponse = await geminiAI.classify(challengeText);\n    return parseGeminiResponse(geminiResponse);\n  } catch (error) {\n    console.error('Gemini AI classification failed:', error);\n    \n    // Fallback to manual classification\n    const manualClassification = {\n      category: determineCategory(challengeText),\n      urgency: calculateUrgency(challengeText),\n      confidence: 'low'\n    };\n    \n    return manualClassification;\n  }\n};\n\nconst determineCategory = (text) => {\n  const keywords = {\n    'classroom management': ['discipline', 'behavior', 'control'],\n    'student engagement': ['participation', 'attention', 'motivation']\n  };\n  \n  // Simple keyword matching fallback\n  for (const [category, words] of Object.entries(keywords)) {\n    if (words.some(word => text.toLowerCase().includes(word))) {\n      return category;\n    }\n  }\n  \n  return 'general';\n};",
+        "technical_details": {
+          "components": ["try-catch blocks", "fallback logic", "manual classification", "error logging"],
+          "tech_stack": ["Error handling", "Gemini AI", "Firebase Cloud Functions"],
+          "flow": [
+            "Attempt Gemini AI processing",
+            "Catch and log any errors",
+            "Implement manual fallback logic",
+            "Return results with confidence indicator",
+            "Ensure processing continues despite AI failures"
+          ]
+        },
+        "implementation_notes": "Ensures system robustness by providing manual fallback mechanisms when AI services fail, maintaining functionality even during AI downtime"
+      }
+    },
+    {
+      "input": "What is the data structure of a challenge document in Firestore?",
+      "output": {
+        "explanation": "A challenge document in Firestore contains the challenge text, teacher information, processing status, classification results, peer matches, and orchestration outcomes, with status tracking the processing pipeline.",
+        "code_example": "// Challenge document structure\n{\n  id: 'challenge_123',\n  text: 'Students in my multi-grade class are not paying attention',\n  teacherId: 'teacher_456',\n  urgency: 'high',\n  status: 'ORCHESTRATED', // POSTED -> CLASSIFIED -> MATCHED -> ORCHESTRATED\n  createdAt: '2023-07-16T10:30:00Z',\n  \n  // Added by ClassificationAgent\n  classification: {\n    category: 'student engagement',\n    urgency: 'high',\n    confidence: 0.85\n  },\n  \n  // Added by MatchingAgent\n  matches: [\n    {\n      peerId: 'teacher_789',\n      matchScore: 0.9,\n      expertise: ['student engagement', 'multi-grade teaching']\n    }\n  ],\n  \n  // Added by OrchestrationAgent\n  aiChatRecommended: true,\n  aiSession: {\n    sessionId: 'ai_session_101',\n    persona: 'experienced_teacher',\n    context: 'student engagement in multi-grade classroom'\n  }\n}",
+        "technical_details": {
+          "components": ["Firestore document", "status tracking", "agent results", "nested objects"],
+          "tech_stack": ["Firestore", "NoSQL document structure", "Firebase"],
+          "flow": [
+            "Initial document created with basic info",
+            "Classification adds category and urgency",
+            "Matching adds peer match results",
+            "Orchestration adds final strategy",
+            "Status field tracks processing progress"
+          ]
+        },
+        "implementation_notes": "Document structure evolves through processing pipeline, with each agent adding specific fields while maintaining status tracking for real-time updates"
+      }
+    },
+    {
+      "input": "How does the system fetch and display peer names asynchronously?",
+      "output": {
+        "explanation": "The system fetches peer names asynchronously using a separate function that queries teacher profiles from Firestore and updates the UI state with the retrieved names for display in the peer match interface.",
+        "code_example": "const [peerNames, setPeerNames] = useState({});\n\nconst fetchPeerNames = async (peerIds) => {\n  const names = {};\n  \n  for (const peerId of peerIds) {\n    try {\n      const teacherDoc = await getDoc(doc(db, 'teachers', peerId));\n      if (teacherDoc.exists()) {\n        names[peerId] = teacherDoc.data().name;\n      }\n    } catch (error) {\n      console.error(`Error fetching name for ${peerId}:`, error);\n      names[peerId] = 'Unknown Teacher';\n    }\n  }\n  \n  setPeerNames(names);\n};\n\n// Usage when matches are available\nuseEffect(() => {\n  if (challengeDoc?.matches) {\n    const peerIds = challengeDoc.matches.map(match => match.peerId);\n    fetchPeerNames(peerIds);\n  }\n}, [challengeDoc?.matches]);",
+        "technical_details": {
+          "components": ["getDoc", "Firestore queries", "async operations", "state management"],
+          "tech_stack": ["Firestore", "React hooks", "async/await", "Error handling"],
+          "flow": [
+            "Extract peer IDs from challenge matches",
+            "Query teacher documents for each peer",
+            "Handle errors with fallback names",
+            "Update state with fetched names",
+            "UI re-renders with peer names displayed"
+          ]
+        },
+        "implementation_notes": "Implements error handling with fallback names and updates UI progressively as names are fetched, improving user experience"
+      }
+    },
+    {
+      "input": "What triggers the wellness analysis mentioned in the postChallenge function?",
+      "output": {
+        "explanation": "The wellness analysis is mentioned in the postChallenge function but is not fully implemented in the provided code. It appears to be a planned feature that would analyze the emotional or psychological aspects of teacher challenges.",
+        "code_example": "exports.postChallenge = onCall(async (request) => {\n  // ... challenge creation logic ...\n  \n  // Wellness analysis trigger (not fully implemented)\n  // This would analyze the emotional/psychological aspects\n  // of the challenge for additional support\n  \n  return { challengeId: challengeRef.id };\n});",
+        "technical_details": {
+          "components": ["postChallenge function", "wellness analysis (planned)", "emotional support"],
+          "tech_stack": ["Firebase Cloud Functions", "Potential AI analysis"],
+          "flow": [
+            "Challenge submitted through postChallenge",
+            "Wellness analysis would be triggered",
+            "Emotional/psychological aspects analyzed",
+            "Additional support recommendations generated",
+            "Integration with existing processing pipeline"
+          ]
+        },
+        "implementation_notes": "This feature is mentioned but not implemented, suggesting future enhancement for teacher wellbeing support alongside the existing peer advice system"
+      }
+    },
+    {
+      "input": "How does the system ensure teachers from under-resourced Indian schools get appropriate support?",
+      "output": {
+        "explanation": "The system is specifically designed for teachers in under-resourced Indian schools with multi-grade classrooms, using AI agents to match teachers with relevant expertise and providing culturally appropriate support through both peer connections and AI assistance.",
+        "code_example": "// Teacher profile structure for Indian school context\n{\n  teacherId: 'teacher_123',\n  name: 'Priya Sharma',\n  school: 'Government Primary School Bangalore',\n  gradeLevel: 'multi-grade', // Common in under-resourced schools\n  location: 'Karnataka, India',\n  expertise: ['multi-grade teaching', 'resource constraints', 'local language instruction'],\n  yearsExperience: 5,\n  challenges: ['large class sizes', 'limited resources', 'mixed-age students']\n}\n\n// Matching considers local context\nconst findLocalMatches = async (teacherProfile, challenge) => {\n  const matches = await db.collection('teachers')\n    .where('location', '==', teacherProfile.location)\n    .where('gradeLevel', '==', 'multi-grade')\n    .get();\n  \n  return matches.docs.filter(doc => \n    doc.data().expertise.includes(challenge.classification.category)\n  );\n};",
+        "technical_details": {
+          "components": ["teacher profiles", "location-based matching", "expertise tracking", "multi-grade support"],
+          "tech_stack": ["Firestore", "AI matching", "Cultural context"],
+          "flow": [
+            "Teacher profiles include local context",
+            "Matching prioritizes similar environments",
+            "AI considers resource constraints",
+            "Peer connections based on relevant experience",
+            "Support tailored to Indian school challenges"
+          ]
+        },
+        "implementation_notes": "System designed specifically for the unique challenges of under-resourced Indian schools, including multi-grade classrooms and resource constraints"
+      }
+    }
+  ]
+}

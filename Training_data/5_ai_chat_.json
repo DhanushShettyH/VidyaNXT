@@ -1,0 +1,259 @@
+{
+  "training_data": [
+    {
+      "input": "How does the AI Chat feature work in VidyaNXT?",
+      "output": {
+        "explanation": "The AI Chat feature in VidyaNXT enables teachers to engage in real-time conversations with an AI teaching assistant. It's designed to support teachers in under-resourced Indian schools by providing instant guidance on teaching challenges through personalized conversations.",
+        "code_example": "// Frontend initialization\nconst initAiChat = async () => {\n  const sessionData = await createAiChatSession({\n    challengeId,\n    challengeText,\n    teacherId: auth.currentUser.uid\n  });\n  setSessionId(sessionData.sessionId);\n};",
+        "technical_details": {
+          "components": ["AiChatWindow.jsx", "createAiChatSession Cloud Function", "AiChatAgent", "Firebase Authentication", "Firestore"],
+          "tech_stack": ["React", "Firebase Cloud Functions", "Google Gemini AI", "Firestore", "Firebase Authentication"],
+          "flow": [
+            "Teacher accesses /chat/ai route",
+            "Session initialized with createAiChatSession",
+            "AI persona generated using Gemini AI",
+            "Real-time messaging via Firestore onSnapshot",
+            "AI responses generated through AiChatAgent",
+            "Session analysis performed on completion"
+          ]
+        },
+        "implementation_notes": "Uses React hooks for state management, Firestore for real-time updates, and includes wellness monitoring integration that triggers every three messages"
+      }
+    },
+    {
+      "input": "What are the key components of the AI Chat architecture?",
+      "output": {
+        "explanation": "The AI Chat architecture follows a modular design with separate frontend components, backend Cloud Functions, and AI processing agents. It's built on Firebase for scalability and real-time capabilities.",
+        "code_example": "// Frontend Component Structure\nconst AiChatWindow = () => {\n  const [messages, setMessages] = useState([]);\n  const [sessionId, setSessionId] = useState(null);\n  const [loading, setLoading] = useState(false);\n  \n  useEffect(() => {\n    initAiChat();\n    return () => unsubscribe();\n  }, []);\n};",
+        "technical_details": {
+          "components": ["AiChatWindow (Frontend)", "chat.js Cloud Functions", "AiChatAgent class", "Firestore collections", "Firebase Authentication"],
+          "tech_stack": ["React PWA", "Firebase Cloud Functions", "Google Gemini", "Firestore", "Node.js"],
+          "flow": [
+            "Frontend: AiChatWindow manages UI and state",
+            "Backend: Cloud Functions handle session lifecycle",
+            "AI Layer: AiChatAgent encapsulates Gemini AI logic",
+            "Database: Firestore stores sessions and messages",
+            "Authentication: Firebase Auth ensures secure access"
+          ]
+        },
+        "implementation_notes": "Uses event-driven architecture with Firestore listeners for real-time updates, modular AI agent design for scalability"
+      }
+    },
+    {
+      "input": "How does the createAiChatSession Cloud Function work?",
+      "output": {
+        "explanation": "The createAiChatSession function initializes a new chat session by generating a personalized AI persona based on the teacher's profile and challenge, then stores session data in Firestore.",
+        "code_example": "// Cloud Function implementation\nexports.createAiChatSession = functions.https.onCall(async (data, context) => {\n  const { challengeId, challengeText, teacherId } = data;\n  \n  // Fetch teacher profile\n  const teacherProfile = await getTeacherProfile(teacherId);\n  \n  // Generate AI persona\n  const persona = await aiChatAgent.createPersona(teacherProfile, challengeText);\n  \n  // Store session in Firestore\n  const sessionData = {\n    teacherId,\n    challengeId,\n    challengeText,\n    persona,\n    status: 'active',\n    createdAt: admin.firestore.FieldValue.serverTimestamp()\n  };\n  \n  return { sessionId, welcomeMessage, suggestedQuestions };\n});",
+        "technical_details": {
+          "components": ["Firebase Cloud Functions", "AiChatAgent", "Firestore", "Teacher profile service"],
+          "tech_stack": ["Node.js", "Firebase Admin SDK", "Google Gemini AI", "Firestore"],
+          "flow": [
+            "Function receives challengeId, challengeText, teacherId",
+            "Fetches teacher profile from Firestore",
+            "Uses AiChatAgent to generate personalized persona",
+            "Stores session metadata in aiChatSessions collection",
+            "Returns session details with welcome message"
+          ]
+        },
+        "implementation_notes": "Includes fallback mechanisms if AI generation fails, uses Firebase server timestamps for consistency"
+      }
+    },
+    {
+      "input": "How does real-time messaging work in the AI Chat?",
+      "output": {
+        "explanation": "Real-time messaging is implemented using Firestore's onSnapshot listener that monitors the messages subcollection for each session, automatically updating the UI when new messages are added.",
+        "code_example": "// Frontend real-time listener setup\nuseEffect(() => {\n  if (sessionId) {\n    const messagesRef = db.collection('aiChatSessions')\n      .doc(sessionId)\n      .collection('messages')\n      .orderBy('timestamp', 'asc');\n    \n    const unsubscribe = messagesRef.onSnapshot((snapshot) => {\n      const newMessages = snapshot.docs.map(doc => ({\n        id: doc.id,\n        ...doc.data()\n      }));\n      setMessages(newMessages);\n    });\n    \n    return () => unsubscribe();\n  }\n}, [sessionId]);",
+        "technical_details": {
+          "components": ["Firestore onSnapshot", "React useEffect", "Messages subcollection", "State management"],
+          "tech_stack": ["Firestore", "React", "Firebase SDK"],
+          "flow": [
+            "useEffect sets up Firestore listener on session creation",
+            "Listener monitors messages subcollection",
+            "New messages trigger snapshot callback",
+            "Messages state updated with new data",
+            "UI automatically re-renders with new messages"
+          ]
+        },
+        "implementation_notes": "Uses orderBy timestamp for proper message ordering, includes cleanup function to prevent memory leaks"
+      }
+    },
+    {
+      "input": "What does the sendAiChatMessage function do?",
+      "output": {
+        "explanation": "The sendAiChatMessage function processes user messages by generating AI responses through the AiChatAgent, storing messages in Firestore, and triggering wellness analysis every three messages or at session end.",
+        "code_example": "// Cloud Function for message processing\nexports.sendAiChatMessage = functions.https.onCall(async (data, context) => {\n  const { sessionId, message } = data;\n  \n  // Verify session status\n  const sessionDoc = await db.collection('aiChatSessions').doc(sessionId).get();\n  if (sessionDoc.data().status !== 'active') {\n    throw new functions.https.HttpsError('failed-precondition', 'Session not active');\n  }\n  \n  // Generate AI response\n  const aiResponse = await aiChatAgent.generateResponse(sessionId, message);\n  \n  // Store messages in Firestore\n  await storeMessages(sessionId, message, aiResponse);\n  \n  // Trigger wellness analysis if conditions met\n  if (shouldTriggerWellnessAnalysis(sessionId)) {\n    await triggerWellnessAnalysis(sessionId);\n  }\n  \n  return { response: aiResponse, followUpQuestions };\n});",
+        "technical_details": {
+          "components": ["Cloud Functions", "AiChatAgent", "Firestore", "Wellness analysis system"],
+          "tech_stack": ["Node.js", "Firebase Admin SDK", "Google Gemini AI", "Firestore"],
+          "flow": [
+            "Receives sessionId and user message",
+            "Verifies session is active",
+            "Generates AI response using AiChatAgent",
+            "Stores both user and AI messages in Firestore",
+            "Updates session metrics",
+            "Triggers wellness analysis every 3 messages"
+          ]
+        },
+        "implementation_notes": "Includes session validation, error handling, and integrates with wellness monitoring system for teacher support"
+      }
+    },
+    {
+      "input": "How does the AiChatAgent class work?",
+      "output": {
+        "explanation": "The AiChatAgent class encapsulates all AI-related functionality using Google Gemini AI, providing methods for persona creation, response generation, session analysis, and wellness insights with fallback mechanisms for robustness.",
+        "code_example": "// AiChatAgent class structure\nclass AiChatAgent {\n  async createPersona(teacherProfile, challengeText) {\n    try {\n      const prompt = `Create a personalized AI teaching assistant persona for: ${teacherProfile.name}, teaching ${teacherProfile.subjects} in ${teacherProfile.location}. Challenge: ${challengeText}`;\n      \n      const result = await generateText({\n        model: 'gemini-pro',\n        prompt: prompt\n      });\n      \n      return parseGeminiResponse(result.text);\n    } catch (error) {\n      return this.getFallbackPersona();\n    }\n  }\n  \n  async generateResponse(sessionId, message) {\n    // Generate contextual AI response\n  }\n  \n  async analyzeSession(sessionId) {\n    // Analyze conversation for insights\n  }\n  \n  async generateWellnessInsights(sessionId) {\n    // Assess teacher wellness from chat content\n  }\n}",
+        "technical_details": {
+          "components": ["Google Gemini AI", "generateText function", "Response parsing utilities", "Fallback mechanisms"],
+          "tech_stack": ["Google Gemini", "Node.js", "Firebase Cloud Functions"],
+          "flow": [
+            "Methods called by Cloud Functions",
+            "Constructs prompts based on context",
+            "Calls Gemini AI generateText function",
+            "Parses and formats AI responses",
+            "Provides fallback responses if AI fails"
+          ]
+        },
+        "implementation_notes": "Includes comprehensive error handling, fallback responses, and modular design for different AI tasks"
+      }
+    },
+    {
+      "input": "How does session analysis work when ending an AI chat?",
+      "output": {
+        "explanation": "When a session ends, the endAiChatSession function triggers comprehensive analysis using Gemini AI to provide insights, recommendations, and satisfaction scoring based on the entire conversation history.",
+        "code_example": "// Session analysis implementation\nexports.endAiChatSession = functions.https.onCall(async (data, context) => {\n  const { sessionId } = data;\n  \n  // Get all messages from the session\n  const messagesSnapshot = await db.collection('aiChatSessions')\n    .doc(sessionId)\n    .collection('messages')\n    .orderBy('timestamp', 'asc')\n    .get();\n  \n  const messages = messagesSnapshot.docs.map(doc => doc.data());\n  \n  // Analyze session with AI\n  const analysis = await aiChatAgent.analyzeSession(sessionId, messages);\n  \n  // Update session status and store analysis\n  await db.collection('aiChatSessions').doc(sessionId).update({\n    status: 'completed',\n    analysis: analysis,\n    endedAt: admin.firestore.FieldValue.serverTimestamp()\n  });\n  \n  return { success: true, analysis };\n});",
+        "technical_details": {
+          "components": ["endAiChatSession function", "AiChatAgent.analyzeSession", "Firestore", "Message history"],
+          "tech_stack": ["Firebase Cloud Functions", "Google Gemini AI", "Firestore", "Node.js"],
+          "flow": [
+            "Function receives sessionId",
+            "Retrieves all messages from session",
+            "Passes message history to AiChatAgent for analysis",
+            "AI generates summary, insights, and recommendations",
+            "Updates session status to 'completed'",
+            "Stores analysis results in Firestore"
+          ]
+        },
+        "implementation_notes": "Provides comprehensive session insights including satisfaction scoring, teacher support recommendations, and conversation summary"
+      }
+    },
+    {
+      "input": "How does the frontend handle message formatting and display?",
+      "output": {
+        "explanation": "The frontend uses a formatMessage function to enhance AI response readability by parsing and formatting text with bullets, headings, and numbered lists, while managing the chat display with proper scrolling and loading states.",
+        "code_example": "// Message formatting implementation\nconst formatMessage = (message) => {\n  let formatted = message;\n  \n  // Convert bullet points\n  formatted = formatted.replace(/^• (.+)$/gm, '<li>$1</li>');\n  formatted = formatted.replace(/(<li>.*<\\/li>)/gs, '<ul>$1</ul>');\n  \n  // Convert headings\n  formatted = formatted.replace(/^## (.+)$/gm, '<h3>$1</h3>');\n  formatted = formatted.replace(/^# (.+)$/gm, '<h2>$1</h2>');\n  \n  // Convert numbered lists\n  formatted = formatted.replace(/^\\d+\\. (.+)$/gm, '<li>$1</li>');\n  \n  return formatted;\n};\n\n// Message display component\nconst MessageBubble = ({ message, isAi }) => (\n  <div className={`message ${isAi ? 'ai-message' : 'user-message'}`}>\n    <div dangerouslySetInnerHTML={{ __html: formatMessage(message.text) }} />\n    <span className=\"timestamp\">{message.timestamp}</span>\n  </div>\n);",
+        "technical_details": {
+          "components": ["formatMessage function", "MessageBubble component", "dangerouslySetInnerHTML", "CSS styling"],
+          "tech_stack": ["React", "JavaScript regex", "HTML/CSS", "Firebase Firestore"],
+          "flow": [
+            "Messages received from Firestore listener",
+            "formatMessage processes AI responses",
+            "Converts markdown-style text to HTML",
+            "MessageBubble renders formatted content",
+            "Auto-scroll maintains chat position"
+          ]
+        },
+        "implementation_notes": "Uses regex for text processing, includes timestamp display, and maintains chat scroll position for better UX"
+      }
+    },
+    {
+      "input": "How does wellness monitoring integrate with AI Chat?",
+      "output": {
+        "explanation": "Wellness monitoring is integrated into the AI Chat system by analyzing conversation content every three messages or at session end to assess teacher stress levels and support needs, using the generateWellnessInsights method.",
+        "code_example": "// Wellness analysis integration\nconst triggerWellnessAnalysis = async (sessionId) => {\n  try {\n    // Get recent messages for analysis\n    const recentMessages = await getRecentMessages(sessionId, 3);\n    \n    // Generate wellness insights\n    const wellnessInsights = await aiChatAgent.generateWellnessInsights(sessionId, recentMessages);\n    \n    // Store insights in teacher's wellness profile\n    await db.collection('teacherWellness').doc(teacherId).update({\n      lastChatAnalysis: wellnessInsights,\n      analysisTimestamp: admin.firestore.FieldValue.serverTimestamp(),\n      stressLevel: wellnessInsights.stressLevel,\n      supportNeeds: wellnessInsights.supportNeeds\n    });\n    \n    return wellnessInsights;\n  } catch (error) {\n    console.error('Wellness analysis failed:', error);\n  }\n};\n\n// Check if wellness analysis should be triggered\nconst shouldTriggerWellnessAnalysis = (sessionId) => {\n  const messageCount = getMessageCount(sessionId);\n  return messageCount % 3 === 0; // Every 3 messages\n};",
+        "technical_details": {
+          "components": ["generateWellnessInsights", "teacherWellness collection", "Message counting logic", "Stress level assessment"],
+          "tech_stack": ["Google Gemini AI", "Firestore", "Firebase Cloud Functions", "Node.js"],
+          "flow": [
+            "Message count tracked during chat session",
+            "Wellness analysis triggered every 3 messages",
+            "Recent messages analyzed for stress indicators",
+            "AI generates wellness insights and recommendations",
+            "Results stored in teacher wellness profile",
+            "Integration with broader wellness monitoring system"
+          ]
+        },
+        "implementation_notes": "Provides proactive teacher support by detecting stress patterns in conversations and integrating with the overall wellness monitoring system"
+      }
+    },
+    {
+      "input": "What authentication and security measures are implemented in AI Chat?",
+      "output": {
+        "explanation": "AI Chat implements Firebase Authentication for user verification, with Cloud Functions automatically extracting user context from authenticated requests, and Firestore security rules controlling data access.",
+        "code_example": "// Frontend authentication check\nconst checkAuthentication = () => {\n  if (!auth.currentUser) {\n    navigate('/login');\n    return false;\n  }\n  return true;\n};\n\n// Cloud Function authentication\nexports.createAiChatSession = functions.https.onCall(async (data, context) => {\n  // Authentication automatically handled by Firebase\n  if (!context.auth) {\n    throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');\n  }\n  \n  const uid = context.auth.uid;\n  const teacherId = data.teacherId;\n  \n  // Verify teacher identity matches authenticated user\n  if (uid !== teacherId) {\n    throw new functions.https.HttpsError('permission-denied', 'Access denied');\n  }\n  \n  // Proceed with session creation\n});",
+        "technical_details": {
+          "components": ["Firebase Authentication", "Cloud Functions context.auth", "Firestore security rules", "UID verification"],
+          "tech_stack": ["Firebase Authentication", "Firebase Cloud Functions", "Firestore", "React"],
+          "flow": [
+            "User authentication verified in frontend",
+            "Cloud Functions receive auth context automatically",
+            "UID extracted from context.auth",
+            "Teacher identity verified against authenticated user",
+            "Firestore rules enforce data access permissions",
+            "Session data secured by user ownership"
+          ]
+        },
+        "implementation_notes": "Uses Firebase's built-in authentication system with automatic token validation and role-based access control"
+      }
+    },
+    {
+      "input": "How does error handling work in the AI Chat system?",
+      "output": {
+        "explanation": "The AI Chat system implements comprehensive error handling with try-catch blocks, fallback mechanisms, user-friendly error messages, and graceful degradation when AI services fail.",
+        "code_example": "// Frontend error handling\nconst sendMessage = async (messageText) => {\n  try {\n    setLoading(true);\n    const response = await sendAiChatMessage({\n      sessionId,\n      message: messageText\n    });\n    \n    // Handle successful response\n    setMessages(prev => [...prev, response]);\n  } catch (error) {\n    console.error('Message send failed:', error);\n    setError('Failed to send message. Please try again.');\n    \n    // Show user-friendly error message\n    setMessages(prev => [...prev, {\n      text: 'Sorry, I encountered an error. Please try again.',\n      sender: 'ai',\n      timestamp: new Date()\n    }]);\n  } finally {\n    setLoading(false);\n  }\n};\n\n// Backend error handling with fallbacks\nclass AiChatAgent {\n  async generateResponse(sessionId, message) {\n    try {\n      const aiResponse = await generateText({\n        model: 'gemini-pro',\n        prompt: this.constructPrompt(sessionId, message)\n      });\n      \n      return parseGeminiResponse(aiResponse.text);\n    } catch (error) {\n      console.error('AI generation failed:', error);\n      return this.getFallbackResponse(message);\n    }\n  }\n  \n  getFallbackResponse(message) {\n    return {\n      text: \"I'm here to help with your teaching challenges. Could you please rephrase your question?\",\n      followUpQuestions: [\n        \"What specific subject are you teaching?\",\n        \"What grade level are your students?\",\n        \"What's your main challenge today?\"\n      ]\n    };\n  }\n}",
+        "technical_details": {
+          "components": ["Try-catch blocks", "Fallback mechanisms", "Error state management", "User notifications"],
+          "tech_stack": ["React error boundaries", "Firebase error handling", "JavaScript error handling", "Google Gemini AI"],
+          "flow": [
+            "Frontend wraps async operations in try-catch",
+            "Loading states provide user feedback",
+            "Backend functions include comprehensive error handling",
+            "AI failures trigger fallback responses",
+            "User-friendly error messages displayed",
+            "System continues functioning despite errors"
+          ]
+        },
+        "implementation_notes": "Implements graceful degradation with fallback responses, maintains user experience even when AI services fail, includes proper logging for debugging"
+      }
+    },
+    {
+      "input": "How does the AI Chat integrate with the overall VidyaNXT application?",
+      "output": {
+        "explanation": "AI Chat integrates with VidyaNXT through React Router for navigation, URL parameters for challenge context, Firebase authentication for user sessions, and shared services for teacher profiles and wellness monitoring.",
+        "code_example": "// Integration with React Router\n// In App.jsx\nimport { BrowserRouter, Routes, Route } from 'react-router-dom';\nimport AiChatWindow from './pages/AiChatWindow';\n\nfunction App() {\n  return (\n    <BrowserRouter>\n      <Routes>\n        <Route path=\"/chat/ai\" element={<AiChatWindow />} />\n        <Route path=\"/chat/ai/:challengeId\" element={<AiChatWindow />} />\n      </Routes>\n    </BrowserRouter>\n  );\n}\n\n// URL parameter handling\nconst AiChatWindow = () => {\n  const { challengeId } = useParams();\n  const [searchParams] = useSearchParams();\n  const challengeText = searchParams.get('challengeText');\n  \n  useEffect(() => {\n    initAiChat(challengeId, challengeText);\n  }, [challengeId, challengeText]);\n};\n\n// Integration with shared services\nconst initAiChat = async (challengeId, challengeText) => {\n  const teacherProfile = await getTeacherProfile(auth.currentUser.uid);\n  const sessionData = await createAiChatSession({\n    challengeId,\n    challengeText,\n    teacherId: teacherProfile.id\n  });\n};",
+        "technical_details": {
+          "components": ["React Router", "URL parameters", "Shared Firebase services", "Teacher profile service", "Wellness monitoring"],
+          "tech_stack": ["React Router", "Firebase Authentication", "Firestore", "Cloud Functions", "Progressive Web App"],
+          "flow": [
+            "Users navigate to /chat/ai route",
+            "URL parameters provide challenge context",
+            "Shared authentication state used",
+            "Teacher profile retrieved from common service",
+            "Wellness analysis integrates with monitoring system",
+            "Session data stored in shared Firestore database"
+          ]
+        },
+        "implementation_notes": "Seamlessly integrates with the PWA architecture, uses shared Firebase services, and maintains consistency with the overall application design and user experience"
+      }
+    },
+    {
+      "input": "What are the performance considerations for the AI Chat system?",
+      "output": {
+        "explanation": "The AI Chat system is optimized for performance through efficient Firestore queries, real-time listeners, Cloud Functions for serverless scaling, and careful state management to handle concurrent users and minimize latency.",
+        "code_example": "// Optimized Firestore queries\nconst setupMessageListener = (sessionId) => {\n  const messagesRef = db.collection('aiChatSessions')\n    .doc(sessionId)\n    .collection('messages')\n    .orderBy('timestamp', 'asc')\n    .limit(50); // Limit initial load\n  \n  return messagesRef.onSnapshot({\n    includeMetadataChanges: false // Avoid unnecessary updates\n  }, (snapshot) => {\n    const messages = snapshot.docs.map(doc => ({\n      id: doc.id,\n      ...doc.data()\n    }));\n    setMessages(messages);\n  });\n};\n\n// Efficient state management\nconst AiChatWindow = () => {\n  const [messages, setMessages] = useState([]);\n  const messagesEndRef = useRef(null);\n  \n  // Memoized scroll function\n  const scrollToBottom = useCallback(() => {\n    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });\n  }, []);\n  \n  // Optimized effect dependencies\n  useEffect(() => {\n    if (messages.length > 0) {\n      scrollToBottom();\n    }\n  }, [messages.length, scrollToBottom]);\n};\n\n// Cloud Functions optimization\nexports.sendAiChatMessage = functions\n  .region('asia-south1') // Deploy closer to users\n  .runWith({\n    timeoutSeconds: 30,\n    memory: '512MB'\n  })\n  .https.onCall(async (data, context) => {\n    // Efficient processing\n  });",
+        "technical_details": {
+          "components": ["Firestore optimization", "Real-time listeners", "Cloud Functions scaling", "React performance patterns"],
+          "tech_stack": ["Firestore", "Firebase Cloud Functions", "React", "Google Gemini AI"],
+          "flow": [
+            "Firestore queries optimized with limits and indexing",
+            "Real-time listeners use metadata filtering",
+            "Cloud Functions deployed regionally for low latency",
+            "React uses memoization and efficient re-renders",
+            "AI responses cached where appropriate",
+            "Serverless scaling handles concurrent users"
+          ]
+        },
+        "implementation_notes": "Designed for scalability with serverless architecture, optimized for Indian users with regional deployment, includes efficient data loading patterns"
+      }
+    }
+  ]
+}

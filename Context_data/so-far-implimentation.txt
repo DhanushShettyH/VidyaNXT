@@ -1,0 +1,221 @@
+Flow Name: Comprehensive Teaching Support System
+
+Functionality:
+
+VidyaNXT is a multi-faceted platform that supports teachers in under-resourced Indian schools through three deployed features:
+
+Peer-to-Peer Collaboration Network: Facilitates strategic teacher matching for collaboration.
+Wellness Monitoring: Monitors teacher stress and provides AI-driven support recommendations.
+AI Knowledge Base: Offers instant access to educational resources and a simulated mentor.
+These flows are supported by a modular, agent-based architecture integrating a React Progressive Web App (PWA) frontend with a Firebase backend and Google Gemini AI.
+
+Components and Architecture Involved
+Frontend Components (src/)
+Root Files:
+App.jsx: Main application component, likely defining routes for all pages.
+main.jsx: Entry point for the React app.
+PWABadge.jsx: Manages PWA installation prompts.
+firebase.js: Configures Firebase SDK for authentication, Firestore, and Cloud Functions.
+Pages (src/pages/):
+AiChatWindow.jsx: Interface for AI chat interactions.
+ChatWindow.jsx: General chat interface (likely for peer-to-peer communication).
+PeerAdvice.jsx: Displays peer-shared advice.
+PeersList.jsx: Lists matched peers.
+WellnessDashboard.jsx: Central hub for wellness monitoring.
+Components (src/components/):
+ChatList.jsx: Displays a list of conversations.
+ErrorBoundary.jsx: Handles runtime errors in the UI.
+Home.jsx: Likely the landing page.
+Login.jsx: Teacher login interface.
+RegisterTeacher.jsx: Teacher registration form.
+WellnessAlert.jsx, WellnessAnalytics.jsx, WellnessMetrics.jsx, WellnessNavigation.jsx, WellnessNotifications.jsx, WellnessRecommendations.jsx, WellnessTrendChart.jsx: Wellness monitoring UI elements.
+firebaseWellnessService.js: Service for interacting with Firebase wellness APIs.
+Styling:
+App.css, index.css, PWABadge.css: CSS for UI styling.
+tailwind.config.js: Configures Tailwind CSS for utility-based styling.
+Backend Components (functions/src/)
+Agents (functions/src/agents/):
+ai-chat-agent.js: Powers AI-driven chat support.
+matching-agent.js: Matches teachers for peer collaboration.
+network-agent.js: Manages the peer network.
+orchestration-agent.js: Coordinates agent interactions.
+profile-agent.js: Handles personalized teacher profiles.
+wellness-agent.js: Analyzes teacher wellness data.
+Breadboards (functions/src/breadboards/):
+matching-board.js: Orchestrates peer matching workflows.
+network-board.js: Manages network-related tasks.
+profile-board.js: Coordinates profile updates.
+Functions (functions/src/functions/):
+auth.js: Authentication endpoints.
+chat.js: Chat-related APIs.
+challenge.js: Likely handles teacher challenges or tasks.
+triggers.js: Firestore-triggered functions.
+wellness.js: Wellness monitoring APIs.
+Services (functions/src/services/):
+ai.js: AI utilities.
+auth.js: Authentication logic.
+chat.js: Chat functionality.
+notifications.js: Notification system.
+profile.js: Profile management.
+teacher.js: Teacher-specific services.
+wellness.js: Wellness data processing.
+Utilities (functions/src/utils/):
+helpers.js: General helper functions.
+logger.js: Logging utilities.
+validation.js: Data validation.
+Configuration (functions/src/config/):
+constants.js: Defines app-wide constants.
+gemini.js: Configures Google Gemini AI.
+Configuration Files
+firebase.json, .firebaserc: Firebase project configuration.
+firestore.rules, firestore.indexes.json: Firestore security and indexing.
+vite.config.js: Vite build configuration.
+pwa-assets.config.js: PWA asset generation.
+package.json: Lists dependencies (React, Firebase, Tailwind, etc.).
+Architecture Overview
+Frontend: React PWA with Vite for fast builds, Tailwind CSS for styling, and Firebase SDK for backend integration. Offline support is enabled via service workers and IndexedDB (public/ assets).
+Backend: Firebase Cloud Functions with a multi-agent architecture. Agents (ai-chat-agent.js, wellness-agent.js) leverage Google Gemini for AI tasks, orchestrated by breadboards.
+Data Storage: Firestore stores teacher profiles, wellness data, and chat logs, with offline sync capabilities.
+Integration: Frontend communicates with backend via HTTPS callable functions, with Gemini providing AI-driven insights.
+Key Features and Capabilities
+Based on the project structure and deployed features:
+
+Peer-to-Peer Collaboration Network:
+Matches teachers based on experience and challenges (matching-agent.js).
+Displays peers and advice via PeersList.jsx and PeerAdvice.jsx.
+Supports multimodal content sharing (ChatWindow.jsx).
+Wellness Monitoring:
+Monitors teacher stress using AI (wellness-agent.js).
+Displays metrics, alerts, and recommendations (WellnessDashboard.jsx, WellnessAlert.jsx, etc.).
+Provides trend analysis (WellnessTrendChart.jsx).
+AI Knowledge Base:
+Offers instant access to resources via AiChatWindow.jsx.
+Simulates a mentor using ai-chat-agent.js and Gemini AI.
+Offline-First Design:
+Ensures functionality in low-connectivity environments via PWA and Firestore offline mode.
+Note: Features like multi-grade differentiation and hyper-local content are not explicitly supported by the provided structure (no specific components or agents), so they are assumed to be in development.
+
+Technical Implementation Details
+Frontend:
+React PWA: Built with React, bundled by Vite, and styled with Tailwind CSS. App.jsx uses React Router for navigation.
+Offline Support: Service workers (public/ assets) and IndexedDB cache data for offline use.
+Firebase Integration: firebase.js initializes Authentication, Firestore, and Cloud Functions.
+Backend:
+Cloud Functions: HTTPS endpoints in functions/src/functions/ handle API requests.
+Agents: wellness-agent.js and ai-chat-agent.js use Gemini AI (gemini.js) for analysis and responses.
+Breadboards: Coordinate agent workflows for scalability.
+Firestore: Stores data in collections like teachers, wellness_reports, and conversations.
+Deployment:
+Hosted on Firebase (firebase.json).
+Live demo: https://vidyanxt-c5816.web.app/.
+CI/CD via GitHub Actions.
+Auto-Generated Documentation Q&A Pairs
+Flow-Specific Questions
+Input: "How does the peer-to-peer collaboration network work in VidyaNXT?"
+
+Output:
+
+The peer-to-peer collaboration network in VidyaNXT follows this process:
+
+The matching-agent.js analyzes teacher profiles (from profile.js and Firestore) to identify peers with similar challenges or expertise.
+The matching-board.js orchestrates the matching process, ensuring efficient pairing.
+The frontend (PeersList.jsx) displays matched peers, while PeerAdvice.jsx shows shared advice.
+ChatWindow.jsx enables communication, with data stored in Firestore (conversations collection).
+The network-agent.js tracks successful practices across the network.
+Input: "How does the wellness monitoring feature work in VidyaNXT?"
+
+Output:
+
+The wellness monitoring feature in VidyaNXT follows this process:
+
+WellnessDashboard.jsx fetches data via firebaseWellnessService.js, calling APIs in wellness.js.
+The wellness-agent.js uses Google Gemini (gemini.js) to analyze teacher interactions (e.g., challenges, chats).
+Results are displayed in WellnessMetrics.jsx, WellnessAlerts.jsx, and WellnessRecommendations.jsx.
+WellnessTrendChart.jsx visualizes trends, and notifications.js sends alerts for critical stress levels.
+Input: "How does the AI knowledge base work in VidyaNXT?"
+
+Output:
+
+The AI knowledge base in VidyaNXT follows this process:
+
+Teachers access resources via AiChatWindow.jsx, which sends queries to chat.js.
+The ai-chat-agent.js processes queries using Google Gemini (gemini.js) to generate responses.
+Responses are stored in Firestore (conversations collection) and displayed in the UI.
+The system simulates a mentor by providing quick, context-aware answers.
+API Documentation Scenarios
+Input: "What are the required parameters for the wellness API?"
+
+Output:
+
+The wellness API (likely in wellness.js) requires:
+
+teacher_id: Unique identifier for the teacher.
+Optional: timeframe (e.g., '7d', '30d') for analytics or specific data filters.
+Response includes wellness scores, alerts, and recommendations.
+Input: "What are the required parameters for the chat API?"
+
+Output:
+
+The chat API (in chat.js) requires:
+
+teacher_id: Identifies the teacher.
+message: The user’s query or chat input.
+Optional: session_id to track ongoing conversations.
+Response includes AI-generated replies or peer messages.
+Code Structure Explanations
+Input: "How do the frontend and backend components interact in VidyaNXT?"
+
+Output:
+
+Frontend components (src/components/, src/pages/) interact with the backend via firebase.js, which calls HTTPS functions in functions/src/functions/ (e.g., wellness.js, chat.js). For example, WellnessDashboard.jsx uses firebaseWellnessService.js to fetch data from wellness.js. Agents like wellness-agent.js process data using Gemini AI, with results stored in Firestore and returned to the frontend.
+
+Input: "What is the role of agents and breadboards in VidyaNXT?"
+
+Output:
+
+Agents (ai-chat-agent.js, matching-agent.js) handle specific tasks (e.g., chat responses, peer matching) using Gemini AI. Breadboards (matching-board.js, network-board.js) orchestrate these agents, coordinating workflows like matching teachers or generating wellness insights, ensuring modularity and scalability.
+
+Configuration and Setup Questions
+Input: "How do I set up the VidyaNXT project locally?"
+
+Output:
+
+To set up VidyaNXT:
+
+Clone the repository.
+Install dependencies: npm install in root and functions/.
+Configure Firebase: Set up .firebaserc, firebase.json, and firestore.rules.
+Add Gemini API key to functions/src/config/gemini.js.
+Run frontend: npm run dev (uses vite.config.js).
+Run backend: firebase emulators:start.
+Ensure Tailwind CSS is configured (tailwind.config.js).
+Input: "What environment variables are needed for VidyaNXT?"
+
+Output:
+
+Environment variables include:
+
+GEMINI_API_KEY: For Google Gemini in gemini.js.
+Firebase credentials (e.g., FIREBASE_PROJECT_ID) in .firebaserc.
+Optional: NODE_ENV for development/production modes.
+Troubleshooting Documentation
+Input: "What are common issues with the VidyaNXT wellness feature?"
+
+Output:
+
+Common issues include:
+
+API Failures: Incorrect Gemini API key in gemini.js. Check environment variables.
+Data Access: Firestore rules (firestore.rules) blocking requests. Update rules to allow teacher access.
+Offline Issues: PWA service workers not caching correctly. Clear cache or update public/ assets.
+UI Errors: Use ErrorBoundary.jsx logs to diagnose component failures.
+Input: "Why is the peer collaboration not showing peers?"
+
+Output:
+
+This could occur because:
+
+Matching Failure: matching-agent.js lacks sufficient teacher data in Firestore. Ensure profiles are populated.
+API Issue: Check matching-board.js and network-agent.js logs for errors.
+Frontend: Verify PeersList.jsx is correctly fetching data via firebase.js.
+This analysis is grounded in the provided project structure and deployed features, focusing on peer collaboration, wellness monitoring, and AI knowledge base. It avoids speculation on unimplemented features and provides actionable documentation for developers and users.

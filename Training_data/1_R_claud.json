@@ -1,0 +1,304 @@
+{
+  "training_data": [
+    {
+      "input": "How does teacher registration work in VidyaNXT?",
+      "output": {
+        "explanation": "Teacher registration in VidyaNXT is a comprehensive multi-step process that creates an account and detailed profile for teachers joining the peer-to-peer network. The flow involves React frontend, Firebase Authentication, Cloud Functions, and AI-powered profile processing.",
+        "code_example": "createUserWithEmailAndPassword(auth, email, password).then(() => {\n  return registerTeacher({\n    displayName,\n    grades,\n    location,\n    experienceYears,\n    expertise\n  });\n});",
+        "technical_details": {
+          "components": ["RegisterTeacher.jsx", "registerTeacher Cloud Function", "profileAgent Trigger", "ProfileAgent Class", "createTeacher Service"],
+          "tech_stack": ["React", "Firebase Authentication", "Cloud Functions", "Firestore", "Gemini AI"],
+          "flow": [
+            "User fills registration form with email, password, name, grades, location, experience",
+            "Firebase Authentication creates user account",
+            "registerTeacher Cloud Function validates and stores teacher data",
+            "Firestore trigger activates profileAgent on new teacher document",
+            "ProfileAgent uses Gemini AI to generate profile summary and metrics",
+            "Processed profile stored in teacher_profiles collection",
+            "Network statistics updated in network_stats collection",
+            "User redirected to login page"
+          ]
+        },
+        "implementation_notes": "Uses Progressive Web App (PWA) setup with controlled form handling, loading states, and artificial delays for better UX. Backend follows serverless, event-driven architecture with modular design."
+      }
+    },
+    {
+      "input": "What are the required parameters for the registerTeacher Cloud Function?",
+      "output": {
+        "explanation": "The registerTeacher Cloud Function requires authentication context and specific teacher profile data to create a comprehensive teacher document in Firestore.",
+        "code_example": "const teacherData = {\n  displayName: 'John Doe',\n  grades: ['1', '2', '3'],\n  location: 'Mumbai, Maharashtra',\n  experienceYears: 5,\n  expertise: ['Math', 'Science'] // optional\n};\n// Authentication: request.auth.uid automatically provided",
+        "technical_details": {
+          "components": ["Firebase Authentication", "Cloud Functions", "Firestore teachers collection"],
+          "tech_stack": ["Firebase Cloud Functions", "Firebase Authentication", "Firestore"],
+          "flow": [
+            "User must be authenticated (request.auth.uid required)",
+            "displayName (string) - teacher's name",
+            "grades (array of strings) - grades taught",
+            "location (string) - teacher's location",
+            "experienceYears (number) - years of teaching experience",
+            "expertise (optional array) - areas of expertise"
+          ]
+        },
+        "implementation_notes": "Function validates authentication automatically via Firebase middleware. Uses createTeacher service to add metadata like createdAt, status, and lastActiveAt."
+      }
+    },
+    {
+      "input": "How is AI integrated into the teacher registration process?",
+      "output": {
+        "explanation": "AI is integrated through the ProfileAgent class that uses Gemini AI to automatically generate professional profile summaries and calculate various metrics after teacher registration.",
+        "code_example": "class ProfileAgent {\n  async processProfile(teacherData) {\n    const summary = await generateText({\n      prompt: `Generate professional summary for teacher: ${teacherData.displayName}...`\n    });\n    return {\n      summary,\n      experienceLevel: getExperienceLevel(teacherData.experienceYears),\n      profileStrength: calculateProfileStrength(teacherData)\n    };\n  }\n}",
+        "technical_details": {
+          "components": ["ProfileAgent Class", "Gemini AI Model", "profileAgent Trigger", "teacher_profiles collection"],
+          "tech_stack": ["Gemini AI", "Firebase Cloud Functions", "Firestore", "generateText API"],
+          "flow": [
+            "New teacher document created in teachers collection",
+            "Firestore onDocumentCreated trigger activates profileAgent",
+            "ProfileAgent invokes Gemini AI with teacher data",
+            "AI generates professional profile summary",
+            "System calculates experience level and profile strength",
+            "Processed data stored in teacher_profiles collection"
+          ]
+        },
+        "implementation_notes": "Part of VidyaNXT's multi-agent architecture. AI processing is event-driven and automatic, ensuring every teacher gets an AI-generated profile summary without manual intervention."
+      }
+    },
+    {
+      "input": "What is the architecture pattern used in VidyaNXT teacher registration?",
+      "output": {
+        "explanation": "VidyaNXT uses a serverless, event-driven, modular architecture with multi-agent system integration for teacher registration, following modern cloud-native patterns.",
+        "code_example": "// Modular separation\n// Frontend: src/components/RegisterTeacher.jsx\n// Auth: functions/src/functions/auth.js\n// Triggers: functions/src/functions/triggers.js\n// Services: functions/src/services/teacher.js\n// Agents: functions/src/agents/profile-agent.js",
+        "technical_details": {
+          "components": ["React PWA Frontend", "Firebase Cloud Functions", "Firestore Database", "AI Agents", "Event Triggers"],
+          "tech_stack": ["React", "Firebase", "Firestore", "Cloud Functions", "Gemini AI"],
+          "flow": [
+            "Modular Design - separate concerns into distinct modules",
+            "Serverless Backend - Firebase Cloud Functions for scalability",
+            "Event-Driven Triggers - Firestore onDocumentCreated",
+            "Multi-Agent System - ProfileAgent for AI processing",
+            "Transaction Management - atomic updates for consistency"
+          ]
+        },
+        "implementation_notes": "Architecture supports scalability, maintainability, and extensibility. Event-driven triggers ensure automatic processing without manual intervention."
+      }
+    },
+    {
+      "input": "How does the RegisterTeacher React component handle form submission?",
+      "output": {
+        "explanation": "The RegisterTeacher component uses React hooks for state management and implements a controlled form handling pattern with async operations for authentication and cloud function calls.",
+        "code_example": "const [formData, setFormData] = useState({\n  email: '',\n  password: '',\n  displayName: '',\n  grades: [],\n  location: '',\n  experienceYears: 0,\n  expertise: []\n});\n\nconst handleSubmit = async (e) => {\n  e.preventDefault();\n  setLoading(true);\n  \n  try {\n    await createUserWithEmailAndPassword(auth, email, password);\n    await registerTeacher(formData);\n    navigate('/login');\n  } catch (error) {\n    setError(error.message);\n  } finally {\n    setLoading(false);\n  }\n};",
+        "technical_details": {
+          "components": ["RegisterTeacher.jsx", "Firebase Authentication", "Cloud Functions", "React Router"],
+          "tech_stack": ["React", "useState", "useNavigate", "useEffect", "Firebase SDK"],
+          "flow": [
+            "useState manages form data and loading states",
+            "Controlled inputs update formData state",
+            "Form submission triggers async authentication",
+            "Firebase creates user with email/password",
+            "registerTeacher cloud function called with profile data",
+            "Success redirects to login page via useNavigate"
+          ]
+        },
+        "implementation_notes": "Implements loading states with descriptive messages and artificial delays for better UX. Uses modern React patterns with functional components and hooks."
+      }
+    },
+    {
+      "input": "What happens in the profileAgent Firestore trigger?",
+      "output": {
+        "explanation": "The profileAgent trigger automatically activates when a new teacher document is created in Firestore, processing the teacher's profile with AI and updating related collections.",
+        "code_example": "exports.profileAgent = onDocumentCreated('teachers/{teacherId}', async (event) => {\n  const teacherData = event.data.data();\n  const teacherId = event.params.teacherId;\n  \n  const profileAgent = new ProfileAgent();\n  const processedProfile = await profileAgent.processProfile(teacherData);\n  \n  await admin.firestore().collection('teacher_profiles').doc(teacherId).set(processedProfile);\n  await updateNetworkStats(teacherData);\n});",
+        "technical_details": {
+          "components": ["Firestore Trigger", "ProfileAgent Class", "teacher_profiles collection", "network_stats collection"],
+          "tech_stack": ["Firebase Cloud Functions", "Firestore", "Gemini AI", "Firebase Admin SDK"],
+          "flow": [
+            "New document created in teachers collection",
+            "onDocumentCreated trigger activates automatically",
+            "ProfileAgent processes teacher data with AI",
+            "Gemini AI generates profile summary",
+            "Processed profile stored in teacher_profiles collection",
+            "Network statistics updated via updateNetworkStats",
+            "All operations happen automatically without user intervention"
+          ]
+        },
+        "implementation_notes": "Event-driven architecture ensures automatic processing. Uses Firebase Admin SDK for server-side operations and maintains data consistency across collections."
+      }
+    },
+    {
+      "input": "How does the createTeacher service function work?",
+      "output": {
+        "explanation": "The createTeacher service function is a utility that creates a new teacher document in the Firestore teachers collection with additional metadata and proper structure.",
+        "code_example": "const createTeacher = async (teacherData, uid) => {\n  const teacherDoc = {\n    ...teacherData,\n    ownerUid: uid,\n    createdAt: admin.firestore.FieldValue.serverTimestamp(),\n    status: 'active',\n    lastActiveAt: admin.firestore.FieldValue.serverTimestamp()\n  };\n  \n  const docRef = await admin.firestore().collection('teachers').add(teacherDoc);\n  return docRef.id;\n};",
+        "technical_details": {
+          "components": ["createTeacher Service", "Firestore teachers collection", "Firebase Admin SDK"],
+          "tech_stack": ["Firebase Cloud Functions", "Firestore", "Firebase Admin SDK"],
+          "flow": [
+            "Receives teacher data and authenticated user UID",
+            "Adds metadata: ownerUid, createdAt, status, lastActiveAt",
+            "Uses serverTimestamp for consistent timestamps",
+            "Creates document in teachers collection",
+            "Returns document ID for reference"
+          ]
+        },
+        "implementation_notes": "Separates data creation logic into reusable service function. Ensures consistent metadata across all teacher documents."
+      }
+    },
+    {
+      "input": "What metrics does the ProfileAgent calculate for teachers?",
+      "output": {
+        "explanation": "The ProfileAgent calculates various metrics to support matching and network features, including experience level, AI preferences, profile strength, and matching criteria.",
+        "code_example": "const profileMetrics = {\n  experienceLevel: getExperienceLevel(teacherData.experienceYears),\n  aiPreferences: getAIPreferences(teacherData),\n  profileStrength: calculateProfileStrength(teacherData),\n  matchingCriteria: {\n    grades: teacherData.grades,\n    location: teacherData.location,\n    expertise: teacherData.expertise\n  }\n};",
+        "technical_details": {
+          "components": ["ProfileAgent Class", "Utility Functions", "Gemini AI", "teacher_profiles collection"],
+          "tech_stack": ["Gemini AI", "Firebase Cloud Functions", "Firestore"],
+          "flow": [
+            "AI generates professional profile summary",
+            "Calculate experience level based on years",
+            "Determine AI preferences from profile data",
+            "Calculate profile strength score",
+            "Extract matching criteria for peer connections",
+            "Store all metrics in teacher_profiles collection"
+          ]
+        },
+        "implementation_notes": "Metrics support future peer collaboration features and personalized experiences. Uses utility functions for consistent calculations across the platform."
+      }
+    },
+    {
+      "input": "How are network statistics updated during teacher registration?",
+      "output": {
+        "explanation": "Network statistics are updated using Firestore transactions to ensure atomic updates to global statistics like total teachers, grade coverage, and location coverage.",
+        "code_example": "const updateNetworkStats = async (teacherData) => {\n  const statsRef = admin.firestore().collection('network_stats').doc('global');\n  \n  await admin.firestore().runTransaction(async (transaction) => {\n    const statsDoc = await transaction.get(statsRef);\n    const stats = statsDoc.data() || {};\n    \n    transaction.update(statsRef, {\n      totalTeachers: (stats.totalTeachers || 0) + 1,\n      gradesCovered: [...new Set([...stats.gradesCovered || [], ...teacherData.grades])],\n      locationsCovered: [...new Set([...stats.locationsCovered || [], teacherData.location])]\n    });\n  });\n};",
+        "technical_details": {
+          "components": ["updateNetworkStats Function", "network_stats collection", "Firestore Transactions"],
+          "tech_stack": ["Firebase Cloud Functions", "Firestore", "Firestore Transactions"],
+          "flow": [
+            "Function called after teacher profile processing",
+            "Firestore transaction ensures atomic updates",
+            "Increment total teachers count",
+            "Update grade coverage with new teacher's grades",
+            "Update location coverage with teacher's location",
+            "Use Sets to avoid duplicates in arrays"
+          ]
+        },
+        "implementation_notes": "Transactions ensure data consistency even with concurrent registrations. Statistics support network-wide analytics and insights."
+      }
+    },
+    {
+      "input": "What user experience enhancements are implemented in the registration flow?",
+      "output": {
+        "explanation": "The registration flow includes several UX enhancements like loading states, descriptive messages, artificial delays, and smooth navigation to create a polished user experience.",
+        "code_example": "const [loading, setLoading] = useState(false);\nconst [loadingMessage, setLoadingMessage] = useState('');\n\nconst handleSubmit = async () => {\n  setLoading(true);\n  setLoadingMessage('Creating your account...');\n  \n  await createUserWithEmailAndPassword(auth, email, password);\n  \n  setLoadingMessage('Analyzing your teaching profile...');\n  setTimeout(() => {\n    setLoadingMessage('Setting up your network...');\n  }, 1000);\n  \n  await registerTeacher(formData);\n  navigate('/login');\n};",
+        "technical_details": {
+          "components": ["Loading States", "Progress Messages", "React Router Navigation", "Artificial Delays"],
+          "tech_stack": ["React", "useState", "useNavigate", "setTimeout"],
+          "flow": [
+            "Loading state prevents multiple submissions",
+            "Progressive loading messages inform user of progress",
+            "Artificial delays improve perceived responsiveness",
+            "Success redirects to login page",
+            "Error handling provides user feedback"
+          ]
+        },
+        "implementation_notes": "UX enhancements make async operations feel more responsive and professional. Messages provide context about what's happening behind the scenes."
+      }
+    },
+    {
+      "input": "How does the registration flow handle authentication and security?",
+      "output": {
+        "explanation": "The registration flow implements secure authentication using Firebase Authentication with proper validation, error handling, and server-side security through Cloud Functions.",
+        "code_example": "// Frontend authentication\nconst userCredential = await createUserWithEmailAndPassword(auth, email, password);\n\n// Backend security validation\nexports.registerTeacher = onCall(async (request) => {\n  if (!request.auth) {\n    throw new HttpsError('unauthenticated', 'User must be authenticated');\n  }\n  \n  const uid = request.auth.uid;\n  const teacherData = { ...request.data, ownerUid: uid };\n  \n  return await createTeacher(teacherData, uid);\n});",
+        "technical_details": {
+          "components": ["Firebase Authentication", "Cloud Functions Security", "Authentication Middleware", "UID Validation"],
+          "tech_stack": ["Firebase Authentication", "Cloud Functions", "Firebase Admin SDK"],
+          "flow": [
+            "Frontend creates user with email/password",
+            "Firebase Authentication validates credentials",
+            "Cloud Function requires authentication (request.auth)",
+            "UID automatically extracted from authenticated context",
+            "ownerUid added to ensure data ownership",
+            "All operations secured by Firebase Authentication"
+          ]
+        },
+        "implementation_notes": "Security is handled at multiple layers - client-side authentication and server-side validation. Firebase middleware ensures only authenticated users can register."
+      }
+    },
+    {
+      "input": "What is the data flow architecture in teacher registration?",
+      "output": {
+        "explanation": "The data flow follows a clear path from user input through authentication, cloud functions, database storage, AI processing, and statistics updates, with proper error handling at each stage.",
+        "code_example": "// Data flow sequence\nUser Input → RegisterTeacher Component → Firebase Auth → registerTeacher Cloud Function → Firestore teachers Collection → profileAgent Trigger → ProfileAgent AI Processing → teacher_profiles Collection → Network Stats Update",
+        "technical_details": {
+          "components": ["Frontend Form", "Firebase Auth", "Cloud Functions", "Firestore Collections", "AI Agents", "Triggers"],
+          "tech_stack": ["React", "Firebase Authentication", "Cloud Functions", "Firestore", "Gemini AI"],
+          "flow": [
+            "User submits registration form",
+            "Firebase Authentication creates user account",
+            "registerTeacher function stores basic data",
+            "Firestore trigger activates on new document",
+            "ProfileAgent processes data with AI",
+            "Results stored in teacher_profiles collection",
+            "Network statistics updated atomically",
+            "User redirected to login page"
+          ]
+        },
+        "implementation_notes": "Unidirectional data flow ensures predictable behavior. Event-driven triggers enable automatic processing without blocking user experience."
+      }
+    },
+    {
+      "input": "How does the modular design benefit the teacher registration system?",
+      "output": {
+        "explanation": "The modular design separates concerns into distinct files and functions, improving maintainability, testability, and scalability of the registration system.",
+        "code_example": "// Modular structure\n// Frontend: src/components/RegisterTeacher.jsx\n// Authentication: functions/src/functions/auth.js\n// Database Services: functions/src/services/teacher.js\n// AI Processing: functions/src/agents/profile-agent.js\n// Event Triggers: functions/src/functions/triggers.js\n\n// Each module has specific responsibilities\nconst registerTeacher = require('./functions/auth');\nconst { createTeacher } = require('./services/teacher');\nconst { ProfileAgent } = require('./agents/profile-agent');",
+        "technical_details": {
+          "components": ["Separation of Concerns", "Service Layer", "Agent Architecture", "Trigger System"],
+          "tech_stack": ["Modular JavaScript", "Firebase Functions", "Service Pattern", "Agent Pattern"],
+          "flow": [
+            "Frontend handles UI and user interaction",
+            "Auth functions manage authentication logic",
+            "Service layer abstracts database operations",
+            "Agents handle AI and complex processing",
+            "Triggers manage event-driven workflows"
+          ]
+        },
+        "implementation_notes": "Modular design enables independent development, testing, and deployment of components. Each module can be updated without affecting others."
+      }
+    },
+    {
+      "input": "What error handling is implemented in the registration process?",
+      "output": {
+        "explanation": "The registration process implements comprehensive error handling at multiple levels - frontend validation, authentication errors, cloud function errors, and database operation errors.",
+        "code_example": "// Frontend error handling\ntry {\n  await createUserWithEmailAndPassword(auth, email, password);\n  await registerTeacher(formData);\n  navigate('/login');\n} catch (error) {\n  setError(error.message);\n  setLoading(false);\n}\n\n// Backend error handling\nexports.registerTeacher = onCall(async (request) => {\n  try {\n    if (!request.auth) {\n      throw new HttpsError('unauthenticated', 'Authentication required');\n    }\n    return await createTeacher(request.data, request.auth.uid);\n  } catch (error) {\n    throw new HttpsError('internal', 'Registration failed');\n  }\n});",
+        "technical_details": {
+          "components": ["Try-Catch Blocks", "HttpsError Handling", "State Management", "User Feedback"],
+          "tech_stack": ["JavaScript Error Handling", "Firebase Functions", "React State", "Firebase Authentication"],
+          "flow": [
+            "Frontend catches authentication and function call errors",
+            "Error state updated to show user feedback",
+            "Backend validates requests and throws appropriate errors",
+            "Cloud Functions use HttpsError for proper client communication",
+            "Loading states reset on error to allow retry"
+          ]
+        },
+        "implementation_notes": "Multi-layer error handling ensures graceful degradation. User-friendly error messages improve the registration experience."
+      }
+    },
+    {
+      "input": "How does the registration system support the peer-to-peer teacher network?",
+      "output": {
+        "explanation": "The registration system creates the foundation for peer-to-peer connections by collecting essential teacher data, generating AI profiles, and calculating matching criteria for future collaboration features.",
+        "code_example": "// Registration data supports peer matching\nconst teacherProfile = {\n  displayName: 'Teacher Name',\n  grades: ['1', '2', '3'],\n  location: 'Mumbai, Maharashtra',\n  experienceYears: 5,\n  expertise: ['Math', 'Science'],\n  // AI-generated matching data\n  profileSummary: 'AI-generated summary...',\n  matchingCriteria: {\n    grades: ['1', '2', '3'],\n    location: 'Mumbai, Maharashtra',\n    expertise: ['Math', 'Science']\n  }\n};",
+        "technical_details": {
+          "components": ["Profile Data Collection", "AI Profile Generation", "Matching Criteria", "Network Statistics"],
+          "tech_stack": ["Firestore", "Gemini AI", "Profile Processing", "Data Analytics"],
+          "flow": [
+            "Collect essential teacher information during registration",
+            "Generate AI profile summaries for professional presentation",
+            "Calculate matching criteria based on grades and location",
+            "Store expertise areas for skill-based matching",
+            "Update network statistics for platform analytics",
+            "Create foundation for future peer discovery features"
+          ]
+        },
+        "implementation_notes": "Registration data directly supports VidyaNXT's mission to connect under-resourced teachers. AI processing ensures rich profiles for effective peer matching."
+      }
+    }
+  ]
+}

@@ -1,0 +1,241 @@
+{
+  "training_data": [
+    {
+      "input": "What is VidyaNXT and what are its main features?",
+      "output": {
+        "explanation": "VidyaNXT is a multi-faceted platform that supports teachers in under-resourced Indian schools through three deployed features: Peer-to-Peer Collaboration Network, Wellness Monitoring, and AI Knowledge Base. It's built as a Progressive Web App (PWA) with offline-first design.",
+        "code_example": "// Main app structure in App.jsx\nfunction App() {\n  return (\n    <Router>\n      <Routes>\n        <Route path=\"/\" element={<Home />} />\n        <Route path=\"/login\" element={<Login />} />\n        <Route path=\"/wellness\" element={<WellnessDashboard />} />\n        <Route path=\"/chat\" element={<AiChatWindow />} />\n        <Route path=\"/peers\" element={<PeersList />} />\n      </Routes>\n    </Router>\n  );\n}",
+        "technical_details": {
+          "components": ["React PWA Frontend", "Firebase Backend", "Google Gemini AI", "Multi-agent Architecture"],
+          "tech_stack": ["React", "Firebase", "Vite", "Tailwind CSS", "Google Gemini", "Firestore", "Cloud Functions"],
+          "flow": [
+            "Teachers access via PWA interface",
+            "Authentication through Firebase Auth",
+            "Data stored in Firestore with offline sync",
+            "AI agents process requests using Gemini",
+            "Real-time updates via Firebase triggers"
+          ]
+        },
+        "implementation_notes": "Deployed at https://vidyanxt-c5816.web.app/ with offline-first design for low-connectivity environments"
+      }
+    },
+    {
+      "input": "How does the peer-to-peer collaboration network work in VidyaNXT?",
+      "output": {
+        "explanation": "The peer-to-peer collaboration network uses AI-driven matching to connect teachers with similar challenges or complementary expertise. It facilitates strategic teacher matching through automated agents and provides interfaces for sharing advice and communication.",
+        "code_example": "// matching-agent.js example\nconst matchTeachers = async (teacherProfile) => {\n  const similarTeachers = await findSimilarTeachers(teacherProfile);\n  const matchingScore = calculateCompatibility(teacherProfile, similarTeachers);\n  return orchestrateMatching(matchingScore);\n};\n\n// PeersList.jsx component\nconst PeersList = () => {\n  const [peers, setPeers] = useState([]);\n  \n  useEffect(() => {\n    fetchMatchedPeers().then(setPeers);\n  }, []);\n  \n  return peers.map(peer => <PeerCard key={peer.id} peer={peer} />);\n};",
+        "technical_details": {
+          "components": ["matching-agent.js", "matching-board.js", "network-agent.js", "PeersList.jsx", "PeerAdvice.jsx", "ChatWindow.jsx"],
+          "tech_stack": ["Firebase Cloud Functions", "Firestore", "Google Gemini AI", "React"],
+          "flow": [
+            "matching-agent.js analyzes teacher profiles from Firestore",
+            "matching-board.js orchestrates the matching process",
+            "PeersList.jsx displays matched peers in UI",
+            "PeerAdvice.jsx shows shared advice from peers",
+            "ChatWindow.jsx enables peer communication",
+            "network-agent.js tracks successful practices"
+          ]
+        },
+        "implementation_notes": "Uses Firestore conversations collection to store peer interactions and maintains network-wide knowledge base"
+      }
+    },
+    {
+      "input": "How does the wellness monitoring feature work in VidyaNXT?",
+      "output": {
+        "explanation": "The wellness monitoring feature uses AI to analyze teacher interactions and stress levels, providing real-time insights, alerts, and personalized recommendations. It includes comprehensive dashboard views and trend analysis.",
+        "code_example": "// wellness-agent.js example\nconst analyzeWellness = async (teacherData) => {\n  const geminiResponse = await gemini.analyze({\n    interactions: teacherData.interactions,\n    challenges: teacherData.challenges,\n    timeframe: '7d'\n  });\n  \n  return {\n    stressLevel: geminiResponse.stressScore,\n    recommendations: geminiResponse.suggestions,\n    alerts: generateAlerts(geminiResponse)\n  };\n};\n\n// WellnessDashboard.jsx\nconst WellnessDashboard = () => {\n  const [wellnessData, setWellnessData] = useState(null);\n  \n  useEffect(() => {\n    firebaseWellnessService.getWellnessData()\n      .then(setWellnessData);\n  }, []);\n  \n  return (\n    <div className=\"wellness-dashboard\">\n      <WellnessMetrics data={wellnessData} />\n      <WellnessAlerts alerts={wellnessData.alerts} />\n      <WellnessTrendChart trends={wellnessData.trends} />\n    </div>\n  );\n};",
+        "technical_details": {
+          "components": ["wellness-agent.js", "WellnessDashboard.jsx", "WellnessMetrics.jsx", "WellnessAlert.jsx", "WellnessRecommendations.jsx", "WellnessTrendChart.jsx", "firebaseWellnessService.js"],
+          "tech_stack": ["Google Gemini AI", "Firebase Cloud Functions", "Firestore", "React", "Chart.js"],
+          "flow": [
+            "WellnessDashboard.jsx fetches data via firebaseWellnessService.js",
+            "wellness.js API processes requests",
+            "wellness-agent.js uses Gemini to analyze teacher data",
+            "Results displayed in WellnessMetrics.jsx and other components",
+            "WellnessTrendChart.jsx visualizes trends",
+            "notifications.js sends alerts for critical stress levels"
+          ]
+        },
+        "implementation_notes": "Monitors teacher stress through interaction analysis and provides AI-driven support recommendations with real-time alerting"
+      }
+    },
+    {
+      "input": "How does the AI knowledge base work in VidyaNXT?",
+      "output": {
+        "explanation": "The AI knowledge base provides instant access to educational resources through a simulated mentor interface. It uses Google Gemini AI to generate context-aware responses to teacher queries and maintains conversation history.",
+        "code_example": "// ai-chat-agent.js example\nconst processQuery = async (query, teacherContext) => {\n  const geminiResponse = await gemini.chat({\n    message: query,\n    context: teacherContext,\n    role: 'educational_mentor'\n  });\n  \n  return {\n    response: geminiResponse.text,\n    resources: geminiResponse.suggestedResources,\n    followUp: geminiResponse.followUpQuestions\n  };\n};\n\n// AiChatWindow.jsx\nconst AiChatWindow = () => {\n  const [messages, setMessages] = useState([]);\n  const [inputValue, setInputValue] = useState('');\n  \n  const sendMessage = async () => {\n    const response = await chat.sendQuery(inputValue);\n    setMessages(prev => [...prev, \n      { type: 'user', content: inputValue },\n      { type: 'ai', content: response.response }\n    ]);\n    setInputValue('');\n  };\n  \n  return (\n    <div className=\"chat-window\">\n      <MessageList messages={messages} />\n      <MessageInput value={inputValue} onChange={setInputValue} onSend={sendMessage} />\n    </div>\n  );\n};",
+        "technical_details": {
+          "components": ["ai-chat-agent.js", "AiChatWindow.jsx", "chat.js", "ai.js", "ChatList.jsx"],
+          "tech_stack": ["Google Gemini AI", "Firebase Cloud Functions", "Firestore", "React"],
+          "flow": [
+            "Teachers access resources via AiChatWindow.jsx",
+            "Queries sent to chat.js API endpoint",
+            "ai-chat-agent.js processes queries using Gemini",
+            "Responses stored in Firestore conversations collection",
+            "Context-aware answers displayed in UI"
+          ]
+        },
+        "implementation_notes": "Simulates a mentor by providing quick, context-aware answers and maintains conversation history for personalized support"
+      }
+    },
+    {
+      "input": "What is the architecture of VidyaNXT's backend system?",
+      "output": {
+        "explanation": "VidyaNXT uses a multi-agent architecture built on Firebase Cloud Functions, where specialized agents handle different aspects of the platform (AI chat, matching, wellness, etc.) coordinated by breadboards for scalability.",
+        "code_example": "// orchestration-agent.js example\nconst orchestrateRequest = async (requestType, data) => {\n  switch(requestType) {\n    case 'wellness_analysis':\n      return await wellnessAgent.analyze(data);\n    case 'peer_matching':\n      return await matchingAgent.findPeers(data);\n    case 'ai_chat':\n      return await aiChatAgent.processQuery(data);\n    default:\n      throw new Error('Unknown request type');\n  }\n};\n\n// matching-board.js example\nconst matchingBoard = {\n  coordinateMatching: async (teacherProfile) => {\n    const candidates = await profileAgent.findCandidates(teacherProfile);\n    const scores = await matchingAgent.calculateScores(candidates);\n    return await networkAgent.createConnections(scores);\n  }\n};",
+        "technical_details": {
+          "components": ["orchestration-agent.js", "ai-chat-agent.js", "matching-agent.js", "wellness-agent.js", "profile-agent.js", "network-agent.js", "matching-board.js", "network-board.js", "profile-board.js"],
+          "tech_stack": ["Firebase Cloud Functions", "Google Gemini AI", "Firestore", "Node.js"],
+          "flow": [
+            "HTTPS endpoints in functions/src/functions/ handle API requests",
+            "Agents process specific tasks using Gemini AI",
+            "Breadboards coordinate agent workflows",
+            "Data stored in Firestore collections",
+            "Responses returned to frontend via firebase.js"
+          ]
+        },
+        "implementation_notes": "Modular agent-based architecture ensures scalability and maintainability with clear separation of concerns"
+      }
+    },
+    {
+      "input": "How does the frontend communicate with the backend in VidyaNXT?",
+      "output": {
+        "explanation": "The frontend uses Firebase SDK to communicate with Cloud Functions through HTTPS callable functions. Components use service layers to abstract API calls and handle authentication automatically.",
+        "code_example": "// firebase.js configuration\nimport { initializeApp } from 'firebase/app';\nimport { getAuth } from 'firebase/auth';\nimport { getFirestore } from 'firebase/firestore';\nimport { getFunctions, httpsCallable } from 'firebase/functions';\n\nconst app = initializeApp(firebaseConfig);\nexport const auth = getAuth(app);\nexport const db = getFirestore(app);\nexport const functions = getFunctions(app);\n\n// Service layer example - firebaseWellnessService.js\nconst getWellnessData = httpsCallable(functions, 'getWellnessData');\n\nexport const firebaseWellnessService = {\n  getWellnessData: async (teacherId) => {\n    const result = await getWellnessData({ teacherId });\n    return result.data;\n  }\n};\n\n// Component usage\nconst WellnessDashboard = () => {\n  useEffect(() => {\n    firebaseWellnessService.getWellnessData(teacherId)\n      .then(setWellnessData)\n      .catch(handleError);\n  }, [teacherId]);\n};",
+        "technical_details": {
+          "components": ["firebase.js", "firebaseWellnessService.js", "Cloud Functions", "HTTPS callable functions"],
+          "tech_stack": ["Firebase SDK", "Firebase Cloud Functions", "Firebase Authentication", "Firestore"],
+          "flow": [
+            "Frontend components import firebase.js configuration",
+            "Service layers create callable function references",
+            "Components call service methods with parameters",
+            "Firebase Authentication automatically handles auth context",
+            "Cloud Functions process requests and return data",
+            "Frontend receives and displays results"
+          ]
+        },
+        "implementation_notes": "Authentication context automatically passed to Cloud Functions, enabling secure API access without manual token management"
+      }
+    },
+    {
+      "input": "What are the key components of the wellness monitoring system?",
+      "output": {
+        "explanation": "The wellness monitoring system consists of multiple specialized React components that work together to provide comprehensive teacher wellness tracking, from data collection to visualization and alerting.",
+        "code_example": "// WellnessMetrics.jsx example\nconst WellnessMetrics = ({ data }) => {\n  const metrics = {\n    stressLevel: data.stressLevel,\n    engagementScore: data.engagement,\n    supportNeeded: data.supportLevel\n  };\n  \n  return (\n    <div className=\"wellness-metrics\">\n      <MetricCard title=\"Stress Level\" value={metrics.stressLevel} />\n      <MetricCard title=\"Engagement\" value={metrics.engagementScore} />\n      <MetricCard title=\"Support Needed\" value={metrics.supportNeeded} />\n    </div>\n  );\n};\n\n// WellnessAlert.jsx example\nconst WellnessAlert = ({ alerts }) => {\n  return alerts.map(alert => (\n    <div key={alert.id} className={`alert alert-${alert.severity}`}>\n      <AlertIcon severity={alert.severity} />\n      <AlertMessage message={alert.message} />\n      <AlertActions actions={alert.actions} />\n    </div>\n  ));\n};",
+        "technical_details": {
+          "components": ["WellnessDashboard.jsx", "WellnessMetrics.jsx", "WellnessAlert.jsx", "WellnessAnalytics.jsx", "WellnessNotifications.jsx", "WellnessRecommendations.jsx", "WellnessTrendChart.jsx", "WellnessNavigation.jsx"],
+          "tech_stack": ["React", "Tailwind CSS", "Chart.js", "Firebase", "Google Gemini AI"],
+          "flow": [
+            "WellnessDashboard.jsx serves as central hub",
+            "WellnessMetrics.jsx displays key wellness indicators",
+            "WellnessAlert.jsx shows critical alerts",
+            "WellnessTrendChart.jsx visualizes trends over time",
+            "WellnessRecommendations.jsx provides AI-generated suggestions",
+            "WellnessNotifications.jsx manages alert system"
+          ]
+        },
+        "implementation_notes": "Modular component design allows for flexible dashboard layouts and easy maintenance of individual wellness features"
+      }
+    },
+    {
+      "input": "How does VidyaNXT handle offline functionality?",
+      "output": {
+        "explanation": "VidyaNXT implements offline-first design through Progressive Web App (PWA) features, service workers, and Firestore's offline synchronization capabilities, ensuring functionality in low-connectivity environments.",
+        "code_example": "// PWABadge.jsx example\nconst PWABadge = () => {\n  const [isOffline, setIsOffline] = useState(!navigator.onLine);\n  const [canInstall, setCanInstall] = useState(false);\n  \n  useEffect(() => {\n    const handleOnline = () => setIsOffline(false);\n    const handleOffline = () => setIsOffline(true);\n    \n    window.addEventListener('online', handleOnline);\n    window.addEventListener('offline', handleOffline);\n    \n    return () => {\n      window.removeEventListener('online', handleOnline);\n      window.removeEventListener('offline', handleOffline);\n    };\n  }, []);\n  \n  return (\n    <div className=\"pwa-badge\">\n      {isOffline && <OfflineIndicator />}\n      {canInstall && <InstallPrompt />}\n    </div>\n  );\n};\n\n// Service worker configuration in vite.config.js\nconst config = {\n  plugins: [\n    VitePWA({\n      registerType: 'autoUpdate',\n      workbox: {\n        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],\n        runtimeCaching: [\n          {\n            urlPattern: /^https:\\/\\/firestore\\.googleapis\\.com/,\n            handler: 'NetworkFirst'\n          }\n        ]\n      }\n    })\n  ]\n};",
+        "technical_details": {
+          "components": ["PWABadge.jsx", "Service Workers", "Firestore Offline", "IndexedDB", "vite.config.js", "pwa-assets.config.js"],
+          "tech_stack": ["PWA", "Service Workers", "Firestore Offline", "IndexedDB", "Vite PWA Plugin"],
+          "flow": [
+            "Service workers cache app assets and API responses",
+            "Firestore enables offline data synchronization",
+            "IndexedDB stores cached data locally",
+            "PWABadge.jsx manages offline indicators",
+            "Automatic sync when connection restored",
+            "Install prompts for native app experience"
+          ]
+        },
+        "implementation_notes": "Designed specifically for under-resourced schools with limited connectivity, ensuring core functionality remains available offline"
+      }
+    },
+    {
+      "input": "What are the required parameters for the wellness API endpoints?",
+      "output": {
+        "explanation": "The wellness API endpoints require teacher identification and optional parameters for filtering and analysis scope. All requests are authenticated through Firebase Authentication.",
+        "code_example": "// wellness.js API endpoint example\nconst getWellnessData = async (request, response) => {\n  const { teacher_id, timeframe = '7d', includeRecommendations = true } = request.data;\n  const uid = request.auth.uid; // Auto-provided by Firebase Auth\n  \n  try {\n    const wellnessData = await wellnessAgent.analyze({\n      teacherId: teacher_id,\n      timeframe: timeframe,\n      includeRecommendations: includeRecommendations\n    });\n    \n    response.json({\n      success: true,\n      data: wellnessData,\n      timestamp: new Date().toISOString()\n    });\n  } catch (error) {\n    response.status(500).json({ error: error.message });\n  }\n};\n\n// Frontend service call\nconst wellnessService = {\n  getWellnessData: async (teacherId, options = {}) => {\n    const getWellnessData = httpsCallable(functions, 'getWellnessData');\n    const result = await getWellnessData({\n      teacher_id: teacherId,\n      timeframe: options.timeframe || '7d',\n      includeRecommendations: options.includeRecommendations ?? true\n    });\n    return result.data;\n  }\n};",
+        "technical_details": {
+          "components": ["wellness.js", "wellness-agent.js", "Firebase Authentication", "httpsCallable functions"],
+          "tech_stack": ["Firebase Cloud Functions", "Firebase Authentication", "Google Gemini AI", "Firestore"],
+          "flow": [
+            "Frontend calls wellness API with teacher_id",
+            "Firebase Auth automatically provides uid context",
+            "wellness.js validates parameters and permissions",
+            "wellness-agent.js processes analysis request",
+            "Results returned with success/error status",
+            "Frontend receives formatted response data"
+          ]
+        },
+        "implementation_notes": "Authentication handled automatically by Firebase, optional parameters provide flexibility for different analysis needs"
+      }
+    },
+    {
+      "input": "How does the matching algorithm work for peer collaboration?",
+      "output": {
+        "explanation": "The matching algorithm uses AI-powered analysis to evaluate teacher profiles, experience levels, challenges, and teaching contexts to create optimal peer connections for collaboration and knowledge sharing.",
+        "code_example": "// matching-agent.js algorithm example\nconst calculateCompatibility = (teacher1, teacher2) => {\n  const factors = {\n    experienceBalance: assessExperienceBalance(teacher1, teacher2),\n    subjectAlignment: calculateSubjectOverlap(teacher1, teacher2),\n    challengeComplementarity: evaluateChallengeMatch(teacher1, teacher2),\n    geographicRelevance: assessLocationContext(teacher1, teacher2),\n    languageCompatibility: checkLanguageMatch(teacher1, teacher2)\n  };\n  \n  return weightedScore(factors);\n};\n\nconst findOptimalMatches = async (teacherProfile) => {\n  const candidates = await fetchPotentialMatches(teacherProfile);\n  const scoredCandidates = candidates.map(candidate => ({\n    ...candidate,\n    compatibilityScore: calculateCompatibility(teacherProfile, candidate)\n  }));\n  \n  return scoredCandidates\n    .sort((a, b) => b.compatibilityScore - a.compatibilityScore)\n    .slice(0, 5); // Top 5 matches\n};\n\n// matching-board.js orchestration\nconst orchestrateMatching = async (teacherId) => {\n  const teacherProfile = await profileAgent.getProfile(teacherId);\n  const matches = await matchingAgent.findOptimalMatches(teacherProfile);\n  const networkConnections = await networkAgent.establishConnections(matches);\n  \n  return {\n    matches: matches,\n    connections: networkConnections,\n    recommendations: generateCollaborationSuggestions(matches)\n  };\n};",
+        "technical_details": {
+          "components": ["matching-agent.js", "matching-board.js", "profile-agent.js", "network-agent.js", "Google Gemini AI"],
+          "tech_stack": ["Google Gemini AI", "Firebase Cloud Functions", "Firestore", "Machine Learning algorithms"],
+          "flow": [
+            "Profile data retrieved from Firestore",
+            "Compatibility factors calculated using AI analysis",
+            "Weighted scoring system ranks potential matches",
+            "Top matches selected based on compatibility scores",
+            "Network connections established and tracked",
+            "Collaboration suggestions generated for matched pairs"
+          ]
+        },
+        "implementation_notes": "Algorithm considers multiple factors including experience balance, subject alignment, and geographic relevance to create meaningful peer connections"
+      }
+    },
+    {
+      "input": "How do you set up and deploy VidyaNXT locally and in production?",
+      "output": {
+        "explanation": "VidyaNXT setup involves configuring the React frontend, Firebase backend, and Google Gemini AI integration. The project supports both local development with Firebase emulators and production deployment to Firebase Hosting.",
+        "code_example": "// Local development setup\n// 1. Install dependencies\nnpm install\ncd functions && npm install\n\n// 2. Firebase configuration - .firebaserc\n{\n  \"projects\": {\n    \"default\": \"vidyanxt-c5816\"\n  }\n}\n\n// 3. Environment variables - functions/.env\nGEMINI_API_KEY=your_gemini_api_key\nFIREBASE_PROJECT_ID=vidyanxt-c5816\nNODE_ENV=development\n\n// 4. Run local development\nnpm run dev # Frontend (Vite)\nfirebase emulators:start # Backend\n\n// 5. Production deployment\nnpm run build\nfirebase deploy\n\n// vite.config.js configuration\nexport default defineConfig({\n  plugins: [\n    react(),\n    VitePWA({\n      registerType: 'autoUpdate',\n      workbox: {\n        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],\n        maximumFileSizeToCacheInBytes: 5000000\n      }\n    })\n  ],\n  build: {\n    outDir: 'dist',\n    sourcemap: false\n  }\n});",
+        "technical_details": {
+          "components": ["package.json", "vite.config.js", "firebase.json", ".firebaserc", "firestore.rules", "pwa-assets.config.js"],
+          "tech_stack": ["Node.js", "npm", "Vite", "Firebase CLI", "Firebase Hosting", "Firebase Emulators"],
+          "flow": [
+            "Clone repository and install dependencies",
+            "Configure Firebase project and authentication",
+            "Set up Gemini API key in environment variables",
+            "Configure Firestore rules and indexes",
+            "Run local development with emulators",
+            "Build and deploy to Firebase Hosting for production"
+          ]
+        },
+        "implementation_notes": "Live production deployment available at https://vidyanxt-c5816.web.app/ with CI/CD via GitHub Actions"
+      }
+    },
+    {
+      "input": "What are common troubleshooting issues and solutions in VidyaNXT?",
+      "output": {
+        "explanation": "Common issues in VidyaNXT relate to API configurations, authentication problems, offline functionality, and component errors. The platform includes error boundaries and logging for debugging.",
+        "code_example": "// ErrorBoundary.jsx implementation\nclass ErrorBoundary extends React.Component {\n  constructor(props) {\n    super(props);\n    this.state = { hasError: false, error: null };\n  }\n  \n  static getDerivedStateFromError(error) {\n    return { hasError: true, error };\n  }\n  \n  componentDidCatch(error, errorInfo) {\n    console.error('VidyaNXT Error:', error, errorInfo);\n    // Log to Firebase or external service\n    logger.error('Component Error', { error, errorInfo });\n  }\n  \n  render() {\n    if (this.state.hasError) {\n      return (\n        <div className=\"error-boundary\">\n          <h2>Something went wrong</h2>\n          <details>\n            {this.state.error && this.state.error.toString()}\n          </details>\n        </div>\n      );\n    }\n    return this.props.children;\n  }\n}\n\n// Common troubleshooting checks\nconst diagnosticChecks = {\n  checkFirebaseConnection: async () => {\n    try {\n      await db.collection('health').doc('test').get();\n      return { status: 'connected' };\n    } catch (error) {\n      return { status: 'error', message: error.message };\n    }\n  },\n  \n  checkGeminiAPI: async () => {\n    try {\n      const response = await gemini.test();\n      return { status: 'working', response };\n    } catch (error) {\n      return { status: 'error', message: 'Check GEMINI_API_KEY' };\n    }\n  }\n};",
+        "technical_details": {
+          "components": ["ErrorBoundary.jsx", "logger.js", "validation.js", "helpers.js", "firebase.js", "gemini.js"],
+          "tech_stack": ["React Error Boundaries", "Firebase", "Google Gemini", "Console logging", "Firestore"],
+          "flow": [
+            "ErrorBoundary.jsx catches and logs component errors",
+            "logger.js provides centralized logging utilities",
+            "validation.js ensures data integrity",
+            "helpers.js contains diagnostic functions",
+            "Firebase connection and auth issues diagnosed",
+            "Gemini API key and configuration verified"
+          ]
+        },
+        "implementation_notes": "Common issues include: incorrect Gemini API key, Firestore rules blocking access, PWA caching problems, and component rendering errors. Use ErrorBoundary logs and Firebase emulator debugging for diagnosis."
+      }
+    }
+  ]
+}

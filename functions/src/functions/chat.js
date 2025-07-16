@@ -9,6 +9,7 @@ const { FieldValue } = require("firebase-admin/firestore");
 const { generateText } = require("../config/gemini");
 const { delay, parseGeminiResponse } = require("../utils/helpers");
 const { createWellnessReport } = require("../services/wellness");
+const { incrementUnread } = require("./triggers");
 
 const db = admin.firestore();
 
@@ -349,27 +350,8 @@ const endAiChatSession = onCall(async (request) => {
   };
 });
 
-// ======================== TRIGGERS ===========================
 
-const incrementUnread = onDocCreated(
-  "conversations/{convoId}/messages/{msgId}",
-  async (event) => {
-    const convoDoc = await db
-      .collection("conversations")
-      .doc(event.params.convoId)
-      .get();
 
-    const { members } = convoDoc.data();
-    const sender = event.data.data().sender;
-    const recipient = members.find((u) => u !== sender);
-
-    const convoRef = db.collection("conversations").doc(event.params.convoId);
-    await convoRef.update({
-      [`unreadCounts.${recipient}`]: FieldValue.increment(1),
-      lastUpdated: new Date().toISOString(),
-    });
-  }
-);
 
 module.exports = {
   startChatWith,
@@ -377,5 +359,5 @@ module.exports = {
   createAiChatSession,
   sendAiChatMessage,
   endAiChatSession,
-  incrementUnread,
+
 };

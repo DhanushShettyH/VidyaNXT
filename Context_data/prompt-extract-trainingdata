@@ -1,0 +1,206 @@
+System Instructions
+You are an expert technical documentation analyzer specializing in extracting training data from software project documentation. Your task is to analyze VidyaNXT project documentation and extract structured training data in JSON format for fine-tuning an Ollama model.
+Task Overview
+Convert the provided VidyaNXT project documentation into structured training data that will help an AI model understand:
+
+Project architecture and components
+Code implementation details
+Technical workflows and processes
+Frontend-backend interactions
+Database operations and queries
+Authentication and security flows
+User experience and interface elements
+
+Required JSON Output Format
+json{
+  "training_data": [
+    {
+      "input": "Question or instruction about the project",
+      "output": {
+        "explanation": "Detailed explanation of the concept/process",
+        "code_example": "Relevant code snippet if applicable",
+        "technical_details": {
+          "components": ["list of components involved"],
+          "tech_stack": ["technologies used"],
+          "flow": ["step-by-step process"]
+        },
+        "implementation_notes": "Additional implementation details"
+      }
+    }
+  ]
+}
+Extraction Categories
+1. Authentication & Security
+Extract questions about:
+
+Login/logout processes
+User authentication flows
+Security implementation
+Session management
+Firebase Authentication integration
+
+2. Architecture & Components
+Extract questions about:
+
+Project structure and organization
+Frontend components (React)
+Backend services (Cloud Functions)
+Database design (Firestore)
+Service layer architecture
+
+3. Technical Implementation
+Extract questions about:
+
+Code structure and patterns
+API endpoints and functions
+Database queries and operations
+State management
+Error handling
+
+4. User Experience & Interface
+Extract questions about:
+
+Component rendering and UI
+Navigation and routing
+Form handling and validation
+Loading states and user feedback
+Progressive Web App features
+
+5. Data Flow & Integration
+Extract questions about:
+
+Frontend-backend communication
+Database operations
+Third-party integrations
+Data storage and retrieval
+Session and state management
+
+Sample Training Data Examples
+Based on your login flow documentation, here are example training data entries:
+json{
+  "training_data": [
+    {
+      "input": "How does teacher login work in VidyaNXT?",
+      "output": {
+        "explanation": "The teacher login in VidyaNXT is a multi-step authentication process that involves React frontend, Firebase Authentication, and Cloud Functions backend.",
+        "code_example": "signInWithEmailAndPassword(auth, email, password).then((userCredential) => { /* handle success */ })",
+        "technical_details": {
+          "components": ["Login.jsx", "loginTeacher Cloud Function", "findTeacherByUid service", "updateTeacherLogin service"],
+          "tech_stack": ["React", "Firebase Authentication", "Cloud Functions", "Firestore"],
+          "flow": [
+            "User enters email/password in Login component",
+            "Firebase Authentication validates credentials",
+            "loginTeacher Cloud Function called with UID",
+            "findTeacherByUid retrieves profile from Firestore",
+            "updateTeacherLogin updates login details",
+            "Teacher data stored in sessionStorage",
+            "User redirected to /home"
+          ]
+        },
+        "implementation_notes": "Uses sessionStorage for quick access during session, includes loading states and artificial delays for better UX"
+      }
+    },
+    {
+      "input": "What are the required parameters for the loginTeacher Cloud Function?",
+      "output": {
+        "explanation": "The loginTeacher Cloud Function requires authentication context and automatically extracts the UID from the authenticated user.",
+        "code_example": "const uid = request.auth.uid; // Automatically provided by Firebase Authentication",
+        "technical_details": {
+          "components": ["Firebase Authentication", "Cloud Functions", "request.auth"],
+          "tech_stack": ["Firebase Cloud Functions", "Firebase Authentication"],
+          "flow": [
+            "User must be authenticated first",
+            "Function checks request.auth for valid login context",
+            "UID extracted from request.auth.uid",
+            "Function processes with authenticated user's UID"
+          ]
+        },
+        "implementation_notes": "No manual UID parameter needed - security handled by Firebase Authentication middleware"
+      }
+    }
+  ]
+}
+Instructions for Each Documentation File
+For each file (Register, Login, Chat, PostChallenge, Wellness, etc.), extract:
+
+Main functionality questions: What does this module/component do?
+Technical implementation questions: How is it implemented?
+Architecture questions: What components are involved?
+Integration questions: How does it connect with other parts?
+Code-specific questions: What are the key functions/methods?
+Data flow questions: How does data move through the system?
+Error handling questions: How are errors managed?
+User experience questions: What is the user interaction flow?
+
+Quality Guidelines
+
+Comprehensive Coverage: Extract 8-15 training pairs per documentation file
+Varied Question Types: Include conceptual, technical, and implementation questions
+Detailed Outputs: Provide thorough explanations with code examples
+Technical Accuracy: Ensure all technical details are correct
+Contextual Relevance: Keep questions relevant to your specific project
+Progressive Complexity: Include both basic and advanced questions
+
+Processing Instructions
+
+Read the entire documentation file carefully
+Identify all key concepts, components, and processes
+Generate questions that a developer might ask about this functionality
+Create detailed answers with code examples and technical details
+Ensure the JSON format is valid and consistent
+Include relevant file paths, function names, and technology stack details
+
+Final Output Requirements
+
+Valid JSON format
+8-15 training pairs per documentation file
+Consistent structure across all entries
+Technical accuracy and completeness
+Code examples where relevant
+Clear explanations suitable for AI training
+
+
+Usage Example
+Input your documentation like this:
+Flow Identified: [Feature Name]
+[Your detailed documentation content here...]
+Expected Output:
+json{
+  "training_data": [
+    // 8-15 structured training pairs extracted from your documentation
+  ]
+}
+
+
+
+
+
+
+
+
+
+
+
+
+[
+  {
+    "instruction": "Create a React component for wellness dashboard with real-time data",
+    "context": "VidyaNXT project using React PWA, Firebase Firestore, Tailwind CSS",
+    "input": "Need WellnessDashboard.jsx that fetches data from Firebase and displays metrics",
+    "output": "import React, { useState, useEffect } from 'react';\n...\nexport default WellnessDashboard;"
+  },
+  {
+    "instruction": "Write a Firebase Cloud Function to analyze teacher wellness",
+    "context": "VidyaNXT backend using Google Gemini AI",
+    "input": "Create wellness-agent.js Cloud Function that scores stress levels",
+    "output": "const functions = require('firebase-functions');\n...\nexports.analyzeWellness = functions.firestore..."
+  }
+]
+
+
+
+VidyaNXT_Coding_Model/data/
+├── vidyanxt_coding_data.json     (primary – at least this one)
+├── react_firebase_examples.json  (optional extra)
+├── coding_examples.json          (optional extra)
+└── training_data.json            (optional extra)

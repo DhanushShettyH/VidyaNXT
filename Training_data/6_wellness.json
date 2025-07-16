@@ -1,0 +1,304 @@
+{
+  "training_data": [
+    {
+      "input": "How does the Wellness Dashboard work in VidyaNXT?",
+      "output": {
+        "explanation": "The Wellness Dashboard in VidyaNXT is a comprehensive AI-driven tool designed to monitor and support teacher mental and emotional well-being in under-resourced Indian schools. It provides a centralized interface displaying wellness metrics, alerts, notifications, and personalized recommendations using React frontend, Firebase backend, and Gemini AI integration.",
+        "code_example": "// Main dashboard component structure\nconst WellnessDashboard = () => {\n  const [teacherData, setTeacherData] = useState(null);\n  const [dashboardData, setDashboardData] = useState(null);\n  const [loading, setLoading] = useState(true);\n  const [error, setError] = useState(null);\n\n  const fetchDashboardData = async () => {\n    const getEnhancedTeacherDashboard = httpsCallable(functions, 'getEnhancedTeacherDashboard');\n    const result = await getEnhancedTeacherDashboard({ teacher_id: teacherId });\n    setDashboardData(result.data);\n  };\n};",
+        "technical_details": {
+          "components": ["WellnessDashboard.jsx", "WellnessMetrics.jsx", "WellnessAlerts.jsx", "WellnessAnalytics.jsx", "WellnessNotifications.jsx", "WellnessRecommendations.jsx"],
+          "tech_stack": ["React", "Firebase Cloud Functions", "Firestore", "Gemini AI", "PWA"],
+          "flow": [
+            "Teacher accesses dashboard via React Router",
+            "WellnessDashboard.jsx fetches data via getEnhancedTeacherDashboard",
+            "Data retrieved from Firestore collections",
+            "WellnessAgent analyzes data using Gemini AI",
+            "Components render metrics, alerts, and recommendations",
+            "Real-time updates via Firestore listeners"
+          ]
+        },
+        "implementation_notes": "Uses sessionStorage for teacher data persistence, implements offline-first design with loading states and error handling"
+      }
+    },
+    {
+      "input": "What are the key components of the Wellness Dashboard frontend?",
+      "output": {
+        "explanation": "The Wellness Dashboard frontend consists of six main React components, each handling specific aspects of teacher wellness monitoring and interaction.",
+        "code_example": "// Component structure in src/pages/WellnessDashboard.jsx\nimport WellnessMetrics from '../components/WellnessMetrics';\nimport WellnessAlerts from '../components/WellnessAlerts';\nimport WellnessAnalytics from '../components/WellnessAnalytics';\nimport WellnessNotifications from '../components/WellnessNotifications';\nimport WellnessRecommendations from '../components/WellnessRecommendations';",
+        "technical_details": {
+          "components": ["WellnessDashboard.jsx - Main hub", "WellnessMetrics.jsx - Metrics display", "WellnessAlerts.jsx - Alert management", "WellnessAnalytics.jsx - Trend analysis", "WellnessNotifications.jsx - Notification handling", "WellnessRecommendations.jsx - AI recommendations"],
+          "tech_stack": ["React", "React Router", "React Hooks", "Firebase SDK"],
+          "flow": [
+            "Main dashboard loads and checks sessionStorage",
+            "Fetches comprehensive teacher data",
+            "Renders individual wellness components",
+            "Each component manages its own state and data fetching",
+            "Real-time updates across all components"
+          ]
+        },
+        "implementation_notes": "All components use consistent patterns with useState for state management, useEffect for data fetching, and standardized error handling"
+      }
+    },
+    {
+      "input": "How does the wellness alert acknowledgment system work?",
+      "output": {
+        "explanation": "The wellness alert acknowledgment system allows teachers to interact with wellness alerts by marking them as acknowledged, which updates the alert status in Firestore and removes them from the active alerts display.",
+        "code_example": "// Alert acknowledgment in WellnessAlerts.jsx\nconst handleAcknowledge = async (alertId) => {\n  try {\n    const acknowledgeAlert = httpsCallable(functions, 'acknowledgeWellnessAlertFunction');\n    await acknowledgeAlert({ \n      teacher_id: teacherData.uid, \n      alert_id: alertId \n    });\n    // Update local state to reflect change\n    setAlerts(alerts.filter(alert => alert.id !== alertId));\n  } catch (error) {\n    console.error('Error acknowledging alert:', error);\n  }\n};",
+        "technical_details": {
+          "components": ["WellnessAlerts.jsx", "acknowledgeWellnessAlertFunction", "acknowledgeWellnessAlert service"],
+          "tech_stack": ["React", "Firebase Cloud Functions", "Firestore"],
+          "flow": [
+            "Teacher clicks 'Acknowledge' button on alert",
+            "handleAcknowledge function called with alert ID",
+            "acknowledgeWellnessAlertFunction Cloud Function invoked",
+            "Alert's acknowledged field updated in Firestore",
+            "Local state updated to remove alert from UI",
+            "Success confirmation returned to user"
+          ]
+        },
+        "implementation_notes": "Includes error handling and immediate UI feedback, uses teacher_id and alert_id for secure acknowledgment"
+      }
+    },
+    {
+      "input": "How is wellness analytics data retrieved and displayed?",
+      "output": {
+        "explanation": "Wellness analytics data is retrieved through the getWellnessAnalytics Cloud Function, which queries wellness reports within specified timeframes and calculates trends, averages, and distributions for visual display.",
+        "code_example": "// Analytics data fetching in WellnessAnalytics.jsx\nconst fetchAnalyticsData = async () => {\n  try {\n    setLoading(true);\n    const getAnalytics = httpsCallable(functions, 'getWellnessAnalytics');\n    const result = await getAnalytics({ \n      teacher_id: teacherData.uid, \n      timeframe: timeframe \n    });\n    setAnalyticsData(result.data);\n  } catch (error) {\n    setError(error.message);\n  } finally {\n    setLoading(false);\n  }\n};",
+        "technical_details": {
+          "components": ["WellnessAnalytics.jsx", "getWellnessAnalytics", "Firestore wellness_reports collection"],
+          "tech_stack": ["React", "Firebase Cloud Functions", "Firestore", "Chart.js"],
+          "flow": [
+            "User selects timeframe (7d, 30d, 90d)",
+            "fetchAnalyticsData called with timeframe parameter",
+            "getWellnessAnalytics queries wellness_reports collection",
+            "Backend calculates trends and summary statistics",
+            "Data formatted for chart display",
+            "Visual charts and distributions rendered"
+          ]
+        },
+        "implementation_notes": "Supports customizable timeframes, includes loading states and error handling, formats data for chart libraries"
+      }
+    },
+    {
+      "input": "What backend functions support the Wellness Dashboard?",
+      "output": {
+        "explanation": "The Wellness Dashboard is supported by four main Firebase Cloud Functions that handle data retrieval, alert management, analytics, and AI-driven insights generation.",
+        "code_example": "// Key backend functions in functions/src/functions/wellness.js\nexports.getEnhancedTeacherDashboard = onCall(async (request) => {\n  const teacherId = request.data.teacher_id;\n  const teacherData = await getTeacherData(teacherId);\n  const wellnessData = await getWellnessData(teacherId);\n  const recentChallenges = await getRecentChallenges(teacherId);\n  return { teacher: teacherData, wellness: wellnessData, challenges: recentChallenges };\n});",
+        "technical_details": {
+          "components": ["getEnhancedTeacherDashboard", "acknowledgeWellnessAlertFunction", "getWellnessAnalytics", "getWellnessDashboard"],
+          "tech_stack": ["Firebase Cloud Functions", "Firestore", "Gemini AI", "JavaScript"],
+          "flow": [
+            "Frontend calls HTTPS callable functions",
+            "Functions validate teacher_id parameter",
+            "Data retrieved from Firestore collections",
+            "WellnessAgent processes data with Gemini AI",
+            "Formatted response returned to frontend",
+            "Error handling with HttpsError for consistency"
+          ]
+        },
+        "implementation_notes": "Uses onCall for HTTPS callable functions, implements consistent error handling, integrates with WellnessAgent for AI analysis"
+      }
+    },
+    {
+      "input": "How does the WellnessAgent integrate with Gemini AI?",
+      "output": {
+        "explanation": "The WellnessAgent is a specialized class that uses Gemini AI to analyze wellness indicators from teacher challenges and chat sessions, generating intelligent insights, recommendations, and dashboard summaries.",
+        "code_example": "// WellnessAgent in functions/src/agents/wellness-agent.js\nclass WellnessAgent {\n  async analyzeChallengeWellness(challenges) {\n    const prompt = `Analyze these teacher challenges for wellness indicators: ${JSON.stringify(challenges)}`;\n    const result = await this.gemini.generateText(prompt);\n    return result.response.text();\n  }\n\n  async getWellnessDashboardSummary(teacherData) {\n    const analysis = await this.gemini.generateText({\n      prompt: `Generate wellness summary for teacher: ${teacherData.name}`,\n      context: teacherData.wellnessHistory\n    });\n    return analysis;\n  }\n}",
+        "technical_details": {
+          "components": ["WellnessAgent class", "Gemini AI gemini-1.5-flash", "generateText method", "wellness analysis prompts"],
+          "tech_stack": ["Google Gemini AI", "JavaScript", "Firebase Cloud Functions"],
+          "flow": [
+            "WellnessAgent instantiated with Gemini AI model",
+            "Teacher data and challenges passed to agent",
+            "AI prompts generated for wellness analysis",
+            "Gemini AI processes data and generates insights",
+            "Structured recommendations and summaries returned",
+            "Results integrated into dashboard responses"
+          ]
+        },
+        "implementation_notes": "Uses structured prompts for consistent AI analysis, processes multiple data sources for comprehensive insights"
+      }
+    },
+    {
+      "input": "How are wellness recommendations generated and managed?",
+      "output": {
+        "explanation": "Wellness recommendations are AI-generated suggestions tailored to each teacher's wellness data. Teachers can interact with recommendations by marking them as completed or dismissed, with filtering options for different priority levels.",
+        "code_example": "// Recommendations management in WellnessRecommendations.jsx\nconst fetchRecommendations = async () => {\n  const getRecommendations = httpsCallable(functions, 'getWellnessRecommendations');\n  const result = await getRecommendations({ \n    teacher_id: teacherData.uid,\n    filter: activeFilter // 'active', 'completed', 'high-priority'\n  });\n  setRecommendations(result.data);\n};\n\nconst markAsCompleted = async (recommendationId) => {\n  const updateRecommendation = httpsCallable(functions, 'updateWellnessRecommendation');\n  await updateRecommendation({ \n    teacher_id: teacherData.uid,\n    recommendation_id: recommendationId,\n    status: 'completed'\n  });\n};",
+        "technical_details": {
+          "components": ["WellnessRecommendations.jsx", "WellnessAgent", "wellness_recommendations collection", "filtering system"],
+          "tech_stack": ["React", "Firebase Cloud Functions", "Firestore", "Gemini AI"],
+          "flow": [
+            "WellnessAgent analyzes teacher data with Gemini AI",
+            "Personalized recommendations generated",
+            "Recommendations stored in Firestore",
+            "Frontend fetches recommendations with filtering",
+            "Teacher marks recommendations as completed/dismissed",
+            "Status updates reflected in real-time"
+          ]
+        },
+        "implementation_notes": "Includes filtering options for active/completed recommendations, supports priority-based sorting, provides action buttons for user interaction"
+      }
+    },
+    {
+      "input": "What is the data flow for the Wellness Dashboard?",
+      "output": {
+        "explanation": "The Wellness Dashboard follows a structured data flow from frontend request through Firebase Cloud Functions to Firestore database, with AI processing via Gemini and real-time updates back to the user interface.",
+        "code_example": "// Data flow example from WellnessDashboard.jsx\nuseEffect(() => {\n  const loadDashboard = async () => {\n    // 1. Check session storage for teacher data\n    const teacher = JSON.parse(sessionStorage.getItem('teacherData'));\n    \n    // 2. Fetch comprehensive dashboard data\n    const dashboardFunction = httpsCallable(functions, 'getEnhancedTeacherDashboard');\n    const result = await dashboardFunction({ teacher_id: teacher.uid });\n    \n    // 3. Update component state with fetched data\n    setDashboardData(result.data);\n  };\n  \n  loadDashboard();\n}, []);",
+        "technical_details": {
+          "components": ["React Frontend", "Firebase Cloud Functions", "Firestore Database", "WellnessAgent", "Gemini AI", "Real-time listeners"],
+          "tech_stack": ["React", "Firebase SDK", "Cloud Functions", "Firestore", "Gemini AI"],
+          "flow": [
+            "Frontend component mounts and checks sessionStorage",
+            "HTTPS callable function invoked with teacher_id",
+            "Cloud Function queries Firestore collections",
+            "WellnessAgent processes data with Gemini AI",
+            "Aggregated data returned to frontend",
+            "Component state updated and UI rendered",
+            "Real-time listeners maintain data synchronization"
+          ]
+        },
+        "implementation_notes": "Uses sessionStorage for performance, implements real-time synchronization via Firestore listeners, includes comprehensive error handling"
+      }
+    },
+    {
+      "input": "How does the Wellness Dashboard handle offline scenarios?",
+      "output": {
+        "explanation": "The Wellness Dashboard implements an offline-first design using sessionStorage for data persistence, service workers for caching, and graceful degradation with appropriate user feedback during connectivity issues.",
+        "code_example": "// Offline handling in WellnessDashboard.jsx\nconst fetchDashboardData = async () => {\n  try {\n    setLoading(true);\n    // Try to fetch fresh data\n    const result = await getEnhancedTeacherDashboard({ teacher_id });\n    setDashboardData(result.data);\n    // Cache successful response\n    sessionStorage.setItem('cachedDashboard', JSON.stringify(result.data));\n  } catch (error) {\n    // Fall back to cached data if available\n    const cachedData = sessionStorage.getItem('cachedDashboard');\n    if (cachedData) {\n      setDashboardData(JSON.parse(cachedData));\n      setError('Using cached data - limited functionality');\n    } else {\n      setError('Unable to load dashboard data');\n    }\n  } finally {\n    setLoading(false);\n  }\n};",
+        "technical_details": {
+          "components": ["Progressive Web App (PWA)", "sessionStorage", "Service Workers", "Error handling", "Retry mechanisms"],
+          "tech_stack": ["React PWA", "sessionStorage", "Service Workers", "Firebase SDK"],
+          "flow": [
+            "App attempts to fetch fresh data from Firebase",
+            "On success, data cached in sessionStorage",
+            "On failure, app checks for cached data",
+            "Cached data displayed with offline indicator",
+            "Retry buttons provided for reconnection attempts",
+            "Service workers handle resource caching"
+          ]
+        },
+        "implementation_notes": "Implements graceful degradation with user feedback, provides retry mechanisms, uses PWA features for offline functionality"
+      }
+    },
+    {
+      "input": "What Firestore collections are used for the Wellness Dashboard?",
+      "output": {
+        "explanation": "The Wellness Dashboard uses several Firestore collections to store teacher information, wellness reports, alerts, summaries, and recommendations, with real-time synchronization and structured data organization.",
+        "code_example": "// Firestore collection structure\nconst collections = {\n  teachers: 'teachers/{teacherId}',\n  wellness_reports: 'teachers/{teacherId}/wellness_reports',\n  wellness_alerts: 'teachers/{teacherId}/wellness_alerts',\n  wellness_summary: 'teachers/{teacherId}/wellness_summary',\n  wellness_recommendations: 'teachers/{teacherId}/wellness_recommendations'\n};\n\n// Example query for wellness reports\nconst getWellnessReports = async (teacherId, timeframe) => {\n  const reportsRef = db.collection(`teachers/${teacherId}/wellness_reports`);\n  const query = reportsRef\n    .where('timestamp', '>=', startDate)\n    .where('timestamp', '<=', endDate)\n    .orderBy('timestamp', 'desc');\n  return await query.get();\n};",
+        "technical_details": {
+          "components": ["teachers collection", "wellness_reports subcollection", "wellness_alerts subcollection", "wellness_summary subcollection", "wellness_recommendations subcollection"],
+          "tech_stack": ["Firestore", "Firebase SDK", "Real-time listeners", "Subcollections"],
+          "flow": [
+            "Teacher data stored in main teachers collection",
+            "Wellness reports stored as subcollection under teacher",
+            "Alerts managed in wellness_alerts subcollection",
+            "Summary data maintained in wellness_summary",
+            "AI recommendations stored in wellness_recommendations",
+            "Real-time listeners provide live updates"
+          ]
+        },
+        "implementation_notes": "Uses subcollections for organization and security, implements server timestamps for consistency, supports real-time synchronization"
+      }
+    },
+    {
+      "input": "How does the Wellness Dashboard implement error handling?",
+      "output": {
+        "explanation": "The Wellness Dashboard implements comprehensive error handling across all components with consistent patterns for loading states, error messages, retry mechanisms, and graceful degradation to ensure a robust user experience.",
+        "code_example": "// Error handling pattern in WellnessMetrics.jsx\nconst WellnessMetrics = () => {\n  const [loading, setLoading] = useState(true);\n  const [error, setError] = useState(null);\n  const [metricsData, setMetricsData] = useState(null);\n\n  const fetchMetricsData = async () => {\n    try {\n      setLoading(true);\n      setError(null);\n      const result = await getWellnessAnalytics({ teacher_id, timeframe });\n      setMetricsData(result.data);\n    } catch (err) {\n      setError(err.message || 'Failed to load metrics data');\n    } finally {\n      setLoading(false);\n    }\n  };\n\n  if (loading) return <LoadingSpinner />;\n  if (error) return <ErrorMessage error={error} onRetry={fetchMetricsData} />;\n  if (!metricsData) return <NoDataMessage />;\n\n  return <MetricsDisplay data={metricsData} />;\n};",
+        "technical_details": {
+          "components": ["Loading states", "Error boundaries", "Retry mechanisms", "LoadingSpinner", "ErrorMessage", "NoDataMessage"],
+          "tech_stack": ["React", "Error handling patterns", "User feedback components"],
+          "flow": [
+            "Component enters loading state during data fetch",
+            "Error caught and stored in error state",
+            "Loading spinner displayed during fetch",
+            "Error message shown with retry button",
+            "No data message for empty results",
+            "Successful data renders main component"
+          ]
+        },
+        "implementation_notes": "Consistent error handling across all components, provides user-friendly error messages, includes retry functionality for transient errors"
+      }
+    },
+    {
+      "input": "How to extend the Wellness Dashboard with a new feature?",
+      "output": {
+        "explanation": "To extend the Wellness Dashboard with a new feature, you need to follow the established patterns by creating a new React component, adding routes, implementing backend functions, and integrating with the existing architecture.",
+        "code_example": "// Example: Adding a Wellness Goals feature\n// 1. Create new component in src/components/WellnessGoals.jsx\nconst WellnessGoals = () => {\n  const [goals, setGoals] = useState([]);\n  const [loading, setLoading] = useState(true);\n  const [error, setError] = useState(null);\n\n  const fetchGoals = async () => {\n    try {\n      const getGoals = httpsCallable(functions, 'getWellnessGoals');\n      const result = await getGoals({ teacher_id: teacherData.uid });\n      setGoals(result.data);\n    } catch (err) {\n      setError(err.message);\n    } finally {\n      setLoading(false);\n    }\n  };\n\n  return (\n    <div>\n      {/* Goals UI implementation */}\n    </div>\n  );\n};\n\n// 2. Add route in src/App.jsx\n<Route path=\"/wellness/goals\" element={<WellnessGoals />} />\n\n// 3. Add backend function in functions/src/functions/wellness.js\nexports.getWellnessGoals = onCall(async (request) => {\n  const teacherId = request.data.teacher_id;\n  const goalsRef = db.collection(`teachers/${teacherId}/wellness_goals`);\n  const snapshot = await goalsRef.get();\n  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));\n});",
+        "technical_details": {
+          "components": ["New React component", "Route configuration", "Backend Cloud Function", "Firestore collection", "Navigation integration"],
+          "tech_stack": ["React", "React Router", "Firebase Cloud Functions", "Firestore"],
+          "flow": [
+            "Create new component following existing patterns",
+            "Add route in App.jsx for navigation",
+            "Implement backend function in wellness.js",
+            "Create Firestore collection for data storage",
+            "Add navigation link in WellnessDashboard.jsx",
+            "Follow error handling and loading patterns"
+          ]
+        },
+        "implementation_notes": "Follow established patterns for consistency, use existing error handling and loading states, maintain security with teacher_id validation"
+      }
+    },
+    {
+      "input": "How does the Wellness Dashboard integrate with the overall VidyaNXT architecture?",
+      "output": {
+        "explanation": "The Wellness Dashboard integrates seamlessly with VidyaNXT's multi-agent architecture, sharing authentication, using common services, and following the established patterns for React components, Firebase functions, and AI agent integration.",
+        "code_example": "// Integration with VidyaNXT architecture\n// 1. Shared authentication from sessionStorage\nconst teacherData = JSON.parse(sessionStorage.getItem('teacherData'));\n\n// 2. Common routing patterns in App.jsx\n<Route path=\"/wellness-dashboard\" element={<WellnessDashboard />} />\n<Route path=\"/wellness/metrics\" element={<WellnessMetrics />} />\n<Route path=\"/wellness/alerts\" element={<WellnessAlerts />} />\n\n// 3. Integration with other VidyaNXT features\nconst analyzeFromChallenges = async () => {\n  const challenges = await getChallenges(teacherId);\n  const wellnessInsights = await wellnessAgent.analyzeChallengeWellness(challenges);\n  return wellnessInsights;\n};\n\n// 4. Shared Firebase configuration\nimport { functions, db } from '../config/firebase';\nimport { WellnessAgent } from '../agents/wellness-agent';",
+        "technical_details": {
+          "components": ["Shared authentication system", "Common routing patterns", "Integrated AI agents", "Shared Firebase config", "Cross-feature data analysis"],
+          "tech_stack": ["React PWA", "Firebase", "Multi-agent architecture", "Gemini AI", "Shared services"],
+          "flow": [
+            "Uses shared authentication from VidyaNXT login",
+            "Integrates with main application routing",
+            "Shares Firebase configuration and services",
+            "Connects with other features via shared agents",
+            "Maintains consistent UI/UX patterns",
+            "Leverages common error handling and loading states"
+          ]
+        },
+        "implementation_notes": "Follows VidyaNXT's architectural patterns, integrates with existing authentication and routing, shares common services and configurations"
+      }
+    },
+    {
+      "input": "What are the key performance considerations for the Wellness Dashboard?",
+      "output": {
+        "explanation": "The Wellness Dashboard implements several performance optimizations including data caching, lazy loading, efficient Firestore queries, and optimized component rendering to ensure smooth operation even in low-bandwidth environments typical of under-resourced schools.",
+        "code_example": "// Performance optimizations in WellnessDashboard\n// 1. Data caching with sessionStorage\nconst getCachedData = (key) => {\n  const cached = sessionStorage.getItem(key);\n  return cached ? JSON.parse(cached) : null;\n};\n\n// 2. Debounced timeframe changes\nconst debouncedFetchMetrics = useCallback(\n  debounce((timeframe) => {\n    fetchMetricsData(timeframe);\n  }, 500),\n  []\n);\n\n// 3. Optimized Firestore queries\nconst getRecentWellnessData = async (teacherId, limit = 10) => {\n  return db.collection(`teachers/${teacherId}/wellness_reports`)\n    .orderBy('timestamp', 'desc')\n    .limit(limit)\n    .get();\n};\n\n// 4. Lazy loading components\nconst WellnessAnalytics = lazy(() => import('../components/WellnessAnalytics'));\n\n// 5. Memoized calculations\nconst wellnessScore = useMemo(() => {\n  return calculateWellnessScore(dashboardData);\n}, [dashboardData]);",
+        "technical_details": {
+          "components": ["Data caching", "Debouncing", "Query optimization", "Lazy loading", "Memoization", "Bundle optimization"],
+          "tech_stack": ["React optimization hooks", "sessionStorage", "Firestore queries", "Code splitting"],
+          "flow": [
+            "Data cached in sessionStorage for quick access",
+            "Debounced user inputs prevent excessive API calls",
+            "Firestore queries optimized with limits and indexing",
+            "Components lazy loaded to reduce initial bundle size",
+            "Expensive calculations memoized",
+            "Progressive loading for better perceived performance"
+          ]
+        },
+        "implementation_notes": "Optimized for low-bandwidth environments, implements progressive loading, uses efficient caching strategies, minimizes API calls"
+      }
+    },
+    {
+      "input": "How does the Wellness Dashboard handle real-time updates?",
+      "output": {
+        "explanation": "The Wellness Dashboard implements real-time updates using Firestore listeners and React state management to ensure teachers receive immediate notifications about wellness alerts, new recommendations, and data changes without manual refresh.",
+        "code_example": "// Real-time updates implementation\n// 1. Firestore listener for wellness alerts\nuseEffect(() => {\n  const unsubscribe = db\n    .collection(`teachers/${teacherId}/wellness_alerts`)\n    .where('acknowledged', '==', false)\n    .onSnapshot((snapshot) => {\n      const alerts = snapshot.docs.map(doc => ({\n        id: doc.id,\n        ...doc.data()\n      }));\n      setAlerts(alerts);\n    });\n\n  return () => unsubscribe();\n}, [teacherId]);\n\n// 2. Real-time wellness summary updates\nuseEffect(() => {\n  const summaryListener = db\n    .doc(`teachers/${teacherId}/wellness_summary/current`)\n    .onSnapshot((doc) => {\n      if (doc.exists) {\n        setWellnessSummary(doc.data());\n      }\n    });\n\n  return () => summaryListener();\n}, [teacherId]);\n\n// 3. Batch updates for performance\nconst updateWellnessData = (updates) => {\n  const batch = db.batch();\n  updates.forEach(update => {\n    const ref = db.doc(update.path);\n    batch.set(ref, update.data, { merge: true });\n  });\n  return batch.commit();\n};",
+        "technical_details": {
+          "components": ["Firestore listeners", "React state updates", "Real-time subscriptions", "Batch operations", "Automatic cleanup"],
+          "tech_stack": ["Firestore real-time listeners", "React hooks", "Firebase SDK"],
+          "flow": [
+            "Firestore listeners attached on component mount",
+            "Real-time data changes trigger snapshot updates",
+            "React state automatically updated with new data",
+            "UI re-renders with fresh information",
+            "Listeners cleaned up on component unmount",
+            "Batch operations for efficient updates"
+          ]
+        },
+        "implementation_notes": "Uses Firestore real-time listeners for immediate updates, implements proper cleanup to prevent memory leaks, batches updates for performance"
+      }
+    }
+  ]
+}

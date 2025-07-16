@@ -1,0 +1,232 @@
+{
+  "training_data": [
+    {
+      "input": "How is AI content generation implemented in VidyaNXT?",
+      "output": {
+        "explanation": "VidyaNXT implements AI content generation through Google Gemini integration using the gemini-1.5-flash model. The system provides a reusable utility within Firebase Cloud Functions that can generate text-based content for various features like wellness analysis, chat responses, and recommendations.",
+        "code_example": "const { GoogleGenerativeAI } = require('@google/generative-ai');\nconst genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);\nconst model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });",
+        "technical_details": {
+          "components": ["functions/src/config/gemini.js", "GoogleGenerativeAI", "Firebase Cloud Functions"],
+          "tech_stack": ["Google Gemini", "@google/generative-ai", "Firebase Cloud Functions", "Node.js"],
+          "flow": [
+            "Initialize Gemini AI model with API key",
+            "Create generateText function for prompt processing",
+            "Handle API calls asynchronously",
+            "Process responses and handle errors",
+            "Return generated content to calling functions"
+          ]
+        },
+        "implementation_notes": "Uses serverless architecture with modular design, separating AI configuration from business logic. Includes comprehensive error handling and logging."
+      }
+    },
+    {
+      "input": "What are the key components of the generateText function?",
+      "output": {
+        "explanation": "The generateText function is the core component that processes prompts and returns AI-generated responses. It handles the complete lifecycle of AI content generation including initialization, API calls, and error management.",
+        "code_example": "async function generateText(prompt) {\n  try {\n    const result = await model.generateContent(prompt);\n    const response = (await result.response).text();\n    console.log('Generated response:', response);\n    return response;\n  } catch (error) {\n    console.error('Gemini API error:', error);\n    throw new Error('Failed to generate content');\n  }\n}",
+        "technical_details": {
+          "components": ["model.generateContent", "result.response", "error handling", "console logging"],
+          "tech_stack": ["async/await", "try-catch blocks", "Gemini API"],
+          "flow": [
+            "Accept string prompt as input",
+            "Call model.generateContent with prompt",
+            "Extract text from API response",
+            "Log response for debugging",
+            "Return generated text or throw error"
+          ]
+        },
+        "implementation_notes": "Uses async/await for non-blocking operations, includes comprehensive logging, and provides generic error messages for upstream handling."
+      }
+    },
+    {
+      "input": "How is error handling implemented in the AI content generation flow?",
+      "output": {
+        "explanation": "Error handling in VidyaNXT's AI content generation uses try-catch blocks to manage Gemini API failures. The system logs detailed errors for debugging while throwing generic errors for upstream handling.",
+        "code_example": "try {\n  const result = await model.generateContent(prompt);\n  return (await result.response).text();\n} catch (error) {\n  console.error('Gemini API error:', error);\n  throw new Error('Failed to generate content');\n}",
+        "technical_details": {
+          "components": ["try-catch blocks", "console.error", "Error throwing", "upstream propagation"],
+          "tech_stack": ["JavaScript error handling", "Node.js logging", "Firebase Cloud Functions"],
+          "flow": [
+            "Wrap API calls in try-catch",
+            "Log full error details for debugging",
+            "Throw generic error message",
+            "Allow calling functions to handle user feedback",
+            "Maintain system stability"
+          ]
+        },
+        "implementation_notes": "Provides detailed logging for developers while protecting users from technical error details. Enables robust integration with other system components."
+      }
+    },
+    {
+      "input": "What environment configuration is required for Gemini AI integration?",
+      "output": {
+        "explanation": "The Gemini AI integration requires proper configuration of the API key through environment variables or Firebase config. The system uses a fallback mechanism to ensure flexibility across different deployment scenarios.",
+        "code_example": "const apiKey = process.env.GEMINI_API_KEY || functions.config().gemini.key;\nconst genAI = new GoogleGenerativeAI(apiKey);",
+        "technical_details": {
+          "components": ["process.env.GEMINI_API_KEY", "functions.config().gemini.key", "GoogleGenerativeAI constructor"],
+          "tech_stack": ["Environment variables", "Firebase config", "Node.js process.env"],
+          "flow": [
+            "Check process.env for GEMINI_API_KEY",
+            "Fallback to Firebase config if not found",
+            "Initialize GoogleGenerativeAI with API key",
+            "Create model instance for content generation"
+          ]
+        },
+        "implementation_notes": "Supports both local development (.env) and production (Firebase config) environments. Requires valid API key from Google AI Studio."
+      }
+    },
+    {
+      "input": "How can I add caching to the AI content generation flow?",
+      "output": {
+        "explanation": "Caching can be implemented by adding Firestore or Redis storage to cache AI responses based on prompt hashing. This reduces API calls and improves response times for repeated queries.",
+        "code_example": "const admin = require('firebase-admin');\nconst db = admin.firestore();\n\nasync function generateText(prompt) {\n  const cacheKey = Buffer.from(prompt).toString('base64');\n  const cacheDoc = await db.collection('ai_cache').doc(cacheKey).get();\n  \n  if (cacheDoc.exists) {\n    return cacheDoc.data().response;\n  }\n  \n  try {\n    const result = await model.generateContent(prompt);\n    const response = (await result.response).text();\n    \n    await db.collection('ai_cache').doc(cacheKey).set({\n      response,\n      createdAt: new Date()\n    });\n    \n    return response;\n  } catch (error) {\n    console.error('Gemini API error:', error);\n    throw new Error('Failed to generate content');\n  }\n}",
+        "technical_details": {
+          "components": ["Firestore cache", "Buffer encoding", "cache key generation", "cache expiry logic"],
+          "tech_stack": ["Firebase Admin SDK", "Firestore", "Base64 encoding", "Date objects"],
+          "flow": [
+            "Generate cache key from prompt",
+            "Check Firestore for existing response",
+            "Return cached response if available",
+            "Generate new content if not cached",
+            "Store new response in cache",
+            "Return generated content"
+          ]
+        },
+        "implementation_notes": "Use Base64 encoding for cache keys to handle special characters. Consider implementing cache expiry logic for data freshness."
+      }
+    },
+    {
+      "input": "How does the AI content generation integrate with other VidyaNXT components?",
+      "output": {
+        "explanation": "The AI content generation serves as a foundational utility that integrates with various VidyaNXT agents and services. It's designed to be called by other Cloud Functions like WellnessAgent and AiChatAgent to power AI-driven features.",
+        "code_example": "const { generateText } = require('../config/gemini');\n\nasync function analyzeWellness(wellnessData) {\n  const prompt = `Analyze wellness data: ${JSON.stringify(wellnessData)}`;\n  return await generateText(prompt);\n}\n\nasync function generateChatResponse(userMessage) {\n  const prompt = `Generate helpful response for: ${userMessage}`;\n  return await generateText(prompt);\n}",
+        "technical_details": {
+          "components": ["WellnessAgent", "AiChatAgent", "generateText utility", "Cloud Functions"],
+          "tech_stack": ["Firebase Cloud Functions", "Node.js modules", "JSON processing"],
+          "flow": [
+            "Import generateText from gemini.js",
+            "Create structured prompts for specific use cases",
+            "Call generateText with formatted prompts",
+            "Process AI responses for specific contexts",
+            "Return results to frontend components"
+          ]
+        },
+        "implementation_notes": "Modular design allows multiple agents to use the same AI utility. Prompts should be structured for specific use cases to get optimal results."
+      }
+    },
+    {
+      "input": "What are the best practices for implementing AI content generation in VidyaNXT?",
+      "output": {
+        "explanation": "Best practices include secure API key management, comprehensive error handling, proper logging, rate limiting, and structured prompt design. These practices ensure robust, secure, and maintainable AI integration.",
+        "code_example": "// Environment security\nconst apiKey = process.env.GEMINI_API_KEY;\nif (!apiKey) {\n  throw new Error('GEMINI_API_KEY not configured');\n}\n\n// Structured prompts\nconst createWellnessPrompt = (data) => {\n  return `Analyze wellness metrics:\nSteps: ${data.steps}\nSleep: ${data.sleep}\nMood: ${data.mood}\nProvide insights and recommendations.`;\n};\n\n// Retry logic\nasync function generateTextWithRetry(prompt, maxRetries = 3) {\n  for (let i = 0; i < maxRetries; i++) {\n    try {\n      return await generateText(prompt);\n    } catch (error) {\n      if (i === maxRetries - 1) throw error;\n      await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));\n    }\n  }\n}",
+        "technical_details": {
+          "components": ["Environment validation", "Structured prompts", "Retry mechanism", "Error boundaries"],
+          "tech_stack": ["Environment variables", "setTimeout", "Promise handling", "Exponential backoff"],
+          "flow": [
+            "Validate API key presence",
+            "Create structured prompt templates",
+            "Implement retry logic for failures",
+            "Add exponential backoff for rate limits",
+            "Log all operations for monitoring"
+          ]
+        },
+        "implementation_notes": "Always validate environment configuration, use structured prompts for consistency, implement retry logic for reliability, and maintain comprehensive logging for debugging."
+      }
+    },
+    {
+      "input": "How can I add support for multiple Gemini models?",
+      "output": {
+        "explanation": "Multiple Gemini models can be supported by modifying the generateText function to accept a model parameter and dynamically creating model instances. This allows different features to use optimal models for their specific needs.",
+        "code_example": "const models = {\n  'gemini-1.5-flash': 'gemini-1.5-flash',\n  'gemini-pro': 'gemini-pro',\n  'gemini-pro-vision': 'gemini-pro-vision'\n};\n\nasync function generateText(prompt, modelName = 'gemini-1.5-flash') {\n  const model = genAI.getGenerativeModel({ model: models[modelName] });\n  \n  try {\n    const result = await model.generateContent(prompt);\n    const response = (await result.response).text();\n    console.log(`Generated response using ${modelName}:`, response);\n    return response;\n  } catch (error) {\n    console.error(`Gemini API error for ${modelName}:`, error);\n    throw new Error(`Failed to generate content with ${modelName}`);\n  }\n}\n\n// Usage examples\nconst wellnessAnalysis = await generateText(prompt, 'gemini-pro');\nconst chatResponse = await generateText(prompt, 'gemini-1.5-flash');",
+        "technical_details": {
+          "components": ["Model dictionary", "Dynamic model creation", "Model-specific error handling"],
+          "tech_stack": ["Multiple Gemini models", "Dynamic instantiation", "Parameter passing"],
+          "flow": [
+            "Define available models in dictionary",
+            "Accept model parameter in generateText",
+            "Create model instance dynamically",
+            "Process content with selected model",
+            "Return model-specific responses"
+          ]
+        },
+        "implementation_notes": "Use model dictionary for validation, provide default model fallback, include model name in error messages for debugging, and document model capabilities for developers."
+      }
+    },
+    {
+      "input": "What are common error scenarios in AI content generation?",
+      "output": {
+        "explanation": "Common error scenarios include invalid API keys, network connectivity issues, rate limiting, malformed prompts, and service unavailability. Each scenario requires specific handling strategies to maintain system reliability.",
+        "code_example": "async function generateText(prompt) {\n  // Validate inputs\n  if (!prompt || typeof prompt !== 'string') {\n    throw new Error('Invalid prompt provided');\n  }\n  \n  try {\n    const result = await model.generateContent(prompt);\n    return (await result.response).text();\n  } catch (error) {\n    if (error.message.includes('API key')) {\n      console.error('Invalid API key configuration');\n      throw new Error('AI service configuration error');\n    }\n    if (error.message.includes('quota')) {\n      console.error('Rate limit exceeded');\n      throw new Error('AI service temporarily unavailable');\n    }\n    if (error.message.includes('network')) {\n      console.error('Network connectivity issue');\n      throw new Error('AI service connection failed');\n    }\n    \n    console.error('Unexpected Gemini error:', error);\n    throw new Error('Failed to generate content');\n  }\n}",
+        "technical_details": {
+          "components": ["Input validation", "Error classification", "Specific error handling", "User-friendly messages"],
+          "tech_stack": ["JavaScript validation", "String matching", "Error categorization"],
+          "flow": [
+            "Validate prompt input",
+            "Attempt content generation",
+            "Classify error types",
+            "Provide appropriate user feedback",
+            "Log detailed error information"
+          ]
+        },
+        "implementation_notes": "Implement input validation, classify errors for appropriate responses, provide user-friendly error messages, and maintain detailed logging for debugging."
+      }
+    },
+    {
+      "input": "How do I troubleshoot AI content generation issues?",
+      "output": {
+        "explanation": "Troubleshooting AI content generation involves systematic checking of configuration, network connectivity, API usage, and prompt formatting. A structured approach helps identify and resolve issues quickly.",
+        "code_example": "// Diagnostic function\nasync function diagnoseAIIssues() {\n  console.log('Diagnosing AI content generation...');\n  \n  // Check API key\n  const apiKey = process.env.GEMINI_API_KEY;\n  if (!apiKey) {\n    console.error('❌ GEMINI_API_KEY not found');\n    return;\n  }\n  console.log('✅ API key configured');\n  \n  // Test simple generation\n  try {\n    const response = await generateText('Hello, world!');\n    console.log('✅ Basic generation working:', response.substring(0, 50));\n  } catch (error) {\n    console.error('❌ Basic generation failed:', error.message);\n  }\n  \n  // Check Firebase config\n  try {\n    const config = functions.config();\n    console.log('✅ Firebase config accessible');\n  } catch (error) {\n    console.error('❌ Firebase config issue:', error.message);\n  }\n}",
+        "technical_details": {
+          "components": ["Configuration validation", "Basic functionality testing", "Environment checking", "Error logging"],
+          "tech_stack": ["Environment variables", "Firebase config", "Test functions", "Console logging"],
+          "flow": [
+            "Validate API key configuration",
+            "Test basic generation functionality",
+            "Check Firebase environment",
+            "Verify network connectivity",
+            "Review error logs for patterns"
+          ]
+        },
+        "implementation_notes": "Create diagnostic functions for systematic troubleshooting, test with simple prompts first, check all configuration sources, and maintain comprehensive logging."
+      }
+    },
+    {
+      "input": "How is the AI content generation flow tested and validated?",
+      "output": {
+        "explanation": "Testing AI content generation involves unit tests for the generateText function, integration tests with mock API responses, and end-to-end testing with actual prompts. Validation ensures reliability and proper error handling.",
+        "code_example": "// Unit test example\nconst { generateText } = require('../config/gemini');\n\ndescribe('AI Content Generation', () => {\n  test('should generate content for valid prompt', async () => {\n    const prompt = 'Generate a wellness tip';\n    const result = await generateText(prompt);\n    expect(result).toBeDefined();\n    expect(typeof result).toBe('string');\n    expect(result.length).toBeGreaterThan(0);\n  });\n  \n  test('should handle invalid prompts', async () => {\n    await expect(generateText('')).rejects.toThrow('Invalid prompt');\n    await expect(generateText(null)).rejects.toThrow('Invalid prompt');\n  });\n  \n  test('should handle API errors gracefully', async () => {\n    // Mock API failure\n    jest.spyOn(console, 'error').mockImplementation(() => {});\n    // Test with invalid API key scenario\n    await expect(generateText('test')).rejects.toThrow('Failed to generate content');\n  });\n});",
+        "technical_details": {
+          "components": ["Jest testing framework", "Mock functions", "Error simulation", "Validation checks"],
+          "tech_stack": ["Jest", "JavaScript testing", "Mock APIs", "Async testing"],
+          "flow": [
+            "Create unit tests for generateText",
+            "Test valid prompt scenarios",
+            "Test invalid input handling",
+            "Mock API failures",
+            "Validate error responses"
+          ]
+        },
+        "implementation_notes": "Use Jest for testing, mock external APIs for reliability, test both success and failure scenarios, validate response formats, and ensure proper error handling."
+      }
+    },
+    {
+      "input": "What security considerations apply to AI content generation?",
+      "output": {
+        "explanation": "Security considerations include API key protection, input sanitization, rate limiting, audit logging, and preventing prompt injection attacks. These measures ensure safe and secure AI integration.",
+        "code_example": "// Security implementation\nconst rateLimit = require('express-rate-limit');\n\n// Rate limiting\nconst aiRateLimit = rateLimit({\n  windowMs: 15 * 60 * 1000, // 15 minutes\n  max: 100, // limit each IP to 100 requests per windowMs\n  message: 'AI generation rate limit exceeded'\n});\n\n// Input sanitization\nfunction sanitizePrompt(prompt) {\n  if (!prompt || typeof prompt !== 'string') {\n    throw new Error('Invalid prompt format');\n  }\n  \n  // Remove potentially malicious content\n  const sanitized = prompt\n    .replace(/<script[^>]*>.*?<\\/script>/gi, '')\n    .replace(/<[^>]*>/g, '')\n    .substring(0, 4000); // Limit length\n  \n  return sanitized;\n}\n\n// Secure generation with audit logging\nasync function secureGenerateText(prompt, userId) {\n  const sanitizedPrompt = sanitizePrompt(prompt);\n  \n  // Audit log\n  await logAIUsage({\n    userId,\n    prompt: sanitizedPrompt,\n    timestamp: new Date(),\n    action: 'generate_content'\n  });\n  \n  return await generateText(sanitizedPrompt);\n}",
+        "technical_details": {
+          "components": ["Rate limiting", "Input sanitization", "Audit logging", "User authentication"],
+          "tech_stack": ["express-rate-limit", "String validation", "Firestore logging", "Firebase Auth"],
+          "flow": [
+            "Implement rate limiting per user/IP",
+            "Sanitize all input prompts",
+            "Log AI usage for auditing",
+            "Validate user permissions",
+            "Monitor for abuse patterns"
+          ]
+        },
+        "implementation_notes": "Store API keys securely, implement comprehensive rate limiting, sanitize all inputs, maintain audit logs, and monitor for suspicious usage patterns."
+      }
+    }
+  ]
+}
