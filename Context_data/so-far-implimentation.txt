@@ -1,221 +1,322 @@
-Flow Name: Comprehensive Teaching Support System
+============================================================================
+                                Firestore Context
+============================================================================
+----------------------------------------------------------------------------
+firebase collection ---------Document------------------Inside collections
+----------------------------------------------------------------------------
+1.teachers-------------------DcL8oURMhWlsvsweOPJG-----(wellness_alert,wellness_reports,wellness_summary)
+2.teacherProfiles------------DcL8oURMhWlsvsweOPJG
+3.networkStats---------------global
+4.challenges-----------------w9z883d4vQOFTvbExV1C
+5.conversations--------------Z1qe31hQ0l02C8jbwIFH------(message)
+6.aiChatSessions-------------ai-session-17527368-------(message)
 
-Functionality:
+teacher:{
+  "aiPreferences": {
+    "communicationPreference": "concise",
+    "preferredInteractionStyle": null,
+    "topicExpertise": ["elementary"]
+  },
+  "createdAt": "2025-07-17T07:25:33.469Z",
+  "matchingCriteria": {
+    "experienceLevel": "experienced",
+    "grades": ["1", "2", "3"],
+    "gradeScore": 30,
+    "location": "Bangalore",
+    "regionKey": "bangalore"
+  },
+  "processedAt": "2025-07-17T07:25:33.470Z",
+  "profileStrength": 80,
+  "summary": "Highly motivated and experienced primary school teacher (Grades 1-3) with 7 years of success in Bangalore classrooms. Proven ability to create engaging and supportive learning environments fostering academic growth and social-emotional development in young learners. Expert in differentiated instruction and utilizing creative teaching methods to cater to diverse learning styles. Passionate about nurturing a love of learning in students and building strong teacher-student relationships.",
+  "teacherId": "hcJSzX6LAb8VJGDSOiUm"
+}
 
-VidyaNXT is a multi-faceted platform that supports teachers in under-resourced Indian schools through three deployed features:
+teacher: wellness_report:{
+  "analysis_type": "challenge",
+  "analyzed_at": "2025-07-17T07:34:22.463Z",
+  "content": "help",
+  "created_at": {
+    "_seconds": 1721201658,
+    "_nanoseconds": 0
+  },
+  "critical_alert": true,
+  "key_indicators": [
+    "Vague request for help indicating potential overwhelm",
+    "High level of implied need for support"
+  ],
+  "processed_at": {
+    "_seconds": 1721201662,
+    "_nanoseconds": 0
+  },
+  "recommendations": [
+    "Reach out to a trusted colleague, mentor, or counselor immediately."
+  ]
+}
 
-Peer-to-Peer Collaboration Network: Facilitates strategic teacher matching for collaboration.
-Wellness Monitoring: Monitors teacher stress and provides AI-driven support recommendations.
-AI Knowledge Base: Offers instant access to educational resources and a simulated mentor.
-These flows are supported by a modular, agent-based architecture integrating a React Progressive Web App (PWA) frontend with a Firebase backend and Google Gemini AI.
+teacher: wellness_alerts:{
+  "acknowledged": false,
+  "alert_type": "wellness_critical",
+  "created_at": {
+    "_seconds": 1721201338,
+    "_nanoseconds": 0
+  },
+  "message": "Your recent activity indicates you may need additional support. Please consider the wellness recommendations provided.",
+  "recommendations": [
+    "Seek immediate help from a mental health professional or crisis hotline.",
+    "Contact a trusted friend, family member, or colleague for support.",
+    "Take a break from work and engage in relaxing activities (deep breathing, short walk).",
+    "Consider short-term sick leave if possible to address the situation."
+  ],
+  "teacher_id": "hcJSzX6LAb8VJGDSOiUm",
+  "urgency_level": "high",
+  "wellness_scores": {
+    "emotional_state": 9,
+    "overall_wellness": 2,
+    "stress_level": 10,
+    "support_needed": 10
+  }
+}
 
-Components and Architecture Involved
-Frontend Components (src/)
-Root Files:
-App.jsx: Main application component, likely defining routes for all pages.
-main.jsx: Entry point for the React app.
-PWABadge.jsx: Manages PWA installation prompts.
-firebase.js: Configures Firebase SDK for authentication, Firestore, and Cloud Functions.
-Pages (src/pages/):
-AiChatWindow.jsx: Interface for AI chat interactions.
-ChatWindow.jsx: General chat interface (likely for peer-to-peer communication).
-PeerAdvice.jsx: Displays peer-shared advice.
-PeersList.jsx: Lists matched peers.
-WellnessDashboard.jsx: Central hub for wellness monitoring.
-Components (src/components/):
-ChatList.jsx: Displays a list of conversations.
-ErrorBoundary.jsx: Handles runtime errors in the UI.
-Home.jsx: Likely the landing page.
-Login.jsx: Teacher login interface.
-RegisterTeacher.jsx: Teacher registration form.
-WellnessAlert.jsx, WellnessAnalytics.jsx, WellnessMetrics.jsx, WellnessNavigation.jsx, WellnessNotifications.jsx, WellnessRecommendations.jsx, WellnessTrendChart.jsx: Wellness monitoring UI elements.
-firebaseWellnessService.js: Service for interacting with Firebase wellness APIs.
-Styling:
-App.css, index.css, PWABadge.css: CSS for UI styling.
-tailwind.config.js: Configures Tailwind CSS for utility-based styling.
-Backend Components (functions/src/)
-Agents (functions/src/agents/):
-ai-chat-agent.js: Powers AI-driven chat support.
-matching-agent.js: Matches teachers for peer collaboration.
-network-agent.js: Manages the peer network.
-orchestration-agent.js: Coordinates agent interactions.
-profile-agent.js: Handles personalized teacher profiles.
-wellness-agent.js: Analyzes teacher wellness data.
-Breadboards (functions/src/breadboards/):
-matching-board.js: Orchestrates peer matching workflows.
-network-board.js: Manages network-related tasks.
-profile-board.js: Coordinates profile updates.
-Functions (functions/src/functions/):
-auth.js: Authentication endpoints.
-chat.js: Chat-related APIs.
-challenge.js: Likely handles teacher challenges or tasks.
-triggers.js: Firestore-triggered functions.
-wellness.js: Wellness monitoring APIs.
-Services (functions/src/services/):
-ai.js: AI utilities.
-auth.js: Authentication logic.
-chat.js: Chat functionality.
-notifications.js: Notification system.
-profile.js: Profile management.
-teacher.js: Teacher-specific services.
-wellness.js: Wellness data processing.
-Utilities (functions/src/utils/):
-helpers.js: General helper functions.
-logger.js: Logging utilities.
-validation.js: Data validation.
-Configuration (functions/src/config/):
-constants.js: Defines app-wide constants.
-gemini.js: Configures Google Gemini AI.
-Configuration Files
-firebase.json, .firebaserc: Firebase project configuration.
-firestore.rules, firestore.indexes.json: Firestore security and indexing.
-vite.config.js: Vite build configuration.
-pwa-assets.config.js: PWA asset generation.
-package.json: Lists dependencies (React, Firebase, Tailwind, etc.).
-Architecture Overview
-Frontend: React PWA with Vite for fast builds, Tailwind CSS for styling, and Firebase SDK for backend integration. Offline support is enabled via service workers and IndexedDB (public/ assets).
-Backend: Firebase Cloud Functions with a multi-agent architecture. Agents (ai-chat-agent.js, wellness-agent.js) leverage Google Gemini for AI tasks, orchestrated by breadboards.
-Data Storage: Firestore stores teacher profiles, wellness data, and chat logs, with offline sync capabilities.
-Integration: Frontend communicates with backend via HTTPS callable functions, with Gemini providing AI-driven insights.
-Key Features and Capabilities
-Based on the project structure and deployed features:
+//note for below:-teachers > hcJSzX6LAb8VJGDSOiUm > wellness_summary > current
+teacher:wellness_summary(document name : current):{
+  "avg_wellness_score": 2,
+  "created_at": {
+    "_seconds": 1721201517,
+    "_nanoseconds": 0
+  },
+  "critical_alerts_count": 2,
+  "last_analysis": {
+    "analysis_type": "challenge",
+    "analyzed_at": "2025-07-17T07:34:22.463Z",
+    "critical_alert": true,
+    "key_indicators": [
+      "Vague request for help indicating potential overwhelm",
+      "High level of implied need for support"
+    ],
+    "recommendations": [
+      "Reach out to a trusted colleague, mentor, or counselor immediately.",
+      "Identify specific stressors contributing to the 'help' request and break them down into manageable tasks or problems.",
+      "Explore available resources such as employee assistance programs (EAPs) or mental health services."
+    ]
+  },
+  "teacher_id": "hcJSzX6LAb8VJGDSOiUm",
+  "urgency_level": "high",
+  "wellness_scores": {
+    "emotional_state": 4,
+    "overall_wellness": 3,
+    "stress_level": 8,
+    "support_needed": 9
+  },
+  "last_updated": {
+    "_seconds": 1721201662,
+    "_nanoseconds": 0
+  },
+  "recent_scores": [
+    {
+      "analysis_type": "challenge",
+      "emotional_state": 2,
+      "overall_wellness": 1,
+      "stress_level": 10,
+      "support_needed": 10,
+      "timestamp": "2025-07-17T07:31:57.306Z"
+    },
+    {
+      "analysis_type": "challenge",
+      "emotional_state": 4,
+      "overall_wellness": 3,
+      "stress_level": 8,
+      "support_needed": 9,
+      "timestamp": "2025-07-17T07:34:22.594Z"
+    }
+  ],
+  "total_analyses": 2,
+  "wellness_trend": "stable"
+}
 
-Peer-to-Peer Collaboration Network:
-Matches teachers based on experience and challenges (matching-agent.js).
-Displays peers and advice via PeersList.jsx and PeerAdvice.jsx.
-Supports multimodal content sharing (ChatWindow.jsx).
-Wellness Monitoring:
-Monitors teacher stress using AI (wellness-agent.js).
-Displays metrics, alerts, and recommendations (WellnessDashboard.jsx, WellnessAlert.jsx, etc.).
-Provides trend analysis (WellnessTrendChart.jsx).
-AI Knowledge Base:
-Offers instant access to resources via AiChatWindow.jsx.
-Simulates a mentor using ai-chat-agent.js and Gemini AI.
-Offline-First Design:
-Ensures functionality in low-connectivity environments via PWA and Firestore offline mode.
-Note: Features like multi-grade differentiation and hyper-local content are not explicitly supported by the provided structure (no specific components or agents), so they are assumed to be in development.
+teacherProfiles:{
+  "aiPreferences": {
+    "communicationPreference": "concise",
+    "preferredInteractionStyle": null,
+    "topicExpertise": ["elementary"]
+  },
+  "createdAt": "2025-07-17T07:25:33.469Z",
+  "matchingCriteria": {
+    "experienceLevel": "experienced",
+    "grades": ["1", "2", "3"],
+    "gradeScore": 30,
+    "location": "Bangalore",
+    "regionKey": "bangalore"
+  },
+  "processedAt": "2025-07-17T07:25:33.470Z",
+  "profileStrength": 80,
+  "summary": "Highly motivated and experienced primary school teacher (Grades 1-3) with 7 years of success in Bangalore classrooms. Proven ability to create engaging and supportive learning environments fostering academic growth and social-emotional development in young learners. Expert in differentiated instruction and utilizing creative teaching methods to cater to diverse learning styles. Passionate about nurturing a love of learning in students and building strong teacher-student relationships.",
+  "teacherId": "hcJSzX6LAb8VJGDSOiUm"
+}
 
-Technical Implementation Details
-Frontend:
-React PWA: Built with React, bundled by Vite, and styled with Tailwind CSS. App.jsx uses React Router for navigation.
-Offline Support: Service workers (public/ assets) and IndexedDB cache data for offline use.
-Firebase Integration: firebase.js initializes Authentication, Firestore, and Cloud Functions.
-Backend:
-Cloud Functions: HTTPS endpoints in functions/src/functions/ handle API requests.
-Agents: wellness-agent.js and ai-chat-agent.js use Gemini AI (gemini.js) for analysis and responses.
-Breadboards: Coordinate agent workflows for scalability.
-Firestore: Stores data in collections like teachers, wellness_reports, and conversations.
-Deployment:
-Hosted on Firebase (firebase.json).
-Live demo: https://vidyanxt-c5816.web.app/.
-CI/CD via GitHub Actions.
-Auto-Generated Documentation Q&A Pairs
-Flow-Specific Questions
-Input: "How does the peer-to-peer collaboration network work in VidyaNXT?"
+networkStats:{
+  "gradeCoverage": {
+    "1": 2,
+    "2": 2,
+    "3": 2,
+    "4": 1
+  },
+  "lastUpdated": "2025-07-17T07:25:33.991Z",
+  "locationCoverage": {
+    "Bangalore": 1,
+    "Karnataka, India": 1
+  },
+  "totalTeachers": 2
+}
 
-Output:
+challenges : {
+  "aiChatRecommended": false,
+  "classification": {
+    "aiChatRecommended": false,
+    "classifiedAt": "2025-07-17T07:34:20.422Z",
+    "confidence": 0.6,
+    "estimatedResolutionTime": "4-8 hours",
+    "secondaryTypes": ["classroom management", "behavior management"],
+    "type": "student engagement",
+    "urgency": "medium",
+    "urgencyScore": 0.3
+  },
+  "classifiedAt": "2025-07-17T07:34:20.422Z",
+  "connectionStrategy": "peer-first",
+  "createdAt": "2025-07-17T07:34:17.957Z",
+  "estimatedHelpTime": "4-8 hours",
+  "matchedAt": "2025-07-17T07:34:28.331Z",
+  "matches": [
+    {
+      "peerId": "DcL8oURMhWlsvsweOPJG",
+      "reasons": [
+        "Significant grade level overlap (Grades 1-3)",
+        "Same subject expertise (elementary)",
+        "Similar experience level (experienced)",
+        "Close geographic proximity (Bangalore vs. Karnataka)",
+      ],
+      "score": 0.85,
+      "type": "peer"
+    }
+  ],
+  "orchestratedAt": "2025-07-17T07:34:32.836Z",
+  "orchestrationEnhanced": true,
+  "ownerUid": "gd2RuSy8MsKyJwo64bC3Kz3os7Gj",
+  "priorityOrder": ["peer", "ai"],
+  "recommendAiChat": false,
+  "recommendedConnections": [
+    {
+      "estimatedResponseTime": "4-8 hours",
+      "peerId": "DcL8oURMhWlsvsweOPJG",
+      "priority": "high",
+      "reason": "High peer match score (0.85) indicating significant overlap in experience, grade levels, location, and expertise in classroom and behavior management – directly addressing the secondary challenge types. This ensures a rapid response and practical advice from someone facing similar situations.",
+      "type": "peer"
+    }
+  ],
+  "responses": [],
+  "status": "ORCHESTRATED",
+  "suggestedNextSteps": [
+    "Immediately connect the teacher (hcJSzX6LAb8VJGDSOiUm) with the peer (DcL8oURMhWlsvsweOPJG) via a secure messaging system.",
+    "Provide a brief introduction highlighting the challenge (student engagement, with secondary issues of classroom and behavior management).",
+    "Monitor the interaction and offer additional support if needed (e.g., access to relevant resources, escalation path).",
+    "If the peer connection is not fruitful within 4 hours, explore other options such as more targeted peer matches or access to curated support material.",
+    "After peer support, optionally suggest brief follow-up with AI-based resources to provide additional perspectives and actionable strategies if the issue persists."
+  ],
+  "teacherId": "hcJSzX6LAb8VJGDSOiUm",
+  "text": "help",
+  "urgency": "medium"
+}
 
-The peer-to-peer collaboration network in VidyaNXT follows this process:
+conversations:{
+  "createdAt": "2025-07-17T07:34:32.054Z",
+  "lastUpdated": "2025-07-17T07:35:03.277Z",
+  "members": [
+    "hcJSzX6LAb8VJGDSOiUm",
+    "DcL8oURMhWlsvsweOPJG"
+  ],
+  "unreadCounts": {
+    "DcL8oURMhWlsvsweOPJG": 0,
+    "hcJSzX6LAb8VJGDSOiUm": 1
+  }
+}
 
-The matching-agent.js analyzes teacher profiles (from profile.js and Firestore) to identify peers with similar challenges or expertise.
-The matching-board.js orchestrates the matching process, ensuring efficient pairing.
-The frontend (PeersList.jsx) displays matched peers, while PeerAdvice.jsx shows shared advice.
-ChatWindow.jsx enables communication, with data stored in Firestore (conversations collection).
-The network-agent.js tracks successful practices across the network.
-Input: "How does the wellness monitoring feature work in VidyaNXT?"
+conversations:messages:{
+  "createdAt": {
+    "_seconds": 1721201703,
+    "_nanoseconds": 0
+  },
+  "sender": "DcL8oURMhWlsvsweOPJG",
+  "text": "hi"
+}
 
-Output:
+aiChatSessions:{
+  "analysis": {
+    "keyInsights": [
+      "The user's initial message revealed a serious mental health crisis (suicidal ideation).",
+      "The user's primary concern quickly shifted from personal feelings of loneliness and suicidal thoughts to intense workplace stress related to disruptive student behavior.",
+      "The AI effectively prioritized the user's immediate emotional state but struggled to offer meaningful support beyond basic coping strategies and referrals.",
+      "The user's repeated expressions of extreme stress and disbelief in the AI's capacity to understand indicate a need for in-person professional support.",
+      "The AI's suggested follow-up questions were generally helpful, aiming to elicit specifics about the stressful situation and identify potential solutions, but they weren't sufficient to address the depth of the user's distress."
+    ],
+    "recommendations": [
+      "The AI should have more aggressively and explicitly steered the user towards immediate professional help (e.g., providing direct links to crisis hotlines and mental health resources).",
+      "The AI should have a more sophisticated mechanism for detecting and escalating serious mental health concerns to human intervention.",
+      "Further development of the AI's ability to empathize and understand the nuances of complex emotional states is crucial.",
+      "The AI needs improved strategies for engaging with users who are highly resistant or dismissive of its suggestions.",
+      "The AI could benefit from integrating more diverse and evidence-based stress management techniques beyond simple breathing exercises."
+    ],
+    "satisfaction": 3
+  },
+  "challengeId": "ai-chat-1752736817539",
+  "challengeText": "I need some teaching support and guidance.",
+  "createdAt": "2025-07-17T07:20:24.845Z",
+  "endedAt": "2025-07-17T07:24:22.776Z",
+  "lastAiResponse": "Oh dear, I can hear how overwhelmed you are. It sounds like you're feeling incredibly stressed. Taking a deep breath is a great first step. Let's try something together right now: Inhale slowly through your nose, hold it for a few seconds, and then exhale slowly through your mouth. Do this three times. It might help to calm your mind a little. It's okay to feel this way – teaching is demanding! Before we dive into any teaching strategies, let's figure out what's causing this stress. Is it a specific student, a challenging lesson plan, a lot of paperwork, or something else entirely? Talking about it can often make a big difference.",
+  "lastMessageAt": "2025-07-17T07:23:54.349Z",
+  "lastUserMessage": "i am supper stressed my mind is blasting its going to explode now ....",
+  "messageCount": 5,
+  "persona": "Namaste! I'm Vidya, your AI teaching assistant. Based on the experience of a dedicated primary school teacher from Karnataka, I'm here to support you with differentiated instruction and inclusive classroom strategies for Grades 1-4. I'll focus on concise and collaborative support to help you achieve positive student outcomes.",
+  "sessionId": "ai-session-1752736824844-3988pqzsr",
+  "status": "completed",
+  "suggestedFollowUps": [
+    "Can you tell me a little more about what's causing you so much stress right now?",
+    "What's one small thing you could do right now to take a break and feel a little calmer?",
+    "Thinking about your classroom, what is one thing you are feeling most positive about today?"
+  ],
+  "suggestedQuestions": [
+    "What specific challenges are you currently facing in your classroom?",
+    "What learning objectives are you aiming to achieve with your students?",
+    "Are there any particular students you'd like to focus on supporting, and what are their individual needs?",
+    "What resources or strategies have you already tried, and what were the results?"
+  ],
+  "teacherId": "DcL8oURMhWlsvsweOPJG",
+  "welcomeMessage": "Hello! Welcome. I understand you're looking for some teaching support and guidance. I'm ready to assist you in any way I can. Let's work together to create a fantastic learning experience for your students."
+}
 
-The wellness monitoring feature in VidyaNXT follows this process:
+aiChatSessions:message:{
+  "message": "you don't know i am supper stressed 100% my mind is fucked up",
+  "timestamp": "2025-07-17T07:22:21.808Z",
+  "type": "user"
+}
 
-WellnessDashboard.jsx fetches data via firebaseWellnessService.js, calling APIs in wellness.js.
-The wellness-agent.js uses Google Gemini (gemini.js) to analyze teacher interactions (e.g., challenges, chats).
-Results are displayed in WellnessMetrics.jsx, WellnessAlerts.jsx, and WellnessRecommendations.jsx.
-WellnessTrendChart.jsx visualizes trends, and notifications.js sends alerts for critical stress levels.
-Input: "How does the AI knowledge base work in VidyaNXT?"
 
-Output:
+============================================================================
+        Implimentation Context : React + firebase(funtion,Auth)
+============================================================================
 
-The AI knowledge base in VidyaNXT follows this process:
+import { auth,functions } from "../firebase";
+import { signInWithEmailAndPassword,signOut } from "firebase/auth";
+import { getFunctions, httpsCallable } from "firebase/functions";
+import { collection, onSnapshot, query, where,getDoc } from 'firebase/firestore';
+import { db } from '../firebase';
+Register(fields :- email,password,displayName,grade,location,experienceYear)(auth: email & password) -> registerTeacher=onCall(validateTeacherRegistration,createTeacher) -> (trigger) profileAgent=onDocumentCreated(teachers/{teacherId},TEACHER_PROFILES,updateNetworkStats,const profileResult = await agent.processProfile(payload);)->class ProfileAgent.
+Login -> (auth: email & password) -> loginTeacher = onCall(findTeacherByUid,updateTeacherLogin(increment 1))-> return teacherData(react: sessionStorage("teacherData"))
+Home -> (Listen for chat unread messages,Listen for wellness alerts, Logout| routes:/peer-advice,/peers,/wellness-dashboard,)
+PeerAdvice(postChallenge section) -> (postChallenge(teacherId), Subscribe to challenge doc(display list of match->if select any one -> startChatWith),aiChatRecommended is always true) -> postChallenge = onCall(store challenges, createWellnessReport)-> (trigger)classificationTrigger= onDocumentCreated(classificationAgent-> update challenge) -> (trigger) matchingTrigger= onDocumentUpdated(matchingAgent->update challenge) -> (trigger)orchestrationTrigger = onDocumentUpdated(orchestrationAgent->update challenge) -> (trigger) wellnessAnalysisAgent = onDocumentCreated("teachers/{teacherId}/wellness_reports/{reportId}", wellnessAgent.analyzeChallengeWellness->send critical alert if needed, updateTeacherWellnessSummary-> create or update wellness_summary) -> return peer's list to react.
+peer list(also have ai chat option) (select peer to peer chat) -> chat (by (db, "conversations", convoId, "messages") get conversation history, convoId -> "markAsRead", sendmessage,listen for messages)
+ai chat -> (createAiChatSession, Listen for new messages,) -> createAiChatSession= onCall(Create AI persona using Gemini,generateText(prompt)->class AiChatAgent ->sendAiChatMessage)->endAiChatSessiononCall("Analyze this AI chat session:"->updated aiChatSessions)
+wellness dashboard ->
 
-Teachers access resources via AiChatWindow.jsx, which sends queries to chat.js.
-The ai-chat-agent.js processes queries using Google Gemini (gemini.js) to generate responses.
-Responses are stored in Firestore (conversations collection) and displayed in the UI.
-The system simulates a mentor by providing quick, context-aware answers.
-API Documentation Scenarios
-Input: "What are the required parameters for the wellness API?"
+note:- gemini.js -> generateText(prompt) all agent at the end call this only.
 
-Output:
+--------------------------------------------------------------------------------
 
-The wellness API (likely in wellness.js) requires:
-
-teacher_id: Unique identifier for the teacher.
-Optional: timeframe (e.g., '7d', '30d') for analytics or specific data filters.
-Response includes wellness scores, alerts, and recommendations.
-Input: "What are the required parameters for the chat API?"
-
-Output:
-
-The chat API (in chat.js) requires:
-
-teacher_id: Identifies the teacher.
-message: The user’s query or chat input.
-Optional: session_id to track ongoing conversations.
-Response includes AI-generated replies or peer messages.
-Code Structure Explanations
-Input: "How do the frontend and backend components interact in VidyaNXT?"
-
-Output:
-
-Frontend components (src/components/, src/pages/) interact with the backend via firebase.js, which calls HTTPS functions in functions/src/functions/ (e.g., wellness.js, chat.js). For example, WellnessDashboard.jsx uses firebaseWellnessService.js to fetch data from wellness.js. Agents like wellness-agent.js process data using Gemini AI, with results stored in Firestore and returned to the frontend.
-
-Input: "What is the role of agents and breadboards in VidyaNXT?"
-
-Output:
-
-Agents (ai-chat-agent.js, matching-agent.js) handle specific tasks (e.g., chat responses, peer matching) using Gemini AI. Breadboards (matching-board.js, network-board.js) orchestrate these agents, coordinating workflows like matching teachers or generating wellness insights, ensuring modularity and scalability.
-
-Configuration and Setup Questions
-Input: "How do I set up the VidyaNXT project locally?"
-
-Output:
-
-To set up VidyaNXT:
-
-Clone the repository.
-Install dependencies: npm install in root and functions/.
-Configure Firebase: Set up .firebaserc, firebase.json, and firestore.rules.
-Add Gemini API key to functions/src/config/gemini.js.
-Run frontend: npm run dev (uses vite.config.js).
-Run backend: firebase emulators:start.
-Ensure Tailwind CSS is configured (tailwind.config.js).
-Input: "What environment variables are needed for VidyaNXT?"
-
-Output:
-
-Environment variables include:
-
-GEMINI_API_KEY: For Google Gemini in gemini.js.
-Firebase credentials (e.g., FIREBASE_PROJECT_ID) in .firebaserc.
-Optional: NODE_ENV for development/production modes.
-Troubleshooting Documentation
-Input: "What are common issues with the VidyaNXT wellness feature?"
-
-Output:
-
-Common issues include:
-
-API Failures: Incorrect Gemini API key in gemini.js. Check environment variables.
-Data Access: Firestore rules (firestore.rules) blocking requests. Update rules to allow teacher access.
-Offline Issues: PWA service workers not caching correctly. Clear cache or update public/ assets.
-UI Errors: Use ErrorBoundary.jsx logs to diagnose component failures.
-Input: "Why is the peer collaboration not showing peers?"
-
-Output:
-
-This could occur because:
-
-Matching Failure: matching-agent.js lacks sufficient teacher data in Firestore. Ensure profiles are populated.
-API Issue: Check matching-board.js and network-agent.js logs for errors.
-Frontend: Verify PeersList.jsx is correctly fetching data via firebase.js.
-This analysis is grounded in the provided project structure and deployed features, focusing on peer collaboration, wellness monitoring, and AI knowledge base. It avoids speculation on unimplemented features and provides actionable documentation for developers and users.

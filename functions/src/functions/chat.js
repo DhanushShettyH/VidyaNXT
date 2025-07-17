@@ -1,8 +1,6 @@
 // functions/src/functions/chat.js
 const { onCall, onDocumentCreated } = require("firebase-functions/v2/https");
-const {
-  onDocumentCreated: onDocCreated,
-} = require("firebase-functions/v2/firestore");
+
 const { HttpsError } = require("firebase-functions/v2/https");
 const admin = require("firebase-admin");
 const { FieldValue } = require("firebase-admin/firestore");

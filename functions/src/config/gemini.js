@@ -14,7 +14,7 @@ async function generateText(prompt) {
     const result = await model.generateContent(prompt);
     const response = await result.response;
     console.log("------------------------------------gemini");
-    console.log("Gemini response:", response);
+    // console.log("Gemini response:", response);
     console.log("------------------------------------gemini");
 
     return response.text();

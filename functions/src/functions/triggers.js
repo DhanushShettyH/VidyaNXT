@@ -9,7 +9,15 @@ const { getTeacherProfile_ } = require("../services/teacher");
 const { orchestrationAgent } = require("../agents/orchestration-agent");
 const { matchingAgent } = require("../agents/matching-agent");
 const { classificationAgent } = require("../agents/calssification-agent");
-const { sendWellnessCriticalAlert } = require("../services/wellness");
+const {
+  sendWellnessCriticalAlert,
+  updateTeacherWellnessSummary,
+} = require("../services/wellness");
+const {
+  onDocumentCreated: onDocCreated,
+} = require("firebase-functions/v2/firestore");
+const { FieldValue } = require("firebase-admin/firestore");
+const wellnessAgent = require("../agents/wellness-agent");
 
 const db = admin.firestore();
 
