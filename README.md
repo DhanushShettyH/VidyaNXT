@@ -192,3 +192,6 @@ graph TB
   sampleStory: "Once upon a time in Kolhapur..."
 }
 
+
+
+<!-- Markdown Preview Mermaid Support -->
