@@ -195,6 +195,18 @@ export default function Home() {
 									className="p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
 								>
 									<div className="flex items-center">
+										<span className="text-2xl mr-3">📚</span>
+										<div className="text-left">
+											<div className="font-medium text-gray-900">Content Hub</div>
+											<div className="text-sm text-gray-500">Explore our collection of teaching tools</div>
+										</div>
+									</div>
+								</Link>
+								<Link
+									to="/peer-advice"
+									className="p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+								>
+									<div className="flex items-center">
 										<span className="text-2xl mr-3">🤝</span>
 										<div className="text-left">
 											<div className="font-medium text-gray-900">Get Peer Advice</div>

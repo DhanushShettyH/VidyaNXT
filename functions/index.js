@@ -21,6 +21,8 @@ const chatFunctions = require("./src/functions/chat");
 
 const wellnessFunctions = require("./src/functions/wellness");
 
+const contentGenerationFunctions = require("./src/functions/content-generation");
+
 // Export all functions
 module.exports = {
   // Auth functions
@@ -35,4 +37,6 @@ module.exports = {
   ...chatFunctions,
 
   ...wellnessFunctions,
+
+  ...contentGenerationFunctions,
 };
