@@ -191,7 +191,7 @@ export default function Home() {
 							</h3>
 							<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 								<Link
-									to="/peer-advice"
+									to="/content-hub"
 									className="p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
 								>
 									<div className="flex items-center">

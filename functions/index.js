@@ -21,7 +21,7 @@ const chatFunctions = require("./src/functions/chat");
 
 const wellnessFunctions = require("./src/functions/wellness");
 
-const contentGenerationFunctions = require("./src/functions/content-generation");
+const sahayakFunctions = require("./src/functions/sahayak");
 
 // Export all functions
 module.exports = {
@@ -38,5 +38,5 @@ module.exports = {
 
   ...wellnessFunctions,
 
-  ...contentGenerationFunctions,
+  ...sahayakFunctions,
 };

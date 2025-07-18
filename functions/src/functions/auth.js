@@ -9,6 +9,10 @@ const {
   updateTeacherLogin,
   findTeacherByUid,
 } = require("../services/teacher");
+const {
+  initializeSahayakCollections,
+  addSampleContent,
+} = require("../utils/initialize-collections");
 
 // Register teacher function
 const registerTeacher = onCall(async (request) => {
@@ -29,6 +33,21 @@ const registerTeacher = onCall(async (request) => {
 
     // Create teacher document
     const teacherId = await createTeacher(teacherData);
+
+    // Initialize collections for the first teacher registration
+    // You might want to add a flag to only do this once or based on certain conditions
+    try {
+      console.log("🔄 Initializing Sahayak collections...");
+      await initializeSahayakCollections();
+
+      console.log("📚 Adding sample content...");
+      await addSampleContent();
+
+      console.log("✅ Collections initialized successfully");
+    } catch (initError) {
+      console.warn("⚠️ Collection initialization failed:", initError.message);
+      // Don't fail the registration if initialization fails
+    }
 
     return {
       success: true,

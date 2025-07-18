@@ -1,13 +1,29 @@
 Project Structure: VidyaNXT
-Path: C:\Users\hp\Documents\kali-linux-2024.4-vmware-amd64\kali-linux-2024.4-vmware-amd64.vmwarevm\shared_Files\hackathon\VidyaNXT
+Path: D:\hackathon\Google\AI Agentic Day\VidyaNXT
 ============================================================
 
 ├── 📁 .firebase/
 │   └── 📄 hosting.ZGlzdA.cache
 ├── 📄 .firebaserc
+├── 📁 Context_data/
+│   └── 📄 so-far-implimentation.txt
 ├── 📝 README.md
+├── 📁 Training_data/
+│   ├── 📋 10_notification.json
+│   ├── 📋 1_R_claud.json
+│   ├── 📋 2_L_claud.json
+│   ├── 📋 3_Post_.json
+│   ├── 📋 4_chat_.json
+│   ├── 📋 5_ai_chat_.json
+│   ├── 📋 6_wellness.json
+│   ├── 📋 7_folder_.json
+│   ├── 📋 8_so_far_.json
+│   ├── 📋 9_gemini.json
+│   └── 📋 vidyanxt_coding_data.json
 ├── 📜 eslint.config.js
+├── 📄 firebase-debug.log
 ├── 📋 firebase.json
+├── 📄 firestore-debug.log
 ├── 📋 firestore.indexes.json
 ├── 📄 firestore.rules
 ├── 🐍 folder_structure.py
@@ -20,10 +36,20 @@ Path: C:\Users\hp\Documents\kali-linux-2024.4-vmware-amd64\kali-linux-2024.4-vmw
 │       ├── 📁 agents/
 │       │   ├── 📜 ai-chat-agent.js
 │       │   ├── 📜 calssification-agent.js
+│       │   ├── 📜 differentiation-agent.js
+│       │   ├── 📜 differentiator-agent.js
+│       │   ├── 📜 hyper-local-agent.js
 │       │   ├── 📜 matching-agent.js
 │       │   ├── 📜 network-agent.js
 │       │   ├── 📜 orchestration-agent.js
+│       │   ├── 📜 planner-agent.js
 │       │   ├── 📜 profile-agent.js
+│       │   ├── 📜 regionalizer-agent.js
+│       │   ├── 📜 sahayak-orchestrator.js
+│       │   ├── 📜 simulated-classroom-agent.js
+│       │   ├── 📜 vision-parser-agent.js
+│       │   ├── 📜 visual-aid-agent.js
+│       │   ├── 📜 visual-artist-agent.js
 │       │   └── 📜 wellness-agent.js
 │       ├── 📁 breadboards/
 │       │   ├── 📜 matching-board.js
@@ -33,9 +59,11 @@ Path: C:\Users\hp\Documents\kali-linux-2024.4-vmware-amd64\kali-linux-2024.4-vmw
 │       │   ├── 📜 constants.js
 │       │   └── 📜 gemini.js
 │       ├── 📁 functions/
+│       │   ├── 📜 admin.js
 │       │   ├── 📜 auth.js
 │       │   ├── 📜 challenge.js
 │       │   ├── 📜 chat.js
+│       │   ├── 📜 sahayak.js
 │       │   ├── 📜 triggers.js
 │       │   └── 📜 wellness.js
 │       ├── 📁 services/
@@ -48,12 +76,18 @@ Path: C:\Users\hp\Documents\kali-linux-2024.4-vmware-amd64\kali-linux-2024.4-vmw
 │       │   └── 📜 wellness.js
 │       └── 📁 utils/
 │           ├── 📜 helpers.js
+│           ├── 📜 initialize-collections.js
 │           ├── 📜 logger.js
 │           └── 📜 validation.js
+├── 🖼️ image.png
 ├── 🌐 index.html
+├── 📜 index_copy_test.js
 ├── 📋 package-lock.json
 ├── 📋 package.json
+├── 📄 pglite-debug.log
+├── ⚙️ pnpm-lock.yaml
 ├── 📜 postcss.config.js
+├── 📄 project_structure.txt
 ├── 📁 public/
 │   ├── 🖼️ apple-touch-icon-180x180.png
 │   ├── 📄 favicon.ico
@@ -73,10 +107,13 @@ Path: C:\Users\hp\Documents\kali-linux-2024.4-vmware-amd64\kali-linux-2024.4-vmw
 │   │   └── 🖼️ react.svg
 │   ├── 📁 components/
 │   │   ├── ⚛️ ChatList.jsx
+│   │   ├── ⚛️ ContentGenerator.jsx
+│   │   ├── ⚛️ ContentLibrary.jsx
 │   │   ├── ⚛️ ErrorBoundary.jsx
 │   │   ├── ⚛️ Home.jsx
 │   │   ├── ⚛️ Login.jsx
 │   │   ├── ⚛️ RegisterTeacher.jsx
+│   │   ├── ⚛️ SahayakContent.jsx
 │   │   ├── ⚛️ WellnessAlert.jsx
 │   │   ├── ⚛️ WellnessAnalytics.jsx
 │   │   ├── ⚛️ WellnessMetrics.jsx
@@ -92,8 +129,10 @@ Path: C:\Users\hp\Documents\kali-linux-2024.4-vmware-amd64\kali-linux-2024.4-vmw
 │   └── 📁 pages/
 │       ├── ⚛️ AiChatWindow.jsx
 │       ├── ⚛️ ChatWindow.jsx
+│       ├── ⚛️ ContentHub.jsx
 │       ├── ⚛️ PeerAdvice.jsx
 │       ├── ⚛️ PeersList.jsx
+│       ├── ⚛️ SahayakDashboard.jsx
 │       └── ⚛️ WellnessDashboard.jsx
 ├── 📜 tailwind.config.js
 └── 📜 vite.config.js

@@ -18,6 +18,7 @@ import WellnessAnalytics from "./components/WellnessAnalytics.jsx";
 import WellnessAlerts from "./components/WellnessAlert.jsx";
 import WellnessMetrics from "./components/WellnessMetrics.jsx";
 import ContentHub from "./pages/ContentHub.jsx";
+import SahayakDashboard from "./pages/SahayakDashboard.jsx";
 
 function App() {
 	return (
@@ -42,7 +43,7 @@ function App() {
 				<Route path="/wellness/notifications" element={<WellnessNotifications />} />
 				<Route path="/wellness/recommendations" element={<WellnessRecommendations />} />
 
-				<Route path="/content-hub" element={<ContentHub />} />
+				<Route path="/content-hub" element={<SahayakDashboard />} />
 
 				<Route path="*" element={<Navigate to="/" replace />} />
 			</Routes>
