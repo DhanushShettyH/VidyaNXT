@@ -1,11 +1,10 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
-const admin = require("firebase-admin");
 const { parseGeminiResponse } = require("../utils/helpers");
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 // Initialize
-const db = admin.firestore();
+const { db } = require("../config/firebase-config");
 
 /**
  * Matching Agent

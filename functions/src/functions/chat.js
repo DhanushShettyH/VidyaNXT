@@ -9,7 +9,7 @@ const { delay, parseGeminiResponse } = require("../utils/helpers");
 const { createWellnessReport } = require("../services/wellness");
 const { incrementUnread } = require("./triggers");
 
-const db = admin.firestore();
+const { db } = require("../config/firebase-config");
 
 // ======================== PEER CHAT FUNCTIONS ===========================
 

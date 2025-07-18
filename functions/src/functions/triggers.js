@@ -19,7 +19,7 @@ const {
 const { FieldValue } = require("firebase-admin/firestore");
 const wellnessAgent = require("../agents/wellness-agent");
 
-const db = admin.firestore();
+const { db } = require("../config/firebase-config");
 
 // Profile processing trigger
 const profileAgent = onDocumentCreated(

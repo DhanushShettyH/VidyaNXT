@@ -1,6 +1,6 @@
 // functions/src/utils/initialize-collections.js
 const admin = require("firebase-admin");
-const db = admin.firestore();
+const { db } = require("../config/firebase-config");
 
 async function initializeSahayakCollections() {
   // Initialize Regional Knowledge for Maharashtra
@@ -373,8 +373,10 @@ async function initializeSahayakCollections() {
       landmarks: ["Sahyadri mountains", "Godavari river", "Konkan coast"],
     });
 
-  console.log("Collections initialized successfully");
-  console.log("Sahayak collections initialized successfully!");
+  // Add this at the end
+  await initializeAdditionalCollections();
+
+  console.log("All Sahayak collections initialized successfully!");
 }
 
 // Sample content library entry
@@ -437,6 +439,135 @@ async function addSampleContent() {
   });
 }
 
-// Functions to call during Firebase Functions deployment
+async function initializeAdditionalCollections() {
+  // Initialize Regional Prompts for different states
+  const states = [
+    "maharashtra",
+    "karnataka",
+    "rajasthan",
+    "tamil_nadu",
+    "kerala",
+  ];
+  const languages = ["marathi", "hindi", "kannada", "tamil", "malayalam"];
+
+  for (const state of states) {
+    for (const language of languages) {
+      await db
+        .collection("regional_prompts")
+        .doc(language)
+        .collection(state)
+        .doc("science")
+        .set({
+          promptTemplate: `Create educational content for ${state} students in ${language} with local cultural context`,
+          culturalSnippets: [
+            `${state} traditions`,
+            `${state} festivals`,
+            `${state} landmarks`,
+          ],
+          localExamples: [
+            `${state} agriculture`,
+            `${state} geography`,
+            `${state} climate`,
+          ],
+          dialectWords: {
+            // Add state-specific dialect words
+            teacher: language === "marathi" ? "शिक्षक" : "teacher",
+            student: language === "marathi" ? "विद्यार्थी" : "student",
+            school: language === "marathi" ? "शाळा" : "school",
+          },
+        });
+    }
+  }
+
+  // Initialize Sahayak Sessions tracking
+  await db.collection("sahayak_sessions").doc("_metadata").set({
+    totalSessions: 0,
+    successfulSessions: 0,
+    averageReliabilityScore: 0,
+    lastUpdated: new Date(),
+    version: "1.0",
+  });
+
+  // Initialize Content Library categories
+  const subjects = ["science", "mathematics", "english", "social_studies"];
+  const topics = {
+    science: ["plants", "animals", "water", "soil", "weather", "human_body"],
+    mathematics: [
+      "numbers",
+      "addition",
+      "subtraction",
+      "shapes",
+      "measurement",
+      "time",
+    ],
+    english: ["letters", "words", "sentences", "stories", "poems", "grammar"],
+    social_studies: [
+      "family",
+      "community",
+      "festivals",
+      "occupations",
+      "transport",
+      "environment",
+    ],
+  };
+
+  for (const subject of subjects) {
+    for (const topic of topics[subject]) {
+      await db
+        .collection("content_library")
+        .doc(`${subject}_${topic}_template`)
+        .set({
+          topic,
+          subject,
+          grades: ["1", "2", "3"],
+          language: "template",
+          location: "template",
+          content: {
+            story: {
+              title: `Template for ${topic}`,
+              culturalContext: "To be customized",
+              versions: {
+                1: {
+                  story: "Template content",
+                  vocabulary: "basic",
+                  length: "short",
+                },
+                2: {
+                  story: "Template content",
+                  vocabulary: "elementary",
+                  length: "medium",
+                },
+                3: {
+                  story: "Template content",
+                  vocabulary: "intermediate",
+                  length: "long",
+                },
+              },
+            },
+            visualAids: {
+              diagrams: [`${topic}_diagram.svg`],
+              worksheets: [`${topic}_worksheet.pdf`],
+              activities: [`${topic}_activity`],
+            },
+          },
+          reliabilityScore: 0,
+          createdAt: new Date(),
+          reusable: true,
+          usageCount: 0,
+          isTemplate: true,
+        });
+    }
+  }
+
+  // Initialize Simulation Reports structure
+  await db.collection("simulation_reports").doc("_metadata").set({
+    totalSimulations: 0,
+    averageReliabilityScore: 0,
+    commonFailurePoints: [],
+    lastUpdated: new Date(),
+  });
+
+  console.log("Additional collections initialized successfully!");
+}
 exports.initializeSahayakCollections = initializeSahayakCollections;
 exports.addSampleContent = addSampleContent;

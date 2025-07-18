@@ -5,7 +5,7 @@ const admin = require("firebase-admin");
 const { createWellnessReport } = require("../services/wellness");
 
 // Initialize
-const db = admin.firestore();
+const { db } = require("../config/firebase-config");
 /**
  * Post a new challenge
  * Callable function that creates a challenge and triggers wellness analysis

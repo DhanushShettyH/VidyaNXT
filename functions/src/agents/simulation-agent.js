@@ -1,173 +1,95 @@
 const { generateText } = require("../config/gemini");
 const { parseGeminiResponse } = require("../utils/helpers");
-const admin = require("firebase-admin");
-const db = admin.firestore();
 
 class SimulationAgent {
   constructor() {
-    this.name = "Simulation Agent";
+    this.db = admin.firestore();
   }
 
-  async runClassroomSimulation(content, grades, subject) {
-    try {
-      // Get virtual students for each grade
-      const virtualStudents = await this.getVirtualStudents(grades);
+  async createVirtualStudents() {
+    const virtualStudents = {
+      grade1: [
+        {
+          id: "g1_eager_learner",
+          readingLevel: 1.2,
+          attentionSpan: "short",
+          learningStyle: "visual",
+          characteristics: ["enthusiastic", "needs_repetition"],
+        },
+        {
+          id: "g1_shy_student",
+          readingLevel: 0.8,
+          attentionSpan: "medium",
+          learningStyle: "kinesthetic",
+          characteristics: ["quiet", "observational"],
+        },
+      ],
+      grade2: [
+        {
+          id: "g2_advanced_reader",
+          readingLevel: 2.5,
+          attentionSpan: "long",
+          learningStyle: "auditory",
+          characteristics: ["curious", "asks_questions"],
+        },
+      ],
+      grade3: [
+        {
+          id: "g3_struggling_reader",
+          readingLevel: 2.1,
+          attentionSpan: "medium",
+          learningStyle: "visual",
+          characteristics: ["hardworking", "needs_support"],
+        },
+      ],
+    };
 
-      // Run simulation for each grade
-      const simulationResults = [];
-
-      for (const grade of grades) {
-        const gradeStudents = virtualStudents.filter((s) => s.grade === grade);
-        const gradeResult = await this.simulateGradeResponse(
-          content,
-          gradeStudents,
-          subject
-        );
-        simulationResults.push(gradeResult);
-      }
-
-      // Analyze overall reliability
-      const reliabilityScore =
-        this.calculateReliabilityScore(simulationResults);
-
-      const reportId = `sim_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-
-      const report = {
-        reportId,
-        content,
-        grades,
-        subject,
-        simulationResults,
-        reliabilityScore,
-        recommendations: this.generateRecommendations(simulationResults),
-        createdAt: new Date().toISOString(),
-      };
-
-      // Store simulation report
-      await db.collection("simulation_reports").doc(reportId).set(report);
-
-      return report;
-    } catch (error) {
-      console.error("Simulation failed:", error);
-      throw error;
-    }
-  }
-
-  async getVirtualStudents(grades) {
-    const students = [];
-
-    for (const grade of grades) {
-      const docRef = db.collection("simulated_students").doc(`grade_${grade}`);
-      const doc = await docRef.get();
-
-      if (doc.exists) {
-        students.push(...doc.data().personas);
-      } else {
-        // Create default virtual students
-        const defaultStudents = await this.createDefaultVirtualStudents(grade);
-        await docRef.set({ personas: defaultStudents });
-        students.push(...defaultStudents);
-      }
+    // Store in Firestore
+    for (const [grade, students] of Object.entries(virtualStudents)) {
+      await this.db
+        .collection("simulated_students")
+        .doc(grade)
+        .set({
+          grade: parseInt(grade.replace("grade", "")),
+          personas: students,
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
     }
 
-    return students;
+    return virtualStudents;
   }
 
-  async createDefaultVirtualStudents(grade) {
-    const studentPrompt = `
-      Create 3 diverse virtual student personas for Grade ${grade} in Indian multi-grade classroom.
-      
-      Include different:
-      1. Learning speeds (fast, average, slow)
-      2. Home languages (Hindi, regional languages)
-      3. Attention spans
-      4. Common misconceptions for this grade
-      5. Learning preferences
-      
-      Return in JSON format:
-      {
-        "personas": [
-          {
-            "id": "g${grade}_fast_learner",
-            "name": "Student Name",
-            "grade": ${grade},
-            "learningSpeed": "fast",
-            "attentionSpan": "high",
-            "homeLang": "Hindi",
-            "readingLevel": ${grade + 0.5},
-            "misconceptions": ["common misconception"],
-            "strengths": ["verbal skills"],
-            "challenges": ["sitting still"]
-          }
-        ]
-      }
-    `;
-
-    const response = await generateText(studentPrompt);
-    const result = parseGeminiResponse(response);
-    return result.personas;
-  }
-
-  async simulateGradeResponse(content, students, subject) {
+  async testContentReliability(content, grades) {
     const simulationPrompt = `
-      You are simulating how Grade ${students[0].grade} students would respond to this content.
+      Test this educational content with virtual students from grades ${grades.join(", ")}:
       
-      Content: ${content}
-      Subject: ${subject}
+      Content: ${JSON.stringify(content)}
       
-      Virtual Students:
-      ${JSON.stringify(students, null, 2)}
+      Simulate how students would respond based on:
+      1. Reading comprehension level
+      2. Attention span
+      3. Learning style preferences
+      4. Common misconceptions for each grade
       
-      Simulate realistic responses considering:
-      1. Age-appropriate comprehension
-      2. Attention span limitations
-      3. Common misconceptions
-      4. Language barriers
-      5. Cultural context
-      
-      Return in JSON format:
+      Return JSON format:
       {
-        "grade": ${students[0].grade},
-        "comprehensionRate": 0.85,
-        "engagementLevel": "high",
-        "commonQuestions": ["What is this?"],
-        "difficulties": ["vocabulary too hard"],
-        "successIndicators": ["showed interest"],
-        "recommendedChanges": ["use simpler words"]
+        "overallScore": 0.85,
+        "gradeResults": [
+          {
+            "grade": 1,
+            "comprehensionScore": 0.8,
+            "engagementScore": 0.9,
+            "issues": ["vocabulary too complex"],
+            "suggestions": ["use simpler words"]
+          }
+        ],
+        "recommendations": ["overall improvement suggestions"]
       }
     `;
 
     const response = await generateText(simulationPrompt);
     return parseGeminiResponse(response);
   }
-
-  calculateReliabilityScore(simulationResults) {
-    const totalScore = simulationResults.reduce((sum, result) => {
-      return sum + result.comprehensionRate;
-    }, 0);
-
-    return Math.round((totalScore / simulationResults.length) * 100) / 100;
-  }
-
-  generateRecommendations(simulationResults) {
-    const recommendations = [];
-
-    simulationResults.forEach((result) => {
-      if (result.comprehensionRate < 0.7) {
-        recommendations.push(
-          `Grade ${result.grade}: Simplify vocabulary and concepts`
-        );
-      }
-      if (result.engagementLevel === "low") {
-        recommendations.push(
-          `Grade ${result.grade}: Add more interactive elements`
-        );
-      }
-      recommendations.push(...result.recommendedChanges);
-    });
-
-    return [...new Set(recommendations)]; // Remove duplicates
-  }
 }
 
-module.exports = new SimulationAgent();
+module.exports = SimulationAgent;

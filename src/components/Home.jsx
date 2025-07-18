@@ -99,42 +99,42 @@ export default function Home() {
 	}
 
 	return (
-		<div className="min-h-screen bg-gray-50">
-			{/* Header */}
-			<header className="bg-white shadow">
-				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-					<div className="flex justify-between items-center py-6">
-						<div>
-							<h1 className="text-3xl font-bold text-gray-900">VidyaNXT</h1>
-							<p className="text-sm text-gray-600">Teacher Dashboard</p>
-						</div>
-						<button
-							onClick={handleLogout}
-							className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium"
-						>
-							Logout
-						</button>
-					</div>
-				</div>
-			</header>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white shadow">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-6">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">VidyaNXT</h1>
+              <p className="text-sm text-gray-600">Teacher Dashboard</p>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+            >
+              Logout
+            </button>
+          </div>
+        </div>
+      </header>
 
-			{/* Main Content */}
-			<main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-				<div className="px-4 py-6 sm:px-0">
-					{/* Welcome Section */}
-					<div className="bg-white overflow-hidden shadow rounded-lg mb-6">
-						<div className="px-4 py-5 sm:p-6">
-							<h2 className="text-2xl font-bold text-gray-900 mb-2">
-								Welcome back, {teacherData.displayName}! 👋
-							</h2>
-							<p className="text-gray-600">
-								Ready to inspire and educate your students today?
-							</p>
-						</div>
-					</div>
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div className="px-4 py-6 sm:px-0">
+          {/* Welcome Section */}
+          <div className="bg-white overflow-hidden shadow rounded-lg mb-6">
+            <div className="px-4 py-5 sm:p-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                Welcome back, {teacherData.displayName}! 👋
+              </h2>
+              <p className="text-gray-600">
+                Ready to inspire and educate your students today?
+              </p>
+            </div>
+          </div>
 
-					{/* Teacher Info Cards */}
-					{/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {/* Teacher Info Cards */}
+          {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
 						{[
 							{
 								title: "Grades Teaching",
@@ -183,75 +183,109 @@ export default function Home() {
 						))}
 					</div> */}
 
-					{/* Quick Actions */}
-					<div className="bg-white shadow rounded-lg">
-						<div className="px-4 py-5 sm:p-6">
-							<h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
-								Quick Actions
-							</h3>
-							<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-								<Link
-									to="/content-hub"
-									className="p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-								>
-									<div className="flex items-center">
-										<span className="text-2xl mr-3">📚</span>
-										<div className="text-left">
-											<div className="font-medium text-gray-900">Content Hub</div>
-											<div className="text-sm text-gray-500">Explore our collection of teaching tools</div>
-										</div>
-									</div>
-								</Link>
-								<Link
-									to="/peer-advice"
-									className="p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-								>
-									<div className="flex items-center">
-										<span className="text-2xl mr-3">🤝</span>
-										<div className="text-left">
-											<div className="font-medium text-gray-900">Get Peer Advice</div>
-											<div className="text-sm text-gray-500">Connect with other teachers</div>
-										</div>
-									</div>
-								</Link>
+          {/* Quick Actions */}
+          <div className="bg-white shadow rounded-lg">
+            <div className="px-4 py-5 sm:p-6">
+              <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
+                Quick Actions
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <Link
+                  to="/content-hub"
+                  className="p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-center">
+                    <span className="text-2xl mr-3">🎓</span>
+                    <div className="text-left">
+                      <div className="font-medium text-gray-900">
+                        Content Creation
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        Create localized, differentiated content for your
+                        multi-grade classroom
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+                <Link
+                  to="/content-library"
+                  className="p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-center">
+                    <span className="text-2xl mr-3">📚</span>
+                    <div className="text-left">
+                      <div className="font-medium text-gray-900">
+                        Content Library
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        Browse and reuse previously generated educational
+                        content
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+                <Link
+                  to="/peer-advice"
+                  className="p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-center">
+                    <span className="text-2xl mr-3">🤝</span>
+                    <div className="text-left">
+                      <div className="font-medium text-gray-900">
+                        Get Peer Advice
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        Connect with other teachers
+                      </div>
+                    </div>
+                  </div>
+                </Link>
 
-								<Link
-									to="/peers"
-									className="relative flex items-center p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
-								>
-									<span className="text-2xl mr-3">💬</span>
-									<div>
-										<div className="font-medium text-gray-900">Chat with Peers</div>
-										<div className="text-sm text-gray-500">Your conversations</div>
-									</div>
+                <Link
+                  to="/peers"
+                  className="relative flex items-center p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                >
+                  <span className="text-2xl mr-3">💬</span>
+                  <div>
+                    <div className="font-medium text-gray-900">
+                      Chat with Peers
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      Your conversations
+                    </div>
+                  </div>
 
-									{unreadTotal > 0 && (
-										<span className="absolute top-2 right-2 bg-red-500 text-white text-xs font-semibold px-2 py-1 rounded-full">
-											{unreadTotal}
-										</span>
-									)}
-								</Link>
+                  {unreadTotal > 0 && (
+                    <span className="absolute top-2 right-2 bg-red-500 text-white text-xs font-semibold px-2 py-1 rounded-full">
+                      {unreadTotal}
+                    </span>
+                  )}
+                </Link>
 
-								<Link
-									to="/wellness-dashboard"
-									className="relative flex items-center p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-								>
-									<span className="text-2xl mr-3">🧘</span>
-									<div className="text-left">
-										<div className="font-medium text-gray-900">Wellness Dashboard</div>
-										<div className="text-sm text-gray-500">Check your mental/physical health</div>
-									</div>
-									{wellnessAlerts > 0 && (
-										<span className="absolute top-2 right-2 bg-red-500 text-white text-xs font-semibold px-2 py-1 rounded-full">
-											{wellnessAlerts}
-										</span>
-									)}
-								</Link>
-							</div>
-						</div>
-					</div>
-				</div>
-			</main>
-		</div>
-	);
+                <Link
+                  to="/wellness-dashboard"
+                  className="relative flex items-center p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <span className="text-2xl mr-3">🧘</span>
+                  <div className="text-left">
+                    <div className="font-medium text-gray-900">
+                      Wellness Dashboard
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      Check your mental/physical health
+                    </div>
+                  </div>
+                  {wellnessAlerts > 0 && (
+                    <span className="absolute top-2 right-2 bg-red-500 text-white text-xs font-semibold px-2 py-1 rounded-full">
+                      {wellnessAlerts}
+                    </span>
+                  )}
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
 }

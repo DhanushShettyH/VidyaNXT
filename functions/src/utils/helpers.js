@@ -55,6 +55,83 @@ function calculateProfileStrength(experienceYears, grades) {
 function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
+// Add this function to your existing helpers.js
+function sanitizeForFirestore(obj) {
+  if (obj === null || obj === undefined) {
+    return null;
+  }
+  
+  if (Array.isArray(obj)) {
+    return obj.map(item => sanitizeForFirestore(item)).filter(item => item !== null);
+  }
+  
+  if (typeof obj === 'object') {
+    const sanitized = {};
+    for (const [key, value] of Object.entries(obj)) {
+      const sanitizedValue = sanitizeForFirestore(value);
+      // CRITICAL: Allow empty strings for SVG code and other fields
+      if (sanitizedValue !== null && sanitizedValue !== undefined) {
+        sanitized[key] = sanitizedValue;
+      }
+    }
+    return sanitized;
+  }
+  
+  // Return the value as-is for strings (including SVG code)
+  return obj;
+}
+
+
+function validateContentStructure(content) {
+  const defaultContent = {
+    story: content.story || '',
+    gradeVersions: content.gradeVersions || {},
+    visualAids: content.visualAids || { aids: [], handsonActivities: [] },
+    culturalContext: content.culturalContext || { localReferences: [], culturalConnections: [] },
+    learningObjectives: content.learningObjectives || [],
+    teachingTips: content.teachingTips || []
+  };
+  
+  // Ensure grade versions have proper structure
+  Object.keys(defaultContent.gradeVersions).forEach(grade => {
+    const version = defaultContent.gradeVersions[grade];
+    defaultContent.gradeVersions[grade] = {
+      content: version.content || '',
+      objectives: version.objectives || [],
+      activities: version.activities || [],
+      vocabulary: version.vocabulary || []
+    };
+  });
+  
+  // CRITICAL: Ensure visual aids preserve svgCode
+  if (defaultContent.visualAids.aids) {
+    defaultContent.visualAids.aids = defaultContent.visualAids.aids.map(aid => ({
+      type: aid.type || 'svg',
+      title: aid.title || 'Visual Aid',
+      description: aid.description || '',
+      svgCode: aid.svgCode || '', // PRESERVE SVG CODE
+      teachingPoints: aid.teachingPoints || [],
+      interactiveElements: aid.interactiveElements || [],
+      drawingInstructions: aid.drawingInstructions || [],
+      materials: aid.materials || []
+    }));
+  }
+  
+  // Ensure hands-on activities have proper structure
+  if (defaultContent.visualAids.handsonActivities) {
+    defaultContent.visualAids.handsonActivities = defaultContent.visualAids.handsonActivities.map(activity => ({
+      name: activity.name || 'Activity',
+      materials: activity.materials || [],
+      steps: activity.steps || [],
+      learningOutcome: activity.learningOutcome || ''
+    }));
+  }
+  
+  return defaultContent;
+}
+
+
+// Update the existing parseGeminiResponse function
 
 function parseGeminiResponse(responseText) {
   try {
@@ -80,6 +157,8 @@ function parseGeminiResponse(responseText) {
   }
 }
 
+
+
 module.exports = {
   getExperienceLevel,
   getAIPreferences,
@@ -87,4 +166,6 @@ module.exports = {
   calculateProfileStrength,
   delay,
   parseGeminiResponse,
+  sanitizeForFirestore,
+  validateContentStructure,
 };

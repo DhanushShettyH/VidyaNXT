@@ -1,6 +1,6 @@
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const admin = require("firebase-admin");
-const db = admin.firestore();
+const { db } = require("../config/firebase-config");
 const {
   getWellnessDashboardData,
   acknowledgeWellnessAlert,

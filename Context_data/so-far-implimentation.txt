@@ -28,23 +28,16 @@ firebase collection ---------Document------------------Inside collections
 6.aiChatSessions-------------ai-session-17527368-------(message)
 
 teacher:{
-  "aiPreferences": {
-    "communicationPreference": "concise",
-    "preferredInteractionStyle": null,
-    "topicExpertise": ["elementary"]
-  },
-  "createdAt": "2025-07-17T07:25:33.469Z",
-  "matchingCriteria": {
-    "experienceLevel": "experienced",
-    "grades": ["1", "2", "3"],
-    "gradeScore": 30,
-    "location": "Bangalore",
-    "regionKey": "bangalore"
-  },
-  "processedAt": "2025-07-17T07:25:33.470Z",
-  "profileStrength": 80,
-  "summary": "",
-  "teacherId": "hcJSzX6LAb8VJGDSOiUm"
+  "createdAt": "2025-07-18T06:08:19.658Z",
+  "displayName": "Dhanush",
+  "experienceYears": 6,
+  "grades": ["1", "2", "3"],
+  "lastActiveAt": "2025-07-18T06:08:19.658Z",
+  "lastLoginAt": "2025-07-18T06:12:56.944Z",
+  "location": "karnataka",
+  "loginCount": 2,
+  "ownerUid": "02a48xx2QI925JKnzQlqwibYB8LF",
+  "status": "active"
 }
 
 teacher: wellness_report:{
@@ -360,8 +353,8 @@ function parseGeminiResponse(responseText) {
 
 
 note:- this is how ot access db in any ware in backend don't use firebase (config file)
-const admin = require("firebase-admin");
-const db = admin.firestore();
+const { db } = require("../config/firebase-config");
+
 
 note:- for date or time don't Use admin.firestore.FieldValue.serverTimestamp()
 use :- createdAt: new Date().toISOString(),

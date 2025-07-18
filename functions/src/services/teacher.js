@@ -2,7 +2,7 @@ const admin = require("firebase-admin");
 const { COLLECTIONS, STATUS } = require("../config/constants");
 const { FieldValue } = require("firebase-admin/firestore");
 
-const db = admin.firestore();
+const { db } = require("../config/firebase-config");
 
 // Create teacher document
 async function createTeacher(teacherData) {

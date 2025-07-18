@@ -2,7 +2,7 @@
 const admin = require("firebase-admin");
 const { FieldValue } = require("firebase-admin/firestore");
 
-const db = admin.firestore();
+const { db } = require("../config/firebase-config");
 
 /**
  * Find existing conversation between two teachers

@@ -1,5 +1,5 @@
 const admin = require("firebase-admin");
-const db = admin.firestore();
+const { db } = require("../config/firebase-config");
 const { FieldValue } = require("firebase-admin/firestore");
 const { sendNotification } = require("./notifications");
 

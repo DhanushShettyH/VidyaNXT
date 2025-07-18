@@ -1,5 +1,5 @@
 const admin = require("firebase-admin");
-const db = admin.firestore();
+const { db } = require("../config/firebase-config");
 
 // Send notification to teacher
 async function sendNotification(teacherId, notificationData) {

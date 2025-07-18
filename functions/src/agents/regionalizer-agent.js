@@ -1,98 +1,94 @@
+const admin = require("firebase-admin");
 const { generateText } = require("../config/gemini");
 const { parseGeminiResponse } = require("../utils/helpers");
-const admin = require("firebase-admin");
-const db = admin.firestore();
 
 class RegionalizerAgent {
   constructor() {
-    this.name = "Regionalizer Agent";
+    this.db = admin.firestore();
   }
 
-  async localizeContent(prompt, language, region, subject) {
+  async regionalizeContent(teacherId, content, topic) {
     try {
-      // Fetch regional context
-      const regionalData = await this.getRegionalContext(
-        language,
-        region,
-        subject
-      );
+      // Get teacher's location from profile
+      const teacherDoc = await this.db
+        .collection("teacherProfiles")
+        .doc(teacherId)
+        .get();
+      const teacherData = teacherDoc.data();
 
-      const localizationPrompt = `
-        You are a regional content expert for ${region}, ${language} language.
+      // Determine language based on location
+      const language = this.getLanguageFromLocation(teacherData.location);
+
+      // Get regional context
+      const regionalContext = await this.getRegionalContext(language, topic);
+
+      const prompt = `
+        You are creating localized educational content for ${teacherData.location}.
         
-        Original Request: ${prompt}
+        Original content: ${content}
+        Topic: ${topic}
+        Target language: ${language}
+        Regional context: ${JSON.stringify(regionalContext)}
         
-        Regional Context:
-        - Local dialect words: ${JSON.stringify(regionalData.dialectWords)}
-        - Cultural references: ${regionalData.culturalSnippets.join(", ")}
-        - Local examples: ${regionalData.localExamples.join(", ")}
+        Transform this content to include:
+        1. Local cultural references and examples
+        2. Regional dialect where appropriate
+        3. Familiar local scenarios and places
+        4. Traditional stories or folklore connections
         
-        Create culturally relevant content that:
-        1. Uses local dialect naturally
-        2. Includes regional examples and references
-        3. Mentions local landmarks, festivals, or traditions
-        4. Uses familiar cultural contexts
-        
-        Return in JSON format:
+        Return JSON format:
         {
-          "localizedContent": "content with regional context",
-          "culturalElements": ["list of cultural elements used"],
-          "dialectWords": {"standard": "local"},
-          "confidence": 0.95
+          "localizedContent": "story with regional context",
+          "culturalElements": ["element1", "element2"],
+          "dialectWords": {"english": "local_translation"},
+          "localExamples": ["example1", "example2"]
         }
       `;
 
-      const response = await generateText(localizationPrompt);
+      const response = await generateText(prompt);
       return parseGeminiResponse(response);
     } catch (error) {
-      console.error("Regionalization failed:", error);
+      console.error("Regionalization error:", error);
       throw error;
     }
   }
 
-  async getRegionalContext(language, region, subject) {
-    const docRef = db
-      .collection("regional_knowledge")
-      .doc(`${language}_${region}_${subject}`);
-    const doc = await docRef.get();
+  getLanguageFromLocation(location) {
+    const locationLanguageMap = {
+      Maharashtra: "Marathi",
+      Karnataka: "Kannada",
+      "Tamil Nadu": "Tamil",
+      Gujarat: "Gujarati",
+      Rajasthan: "Hindi",
+      "West Bengal": "Bengali",
+      // Add more mappings
+    };
 
-    if (doc.exists) {
-      return doc.data();
+    for (const [state, language] of Object.entries(locationLanguageMap)) {
+      if (location.includes(state)) return language;
+    }
+    return "Hindi"; // Default
+  }
+
+  async getRegionalContext(language, topic) {
+    const regionalDoc = await this.db
+      .collection("regional_prompts")
+      .doc(language.toLowerCase())
+      .collection("topics")
+      .doc(topic)
+      .get();
+
+    if (regionalDoc.exists) {
+      return regionalDoc.data();
     }
 
     // Create default regional context
-    const defaultContext = await this.createDefaultRegionalContext(
-      language,
-      region,
-      subject
-    );
-    await docRef.set(defaultContext);
-    return defaultContext;
-  }
-
-  async createDefaultRegionalContext(language, region, subject) {
-    const contextPrompt = `
-      Create regional educational context for ${region}, ${language} language, ${subject} subject.
-      
-      Provide:
-      1. Common dialect words for educational terms
-      2. Local cultural references relevant to ${subject}
-      3. Regional examples and case studies
-      4. Traditional knowledge connections
-      
-      Return in JSON format:
-      {
-        "dialectWords": {"soil": "माती", "water": "पाणी"},
-        "culturalSnippets": ["Sant Tukaram stories", "Warli art"],
-        "localExamples": ["Kolhapur farming", "Konkan coast"],
-        "festivals": ["Gudi Padwa", "Ganesh Chaturthi"],
-        "landmarks": ["Sahyadri mountains", "Godavari river"]
-      }
-    `;
-
-    const response = await generateText(contextPrompt);
-    return parseGeminiResponse(response);
+    return {
+      culturalSnippets: [],
+      dialectWords: {},
+      localExamples: [],
+    };
   }
 }
 
-module.exports = new RegionalizerAgent();
+module.exports = RegionalizerAgent;
