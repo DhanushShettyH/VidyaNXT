@@ -6,6 +6,8 @@ import { collection, onSnapshot, query, where } from 'firebase/firestore';
 import { db } from '../firebase';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useAuth } from './AuthContex';
+import LoadingScreen from './LoadingScreen';
 
 // Register GSAP plugins
 gsap.registerPlugin(ScrollTrigger);
@@ -15,6 +17,10 @@ export default function Home() {
 	const [loading, setLoading] = useState(true);
 	const [unreadTotal, setUnreadTotal] = useState(0);
 	const [wellnessAlerts, setWellnessAlerts] = useState(0);
+	const [isMobile, setIsMobile] = useState(false);
+	const [activeCardIndex, setActiveCardIndex] = useState(-1);
+	const { currentUser, loading: authLoading } = useAuth();
+
 
 	const navigate = useNavigate();
 	const cardRefs = useRef([]);
@@ -24,15 +30,29 @@ export default function Home() {
 	const personalSectionRef = useRef(null);
 	const loadingRef = useRef(null);
 
+	// Detect mobile device
 	useEffect(() => {
-		const storedTeacherData = sessionStorage.getItem("teacherData");
-		const displayName = sessionStorage.getItem("displayName");
+		const checkMobile = () => {
+			setIsMobile(window.innerWidth < 1024 || 'ontouchstart' in window);
+		};
 
-		if (!auth.currentUser || !storedTeacherData || !displayName) {
+		checkMobile();
+		window.addEventListener('resize', checkMobile);
+		return () => window.removeEventListener('resize', checkMobile);
+	}, []);
+
+	useEffect(() => {
+		const storedTeacherData = localStorage.getItem("teacherData");
+		const displayName = localStorage.getItem("displayName");
+
+		if (!storedTeacherData || !displayName) {
 			navigate("/login");
 			return;
 		}
-
+		// if (!currentUser) {
+		// 	navigate("/login");
+		// 	return;
+		// }
 		try {
 			const parsedTeacherData = JSON.parse(storedTeacherData);
 			setTeacherData(parsedTeacherData);
@@ -112,93 +132,279 @@ export default function Home() {
 		}
 	}, [loading, teacherData]);
 
-	// GSAP Scroll-triggered animations
+	// Apply hover-like animation to a card
+	const applyActiveAnimation = (card, index) => {
+		if (!card) return;
+
+		const icon = card.querySelector('.card-icon');
+		const overlay = card.querySelector('.card-overlay');
+		const arrow = card.querySelector('.card-arrow');
+
+		gsap.to(card, {
+			y: -8,
+			scale: 1.02,
+			boxShadow: "0 20px 40px -12px rgba(0,0,0,0.15)",
+			duration: 0.4,
+			ease: "power2.out"
+		});
+		gsap.to(icon, {
+			scale: 1.1,
+			rotate: 3,
+			duration: 0.4,
+			ease: "power2.out"
+		});
+		gsap.to(overlay, {
+			opacity: 0.3,
+			duration: 0.4,
+			ease: "power2.out"
+		});
+		gsap.to(arrow, {
+			x: 4,
+			duration: 0.4,
+			ease: "power2.out"
+		});
+
+		setActiveCardIndex(index);
+	};
+
+	// Reset card animation
+	const resetCardAnimation = (card) => {
+		if (!card) return;
+
+		const icon = card.querySelector('.card-icon');
+		const overlay = card.querySelector('.card-overlay');
+		const arrow = card.querySelector('.card-arrow');
+
+		gsap.to(card, {
+			y: 0,
+			scale: 1,
+			boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)",
+			duration: 0.4,
+			ease: "power2.out"
+		});
+		gsap.to(icon, {
+			scale: 1,
+			rotate: 0,
+			duration: 0.4,
+			ease: "power2.out"
+		});
+		gsap.to(overlay, {
+			opacity: 0,
+			duration: 0.4,
+			ease: "power2.out"
+		});
+		gsap.to(arrow, {
+			x: 0,
+			duration: 0.4,
+			ease: "power2.out"
+		});
+	};
+
+	// GSAP Scroll-triggered animations (Desktop) and Mobile viewport detection
 	useEffect(() => {
 		if (!loading && teacherData) {
-			cardRefs.current.forEach((card, index) => {
+			// Clean up existing ScrollTriggers and event listeners
+			ScrollTrigger.getAll().forEach(trigger => trigger.kill());
+
+			// Remove any existing event listeners
+			cardRefs.current.forEach((card) => {
 				if (card) {
-					// Hover animations
-					const icon = card.querySelector('.card-icon');
-					const overlay = card.querySelector('.card-overlay');
-					const arrow = card.querySelector('.card-arrow');
-
-					card.addEventListener('mouseenter', () => {
-						gsap.to(card, {
-							y: -8,
-							scale: 1.02,
-							boxShadow: "0 20px 40px -12px rgba(0,0,0,0.15)",
-							duration: 0.3,
-							ease: "power2.out"
-						});
-						gsap.to(icon, {
-							scale: 1.1,
-							rotate: 3,
-							duration: 0.3,
-							ease: "power2.out"
-						});
-						gsap.to(overlay, {
-							opacity: 0.3,
-							duration: 0.3,
-							ease: "power2.out"
-						});
-						gsap.to(arrow, {
-							x: 4,
-							duration: 0.3,
-							ease: "power2.out"
-						});
-					});
-
-					card.addEventListener('mouseleave', () => {
-						gsap.to(card, {
-							y: 0,
-							scale: 1,
-							boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)",
-							duration: 0.3,
-							ease: "power2.out"
-						});
-						gsap.to(icon, {
-							scale: 1,
-							rotate: 0,
-							duration: 0.3,
-							ease: "power2.out"
-						});
-						gsap.to(overlay, {
-							opacity: 0,
-							duration: 0.3,
-							ease: "power2.out"
-						});
-						gsap.to(arrow, {
-							x: 0,
-							duration: 0.3,
-							ease: "power2.out"
-						});
-					});
-
-					// Click animation
-					card.addEventListener('mousedown', () => {
-						gsap.to(card, {
-							scale: 0.98,
-							duration: 0.1,
-							ease: "power2.out"
-						});
-					});
-
-					card.addEventListener('mouseup', () => {
-						gsap.to(card, {
-							scale: 1.02,
-							duration: 0.1,
-							ease: "power2.out"
-						});
-					});
+					card.removeEventListener('mouseenter', card._handleMouseEnter);
+					card.removeEventListener('mouseleave', card._handleMouseLeave);
+					card.removeEventListener('mousedown', card._handleMouseDown);
+					card.removeEventListener('mouseup', card._handleMouseUp);
 				}
 			});
+
+			if (isMobile) {
+				// Mobile: Scroll-triggered animations
+				cardRefs.current.forEach((card, index) => {
+					if (card) {
+						ScrollTrigger.create({
+							trigger: card,
+							start: "top 60%",
+							end: "bottom 40%",
+							onEnter: () => {
+								// Reset previously active card
+								if (activeCardIndex !== -1 && activeCardIndex !== index) {
+									const prevCard = cardRefs.current[activeCardIndex];
+									resetCardAnimation(prevCard);
+								}
+								applyActiveAnimation(card, index);
+							},
+							onLeave: () => {
+								resetCardAnimation(card);
+								if (activeCardIndex === index) {
+									setActiveCardIndex(-1);
+								}
+							},
+							onEnterBack: () => {
+								// Reset previously active card
+								if (activeCardIndex !== -1 && activeCardIndex !== index) {
+									const prevCard = cardRefs.current[activeCardIndex];
+									resetCardAnimation(prevCard);
+								}
+								applyActiveAnimation(card, index);
+							},
+							onLeaveBack: () => {
+								resetCardAnimation(card);
+								if (activeCardIndex === index) {
+									setActiveCardIndex(-1);
+								}
+							}
+						});
+					}
+				});
+			} else {
+				// Desktop: Mouse hover animations with single card hover control
+				let currentHoveredIndex = -1;
+
+				cardRefs.current.forEach((card, index) => {
+					if (card) {
+						const icon = card.querySelector('.card-icon');
+						const overlay = card.querySelector('.card-overlay');
+						const arrow = card.querySelector('.card-arrow');
+
+						const handleMouseEnter = () => {
+							// Reset previously hovered card if different
+							if (currentHoveredIndex !== -1 && currentHoveredIndex !== index) {
+								const prevCard = cardRefs.current[currentHoveredIndex];
+								if (prevCard) {
+									const prevIcon = prevCard.querySelector('.card-icon');
+									const prevOverlay = prevCard.querySelector('.card-overlay');
+									const prevArrow = prevCard.querySelector('.card-arrow');
+
+									gsap.to(prevCard, {
+										y: 0,
+										scale: 1,
+										boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)",
+										duration: 0.3,
+										ease: "power2.out"
+									});
+									gsap.to(prevIcon, {
+										scale: 1,
+										rotate: 0,
+										duration: 0.3,
+										ease: "power2.out"
+									});
+									gsap.to(prevOverlay, {
+										opacity: 0,
+										duration: 0.3,
+										ease: "power2.out"
+									});
+									gsap.to(prevArrow, {
+										x: 0,
+										duration: 0.3,
+										ease: "power2.out"
+									});
+								}
+							}
+
+							// Apply hover animation to current card
+							currentHoveredIndex = index;
+							gsap.to(card, {
+								y: -8,
+								scale: 1.02,
+								boxShadow: "0 20px 40px -12px rgba(0,0,0,0.15)",
+								duration: 0.3,
+								ease: "power2.out"
+							});
+							gsap.to(icon, {
+								scale: 1.1,
+								rotate: 3,
+								duration: 0.3,
+								ease: "power2.out"
+							});
+							gsap.to(overlay, {
+								opacity: 0.3,
+								duration: 0.3,
+								ease: "power2.out"
+							});
+							gsap.to(arrow, {
+								x: 4,
+								duration: 0.3,
+								ease: "power2.out"
+							});
+						};
+
+						const handleMouseLeave = () => {
+							if (currentHoveredIndex === index) {
+								currentHoveredIndex = -1;
+								gsap.to(card, {
+									y: 0,
+									scale: 1,
+									boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)",
+									duration: 0.3,
+									ease: "power2.out"
+								});
+								gsap.to(icon, {
+									scale: 1,
+									rotate: 0,
+									duration: 0.3,
+									ease: "power2.out"
+								});
+								gsap.to(overlay, {
+									opacity: 0,
+									duration: 0.3,
+									ease: "power2.out"
+								});
+								gsap.to(arrow, {
+									x: 0,
+									duration: 0.3,
+									ease: "power2.out"
+								});
+							}
+						};
+
+						const handleMouseDown = () => {
+							if (currentHoveredIndex === index) {
+								gsap.to(card, {
+									scale: 0.98,
+									duration: 0.1,
+									ease: "power2.out"
+								});
+							}
+						};
+
+						const handleMouseUp = () => {
+							if (currentHoveredIndex === index) {
+								gsap.to(card, {
+									scale: 1.02,
+									duration: 0.1,
+									ease: "power2.out"
+								});
+							}
+						};
+
+						// Store event handlers on the element for cleanup
+						card._handleMouseEnter = handleMouseEnter;
+						card._handleMouseLeave = handleMouseLeave;
+						card._handleMouseDown = handleMouseDown;
+						card._handleMouseUp = handleMouseUp;
+
+						card.addEventListener('mouseenter', handleMouseEnter);
+						card.addEventListener('mouseleave', handleMouseLeave);
+						card.addEventListener('mousedown', handleMouseDown);
+						card.addEventListener('mouseup', handleMouseUp);
+					}
+				});
+			}
 
 			// Cleanup function
 			return () => {
 				ScrollTrigger.getAll().forEach(trigger => trigger.kill());
+				// Clean up event listeners
+				cardRefs.current.forEach((card) => {
+					if (card) {
+						card.removeEventListener('mouseenter', card._handleMouseEnter);
+						card.removeEventListener('mouseleave', card._handleMouseLeave);
+						card.removeEventListener('mousedown', card._handleMouseDown);
+						card.removeEventListener('mouseup', card._handleMouseUp);
+					}
+				});
 			};
 		}
-	}, [loading, teacherData]);
+	}, [loading, teacherData, isMobile, activeCardIndex]);
 
 	useEffect(() => {
 		if (!teacherData) return;
@@ -239,8 +445,8 @@ export default function Home() {
 	const handleLogout = async () => {
 		try {
 			await signOut(auth);
-			sessionStorage.removeItem("teacherData");
-			sessionStorage.removeItem("displayName");
+			localStorage.removeItem("teacherData");
+			localStorage.removeItem("displayName");
 			navigate("/login");
 		} catch (error) {
 			console.error("Logout error:", error);
@@ -249,15 +455,9 @@ export default function Home() {
 
 	if (loading) {
 		return (
-			<div ref={loadingRef} className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-emerald-50">
-				<div className="text-center">
-					<div className="relative">
-						<div className="spinner-outer animate-spin rounded-full h-20 w-20 border-4 border-indigo-100"></div>
-						<div className="spinner-inner animate-spin rounded-full h-20 w-20 border-4 border-indigo-600 border-t-transparent absolute top-0"></div>
-					</div>
-					<p className="mt-6 text-slate-700 font-semibold text-lg">Initializing your AI teaching hub...</p>
-				</div>
-			</div>
+			<>
+				<LoadingScreen title={"loading"} />
+			</>
 		);
 	}
 
@@ -355,7 +555,7 @@ export default function Home() {
 								<h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-800 via-indigo-700 to-emerald-700 bg-clip-text text-transparent">
 									VidyaNXT
 								</h1>
-								<p className="text-sm text-slate-600 font-medium tracking-wide">AI Teaching Intelligence Platform</p>
+								{/* <p className="text-sm text-slate-600 font-medium tracking-wide">AI Teaching Intelligence Platform</p> */}
 							</div>
 						</div>
 						<div className="flex items-center space-x-4">
@@ -365,10 +565,29 @@ export default function Home() {
 							</div>
 							<button
 								onClick={handleLogout}
-								className="px-6 py-3 bg-gradient-to-r from-slate-800 to-slate-900 hover:from-slate-900 hover:to-slate-950 text-white font-semibold rounded-xl transition-all duration-300 hover:shadow-lg hover:scale-105"
+								className={`${isMobile ? 'p-3' : 'px-6 py-3'} bg-gradient-to-r from-slate-800 to-slate-900 hover:from-slate-900 hover:to-slate-950 text-white font-semibold rounded-xl transition-all duration-300 hover:shadow-lg hover:scale-105 flex items-center justify-center`}
+								title={isMobile ? "Sign Out" : ""}
 							>
-								Sign Out
+								{isMobile ? (
+									<svg
+										className="w-6 h-6"
+										fill="none"
+										stroke="currentColor"
+										viewBox="0 0 24 24"
+										strokeWidth="2"
+									>
+										<path
+											strokeLinecap="round"
+											strokeLinejoin="round"
+											d="M5.636 5.636a9 9 0 1012.728 0M12 3v9"
+										/>
+									</svg>
+								) : (
+									"Sign Out"
+								)}
 							</button>
+
+
 						</div>
 					</div>
 				</div>
@@ -398,7 +617,7 @@ export default function Home() {
 										</p>
 									</div>
 								</div>
-
+								{/* 
 								<div className="flex flex-wrap gap-4 mt-8">
 									<div className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-xl">
 										<span className="text-indigo-200 text-sm font-medium">🤖 Multi-Agent AI Active</span>
@@ -409,7 +628,7 @@ export default function Home() {
 									<div className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-xl">
 										<span className="text-indigo-200 text-sm font-medium">📱 Offline-First Ready</span>
 									</div>
-								</div>
+								</div> */}
 							</div>
 
 							<div className="hidden lg:block">

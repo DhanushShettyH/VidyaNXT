@@ -48,8 +48,8 @@ export default function Login() {
 				await new Promise(resolve => setTimeout(resolve, 600)); // Small delay for UX
 
 				const data = JSON.stringify(result.data.teacher);
-				sessionStorage.setItem("teacherData", data);
-				sessionStorage.setItem("displayName", data.displayName);
+				localStorage.setItem("teacherData", data);
+				localStorage.setItem("displayName", result.data.teacher.displayName);
 
 				// Final step
 				setLoadingText("Welcome back!");
