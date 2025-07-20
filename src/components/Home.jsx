@@ -8,6 +8,7 @@ import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useAuth } from './AuthContex';
 import LoadingScreen from './LoadingScreen';
+import NetworkIndicator from './NetworkIndicator';
 
 // Register GSAP plugins
 gsap.registerPlugin(ScrollTrigger);
@@ -549,7 +550,7 @@ export default function Home() {
 								<div className="w-12 h-12 bg-gradient-to-r from-indigo-600 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg">
 									<span className="text-white font-bold text-xl">V</span>
 								</div>
-								<div className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white animate-pulse"></div>
+								<NetworkIndicator />
 							</div>
 							<div>
 								<h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-800 via-indigo-700 to-emerald-700 bg-clip-text text-transparent">
@@ -560,7 +561,7 @@ export default function Home() {
 						</div>
 						<div className="flex items-center space-x-4">
 							<div className="hidden md:flex items-center space-x-3 bg-gradient-to-r from-indigo-50 to-emerald-50 px-4 py-2 rounded-xl">
-								<div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+								<div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse bg-transparent relative overflow-hidden"><NetworkIndicator /></div>
 								<span className="text-sm font-medium text-slate-700">AI Active</span>
 							</div>
 							<button
@@ -586,8 +587,6 @@ export default function Home() {
 									"Sign Out"
 								)}
 							</button>
-
-
 						</div>
 					</div>
 				</div>
