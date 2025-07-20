@@ -26,6 +26,9 @@ firebase collection ---------Document------------------Inside collections
 4.challenges-----------------w9z883d4vQOFTvbExV1C
 5.conversations--------------Z1qe31hQ0l02C8jbwIFH------(message)
 6.aiChatSessions-------------ai-session-17527368-------(message)
+7.sahayak_sessions
+8.simulation_reports
+9.content_library
 
 teacher:{
   "createdAt": "2025-07-18T06:08:19.658Z",
@@ -71,10 +74,6 @@ teacher: wellness_alerts:{
   },
   "message": "Your recent activity indicates you may need additional support. Please consider the wellness recommendations provided.",
   "recommendations": [
-    "Seek immediate help from a mental health professional or crisis hotline.",
-    "Contact a trusted friend, family member, or colleague for support.",
-    "Take a break from work and engage in relaxing activities (deep breathing, short walk).",
-    "Consider short-term sick leave if possible to address the situation."
   ],
   "teacher_id": "hcJSzX6LAb8VJGDSOiUm",
   "urgency_level": "high",
@@ -99,13 +98,8 @@ teacher:wellness_summary(document name : current):{
     "analyzed_at": "2025-07-17T07:34:22.463Z",
     "critical_alert": true,
     "key_indicators": [
-      "Vague request for help indicating potential overwhelm",
-      "High level of implied need for support"
     ],
     "recommendations": [
-      "Reach out to a trusted colleague, mentor, or counselor immediately.",
-      "Identify specific stressors contributing to the 'help' request and break them down into manageable tasks or problems.",
-      "Explore available resources such as employee assistance programs (EAPs) or mental health services."
     ]
   },
   "teacher_id": "hcJSzX6LAb8VJGDSOiUm",
@@ -144,22 +138,10 @@ teacher:wellness_summary(document name : current):{
 
 teacherProfiles:{
   "aiPreferences": {
-    "communicationPreference": "concise",
-    "preferredInteractionStyle": null,
-    "topicExpertise": ["elementary"]
   },
   "createdAt": "2025-07-17T07:25:33.469Z",
   "matchingCriteria": {
-    "experienceLevel": "experienced",
-    "grades": ["1", "2", "3"],
-    "gradeScore": 30,
-    "location": "Bangalore",
-    "regionKey": "bangalore"
   },
-  "processedAt": "2025-07-17T07:25:33.470Z",
-  "profileStrength": 80,
-  "summary": "Highly motivated and experienced primary school teacher (Grades 1-3) with 7 years of success in Bangalore classrooms. Proven ability to create engaging and supportive learning environments fostering academic growth and social-emotional development in young learners. Expert in differentiated instruction and utilizing creative teaching methods to cater to diverse learning styles. Passionate about nurturing a love of learning in students and building strong teacher-student relationships.",
-  "teacherId": "hcJSzX6LAb8VJGDSOiUm"
 }
 
 networkStats:{
@@ -198,10 +180,6 @@ challenges : {
     {
       "peerId": "DcL8oURMhWlsvsweOPJG",
       "reasons": [
-        "Significant grade level overlap (Grades 1-3)",
-        "Same subject expertise (elementary)",
-        "Similar experience level (experienced)",
-        "Close geographic proximity (Bangalore vs. Karnataka)",
       ],
       "score": 0.85,
       "type": "peer"
@@ -214,21 +192,11 @@ challenges : {
   "recommendAiChat": false,
   "recommendedConnections": [
     {
-      "estimatedResponseTime": "4-8 hours",
-      "peerId": "DcL8oURMhWlsvsweOPJG",
-      "priority": "high",
-      "reason": "High peer match score (0.85) indicating significant overlap in experience, grade levels, location, and expertise in classroom and behavior management – directly addressing the secondary challenge types. This ensures a rapid response and practical advice from someone facing similar situations.",
-      "type": "peer"
     }
   ],
   "responses": [],
   "status": "ORCHESTRATED",
   "suggestedNextSteps": [
-    "Immediately connect the teacher (hcJSzX6LAb8VJGDSOiUm) with the peer (DcL8oURMhWlsvsweOPJG) via a secure messaging system.",
-    "Provide a brief introduction highlighting the challenge (student engagement, with secondary issues of classroom and behavior management).",
-    "Monitor the interaction and offer additional support if needed (e.g., access to relevant resources, escalation path).",
-    "If the peer connection is not fruitful within 4 hours, explore other options such as more targeted peer matches or access to curated support material.",
-    "After peer support, optionally suggest brief follow-up with AI-based resources to provide additional perspectives and actionable strategies if the issue persists."
   ],
   "teacherId": "hcJSzX6LAb8VJGDSOiUm",
   "text": "help",
@@ -239,19 +207,13 @@ conversations:{
   "createdAt": "2025-07-17T07:34:32.054Z",
   "lastUpdated": "2025-07-17T07:35:03.277Z",
   "members": [
-    "hcJSzX6LAb8VJGDSOiUm",
-    "DcL8oURMhWlsvsweOPJG"
   ],
   "unreadCounts": {
-    "DcL8oURMhWlsvsweOPJG": 0,
-    "hcJSzX6LAb8VJGDSOiUm": 1
   }
 }
 
 conversations:messages:{
   "createdAt": {
-    "_seconds": 1721201703,
-    "_nanoseconds": 0
   },
   "sender": "DcL8oURMhWlsvsweOPJG",
   "text": "hi"
@@ -260,18 +222,8 @@ conversations:messages:{
 aiChatSessions:{
   "analysis": {
     "keyInsights": [
-      "The user's initial message revealed a serious mental health crisis (suicidal ideation).",
-      "The user's primary concern quickly shifted from personal feelings of loneliness and suicidal thoughts to intense workplace stress related to disruptive student behavior.",
-      "The AI effectively prioritized the user's immediate emotional state but struggled to offer meaningful support beyond basic coping strategies and referrals.",
-      "The user's repeated expressions of extreme stress and disbelief in the AI's capacity to understand indicate a need for in-person professional support.",
-      "The AI's suggested follow-up questions were generally helpful, aiming to elicit specifics about the stressful situation and identify potential solutions, but they weren't sufficient to address the depth of the user's distress."
     ],
     "recommendations": [
-      "The AI should have more aggressively and explicitly steered the user towards immediate professional help (e.g., providing direct links to crisis hotlines and mental health resources).",
-      "The AI should have a more sophisticated mechanism for detecting and escalating serious mental health concerns to human intervention.",
-      "Further development of the AI's ability to empathize and understand the nuances of complex emotional states is crucial.",
-      "The AI needs improved strategies for engaging with users who are highly resistant or dismissive of its suggestions.",
-      "The AI could benefit from integrating more diverse and evidence-based stress management techniques beyond simple breathing exercises."
     ],
     "satisfaction": 3
   },
@@ -287,15 +239,8 @@ aiChatSessions:{
   "sessionId": "ai-session-1752736824844-3988pqzsr",
   "status": "completed",
   "suggestedFollowUps": [
-    "Can you tell me a little more about what's causing you so much stress right now?",
-    "What's one small thing you could do right now to take a break and feel a little calmer?",
-    "Thinking about your classroom, what is one thing you are feeling most positive about today?"
   ],
   "suggestedQuestions": [
-    "What specific challenges are you currently facing in your classroom?",
-    "What learning objectives are you aiming to achieve with your students?",
-    "Are there any particular students you'd like to focus on supporting, and what are their individual needs?",
-    "What resources or strategies have you already tried, and what were the results?"
   ],
   "teacherId": "DcL8oURMhWlsvsweOPJG",
   "welcomeMessage": "Hello! Welcome. I understand you're looking for some teaching support and guidance. I'm ready to assist you in any way I can. Let's work together to create a fantastic learning experience for your students."
@@ -307,6 +252,263 @@ aiChatSessions:message:{
   "type": "user"
 }
 
+sahayak_sessions:{
+  "completedAt": "2025-07-19T11:57:57.447Z",
+  "createdAt": "2025-07-19T11:55:48.836Z",
+  "finalContent": {
+    "culturalContext": {
+      "culturalConnections": [
+      ],
+      "localReferences": [
+      ]
+    },
+    "gradeVersions": {
+      "grade1": {
+        "activities": [
+        ],
+        "content": "",
+        "objectives": [
+        ],
+        "vocabulary": [
+
+        ]
+      },
+      "grade5": {
+        "activities": [
+        ],
+        "content": "",
+        "objectives": [
+        ],
+        "vocabulary": [
+        ]
+      }
+    },
+    "learningObjectives": [
+    ],
+    "story": "ಒಂದು ದಿನ, ಉಗಾದಿ ಹಬ್ಬದ ಸಂಭ್ರಮದಲ್ಲಿ, ಚಿಕ್ಕು ಎಂಬ ಹುಡುಗ ಮೈಸೂರು ಅರಮನೆಯ ಹತ್ತಿರ ಚಿಕ್ಕಮ್ಮನ ಮನೆಯಲ್ಲಿ ಕುಳಿತಿದ್ದನು. ಅವನ ಅಜ್ಜ, ಟಿಪ್ಪು ಸುಲ್ತಾನನ ಕಥೆ ಹೇಳತೊಡಗಿದರು. ಟಿಪ್ಪು ಧೈರ್ಯಶಾಲಿ ರಾಜನಾಗಿದ್ದರು. ಅವರು ರಾಗಿ, ಜೋಳದಂತಹ ಬೆಳೆಗಳನ್ನು ಬೆಳೆಯುವ ರೈತರನ್ನು ಪ್ರೋತ್ಸಾಹಿಸುತ್ತಿದ್ದರು. ಕೊಡಗಿನ ಕಾಫಿ, ತೆಂಗಿನಕಾಯಿ, ಅಡಿಕೆಗಳು ಅವರಿಗೆ ತುಂಬಾ ಇಷ್ಟ. ಒಮ್ಮೆ, ದಸರಾ ಹಬ್ಬದ ಸಮಯದಲ್ಲಿ, ಟಿಪ್ಪು ಹಂಪಿಯನ್ನು ಭೇಟಿ ಮಾಡಿದ್ದರು. ಅಲ್ಲಿನ ಪ್ರಾಚೀನ ದೇವಾಲಯಗಳು ಅವರನ್ನು ಆಶ್ಚರ್ಯಗೊಳಿಸಿದವು. ಕೆಂಪೇಗೌಡರ ಕೆಲಸಗಳನ್ನು ಮತ್ತು ಬಸವಣ್ಣನವರ ತತ್ವಗಳನ್ನು ಅವರು ಮೆಚ್ಚುತ್ತಿದ್ದರು. ಟಿಪ್ಪು ತನ್ನ ಸೈನ್ಯದೊಂದಿಗೆ ಕರ್ನಾಟಕವನ್ನು ರಕ್ಷಿಸಲು ಹೋರಾಡಿದರು. ಚಿಕ್ಕು ಅಜ್ಜನಿಂದ ಅನೇಕ ವಿಷಯಗಳನ್ನು ಕಲಿತು ಸಂತೋಷಪಟ್ಟನು. ಆ ದಿನ, ಚಿಕ್ಕು ಮನೆಯಲ್ಲಿ ಟಿಪ್ಪು ಸುಲ್ತಾನನ ಚಿತ್ರವನ್ನು ಪೂಜಿಸಿದನು.",
+    "teachingTips": [
+         ],
+    "visualAids": {
+      "aids": [
+        {
+          "description": "",
+          "drawingInstructions": [],
+          "imageUrl": "",
+          "interactiveElements": [
+            "Visual elements",
+            "Key concepts"
+          ],
+          "materials": [],
+          "svgCode": "",
+          "teachingPoints": [
+            "Use this image for classroom explanation"
+          ],
+          "title": "",
+          "type": "image"
+        },
+        {
+          "description": "",
+          "drawingInstructions": [],
+          "imageUrl": "",
+          "interactiveElements": [
+            "Labels",
+            "Key elements"
+          ],
+          "materials": [],
+          "svgCode": "",
+          "teachingPoints": [
+            "Use this SVG for classroom explanation"
+          ],
+          "title": "",
+          "type": "svg"
+        },
+        {
+          "description": "",
+          "drawingInstructions": [],
+          "imageUrl": "",
+          "interactiveElements": [
+            "Labels",
+            "Key elements"
+          ],
+          "materials": [],
+          "svgCode": "",
+          "teachingPoints": [
+            "Use this SVG for classroom explanation"
+          ],
+          "title": "",
+          "type": "svg"
+        }
+      ]
+    },
+    "handsonActivities": [
+      {
+        "learningOutcome": "",
+        "materials": [
+        ],
+        "name": "ಟಿಪ್ಪು ಸುಲ್ತಾನ್ ಅವರ ಸಾಮ್ರಾಜ್ಯದ ನಕ್ಷೆ ರಚನೆ",
+        "steps": [
+        ]
+      },
+      {
+        "learningOutcome": "",
+        "materials": [
+        ],
+        "name": "ಟಿಪ್ಪು ಸುಲ್ತಾನ್ ಪಾತ್ರಾಭಿನಯ",
+        "steps": [
+        ]
+      }
+    ],
+    "grades": ["1", "5"]
+  },
+  "lastUpdated": "2025-07-19T11:57:57.447Z",
+  "reliabilityScore": 0,
+  "request": "explain about tippu - social studies",
+  "sessionId": "sahayak-1752926148836-7hlzcmr5p",
+  "status": "completed",
+  "teacherId": "4itwxEkGXAJ9SrIKrmIO"
+}
+
+simulation_reports:{
+  "analysis": {
+    "detailedResults": [
+      {
+        "grade": null,
+        "overallScore": null,
+        "personaResults": [
+          {
+            "comprehension": null,
+            "culturalRelevance": null,
+            "difficulties": [],
+            "effectiveness": null,
+            "engagement": null,
+            "feedback": null,
+            "persona": null
+          }
+        ],
+        "recommendations": []
+      }
+    ],
+    "gradeBreakdown": [
+      {
+        "grade": null,
+        "score": null
+      }
+    ],
+    "recommendations": []
+  },
+  "content": {
+    "culturalContext": {
+      "culturalConnections": [],
+      "localReferences": []
+    },
+    "gradeVersions": {
+      "grade1": {
+        "activities": [],
+        "content": null,
+        "objectives": [],
+        "vocabulary": []
+      },
+      "grade5": {
+        "activities": [],
+        "content": null,
+        "objectives": [],
+        "vocabulary": []
+      }
+    },
+    "learningObjectives": [],
+    "story": null,
+    "teachingTips": [],
+    "visualAids": {
+      "aids": [
+        {
+          "description": null,
+          "drawingInstructions": [],
+          "imageUrl": null,
+          "interactiveElements": [],
+          "materials": [],
+          "svgCode": null,
+          "teachingPoints": [],
+          "title": null,
+          "type": null
+        }
+      ]
+    },
+    "handsonActivities": [
+      {
+        "learningOutcome": null,
+        "materials": [],
+        "name": null,
+        "steps": []
+      }
+    ],
+    "grades": []
+  },
+  "createdAt": null,
+  "reportId": null,
+  "testResults": [
+    {
+      "grade": null,
+      "overallScore": null,
+      "personaResults": [
+        {
+          "comprehension": null,
+          "culturalRelevance": null,
+          "difficulties": [],
+          "effectiveness": null,
+          "engagement": null,
+          "feedback": null,
+          "persona": null
+        }
+      ],
+      "recommendations": []
+    }
+  ]
+}
+
+content_library:{
+  "content": {
+    "culturalContext": {
+      "culturalConnections": [],
+      "localReferences": []
+    },
+    "gradeVersions": {
+		"grade1":{},
+		"grade2":{}
+	},
+    "learningObjectives": [],
+    "story": null,
+    "teachingTips": [],
+    "visualAids": {
+      "aids": [
+        {
+          "description": null,
+          "drawingInstructions": [],
+          "imageUrl": null,
+          "interactiveElements": [],
+          "materials": [],
+          "svgCode": null,
+          "teachingPoints": [],
+          "title": null,
+          "type": null
+        }
+      ]
+    },
+    "handsonActivities": [
+      {
+        "learningOutcome": null,
+        "materials": [],
+        "name": null,
+        "steps": []
+      }
+    ],
+    "grades": [],
+    "language": null,
+    "location": null,
+    "reliabilityScore": null,
+    "sessionId": null,
+    "subject": null
+  }
+}
 
 ============================================================================
         Implimentation Context : React + firebase(funtion,Auth)
@@ -323,31 +525,14 @@ Home -> (Listen for chat unread messages,Listen for wellness alerts, Logout| rou
 PeerAdvice(postChallenge section) -> (postChallenge(teacherId), Subscribe to challenge doc(display list of match->if select any one -> startChatWith),aiChatRecommended is always true) -> postChallenge = onCall(store challenges, createWellnessReport)-> (trigger)classificationTrigger= onDocumentCreated(classificationAgent-> update challenge) -> (trigger) matchingTrigger= onDocumentUpdated(matchingAgent->update challenge) -> (trigger)orchestrationTrigger = onDocumentUpdated(orchestrationAgent->update challenge) -> (trigger) wellnessAnalysisAgent = onDocumentCreated("teachers/{teacherId}/wellness_reports/{reportId}", wellnessAgent.analyzeChallengeWellness->send critical alert if needed, updateTeacherWellnessSummary-> create or update wellness_summary) -> return peer's list to react.
 peer list(also have ai chat option) (select peer to peer chat) -> chat (by (db, "conversations", convoId, "messages") get conversation history, convoId -> "markAsRead", sendmessage,listen for messages)
 ai chat -> (createAiChatSession, Listen for new messages,) -> createAiChatSession= onCall(Create AI persona using Gemini,generateText(prompt)->class AiChatAgent ->sendAiChatMessage)->endAiChatSessiononCall("Analyze this AI chat session:"->updated aiChatSessions)
-wellness dashboard ->
+wellness dashboard.
+content_generation ->content req (grades:1,2,3) -> createSahayakContent = onCall(SahayakOrchestrator(analyzeRequest->(lang,sub),regionalContext,{processHyperLocalContent,processDifferentiatedContent,processVisualAids}testWithSimulatedClassroom->finalizeContent (also stored in content_library)))
+content_library -> req(teacherid....) -> searchContentLibrary= onCall()
 
 note:- gemini.js -> export generateText(prompt) - all agents send there prepared prompt to here to call gemini.
 for this i also have function to parse the response helpers.js
 function parseGeminiResponse(responseText) {
-  try {
-    // Remove markdown code blocks if present
-    let cleanText = responseText.trim();
-
-    // Remove ```json and ``` if present
-    if (cleanText.startsWith("```json")) {
-      cleanText = cleanText.replace(/^```json\s*/, "");
-    }
-    if (cleanText.startsWith("```")) {
-      cleanText = cleanText.replace(/^```\s*/, "");
-    }
-    if (cleanText.endsWith("```")) {
-      cleanText = cleanText.replace(/\s*```$/, "");
-    }
-
-    // Parse the cleaned JSON
-    return JSON.parse(cleanText);
   } catch (error) {
-    console.error("Failed to parse Gemini response:", responseText);
-    throw new Error(`JSON parsing failed: ${error.message}`);
   }
 }
 
@@ -359,18 +544,43 @@ const { db } = require("../config/firebase-config");
 note:- for date or time don't Use admin.firestore.FieldValue.serverTimestamp()
 use :- createdAt: new Date().toISOString(),
 
+firebase -> vertex ai (setup)
+- enable google cloud ai services
+- create service (download json) to get access to vertex ai from local dev.
+- use that json for authenticate our req to services. (also add json to gitignore)
+- update Your Firebase Functions Configuration
+firebase functions:config:set vertex.credentials_path="./vidyanxt-service-account.json"
+- npm install @google-cloud/aiplatform @google-cloud/storage
+- if you are using storage than seperatly have to setit up
+node scripts/setup-storage.js
 
 --------------------------------------------------------------------------------
 Project Structure: VidyaNXT
-Path: C:\Users\hp\Documents\kali-linux-2024.4-vmware-amd64\kali-linux-2024.4-vmware-amd64.vmwarevm\shared_Files\hackathon\VidyaNXT
+Path: D:\hackathon\Google\AI Agentic Day\VidyaNXT
 ============================================================
 
 ├── 📁 .firebase/
 │   └── 📄 hosting.ZGlzdA.cache
 ├── 📄 .firebaserc
+├── 📁 Context_data/
+│   └── 📄 so-far-implimentation.txt
 ├── 📝 README.md
+├── 📁 Training_data/
+│   ├── 📋 10_notification.json
+│   ├── 📋 1_R_claud.json
+│   ├── 📋 2_L_claud.json
+│   ├── 📋 3_Post_.json
+│   ├── 📋 4_chat_.json
+│   ├── 📋 5_ai_chat_.json
+│   ├── 📋 6_wellness.json
+│   ├── 📋 7_folder_.json
+│   ├── 📋 8_so_far_.json
+│   ├── 📋 9_gemini.json
+│   └── 📋 vidyanxt_coding_data.json
 ├── 📜 eslint.config.js
+├── 📄 firebase-debug.log
 ├── 📋 firebase.json
+├── 📄 firestore-debug.log
 ├── 📋 firestore.indexes.json
 ├── 📄 firestore.rules
 ├── 🐍 folder_structure.py
@@ -379,35 +589,54 @@ Path: C:\Users\hp\Documents\kali-linux-2024.4-vmware-amd64\kali-linux-2024.4-vmw
 │   ├── 📜 index.js
 │   ├── 📋 package-lock.json
 │   ├── 📋 package.json
-│   └── 📁 src/
-│       ├── 📁 agents/
-│       │   ├── 📜 ai-chat-agent.js
-│       │   ├── 📜 calssification-agent.js
-│       │   ├── 📜 matching-agent.js
-│       │   ├── 📜 network-agent.js
-│       │   ├── 📜 orchestration-agent.js
-│       │   ├── 📜 profile-agent.js
-│       │   └── 📜 wellness-agent.js
-│       ├── 📁 config/
-│       │   ├── 📜 constants.js
-│       │   └── 📜 gemini.js
-│       ├── 📁 functions/
-│       │   ├── 📜 auth.js
-│       │   ├── 📜 challenge.js
-│       │   ├── 📜 chat.js
-│       │   ├── 📜 triggers.js
-│       │   └── 📜 wellness.js
-│       ├── 📁 services/
-│       │   ├── 📜 chat.js
-│       │   ├── 📜 notifications.js
-│       │   ├── 📜 teacher.js
-│       │   └── 📜 wellness.js
-│       └── 📁 utils/
-│           ├── 📜 helpers.js
+│   ├── 📄 pglite-debug.log
+│   ├── 📁 scripts/
+│   │   └── 📜 setup-storage.js
+│   ├── 📁 src/
+│   │   ├── 📁 agents/
+│   │   │   ├── 📜 ai-chat-agent.js
+│   │   │   ├── 📜 calssification-agent.js
+│   │   │   ├── 📜 differentiation-agent.js
+│   │   │   ├── 📜 hyper-local-agent.js
+│   │   │   ├── 📜 matching-agent.js
+│   │   │   ├── 📜 orchestration-agent.js
+│   │   │   ├── 📜 profile-agent.js
+│   │   │   ├── 📜 sahayak-orchestrator.js
+│   │   │   ├── 📜 simulated-classroom-agent.js
+│   │   │   ├── 📜 visual-aid-agent.js
+│   │   │   └── 📜 wellness-agent.js
+│   │   ├── 📁 breadboards/
+│   │   ├── 📁 config/
+│   │   │   ├── 📜 constants.js
+│   │   │   ├── 📜 firebase-config.js
+│   │   │   ├── 📜 gemini.js
+│   │   │   └── 📜 vertex-ai.js
+│   │   ├── 📁 functions/
+│   │   │   ├── 📜 auth.js
+│   │   │   ├── 📜 challenge.js
+│   │   │   ├── 📜 chat.js
+│   │   │   ├── 📜 sahayak.js
+│   │   │   ├── 📜 triggers.js
+│   │   │   └── 📜 wellness.js
+│   │   ├── 📁 services/
+│   │   │   ├── 📜 chat.js
+│   │   │   ├── 📜 notifications.js
+│   │   │   ├── 📜 teacher.js
+│   │   │   └── 📜 wellness.js
+│   │   └── 📁 utils/
+│   │       ├── 📜 helpers.js
+│   │       ├── 📜 location-mapping.js
+│   │       ├── 📜 logger.js
+│   │       └── 📜 validation.js
+│   └── 📋 vidyanxt-service-account.json
 ├── 🌐 index.html
+├── 📜 index_copy_test.js
 ├── 📋 package-lock.json
 ├── 📋 package.json
+├── 📄 pglite-debug.log
+├── ⚙️ pnpm-lock.yaml
 ├── 📜 postcss.config.js
+├── 📄 project_structure.txt
 ├── 📁 public/
 │   ├── 🖼️ apple-touch-icon-180x180.png
 │   ├── 📄 favicon.ico
@@ -426,11 +655,17 @@ Path: C:\Users\hp\Documents\kali-linux-2024.4-vmware-amd64\kali-linux-2024.4-vmw
 │   ├── 📁 assets/
 │   │   └── 🖼️ react.svg
 │   ├── 📁 components/
+│   │   ├── ⚛️ Admininitialization.jsx
 │   │   ├── ⚛️ ChatList.jsx
+│   │   ├── ⚛️ ContentDetailView.jsx
+│   │   ├── ⚛️ ContentGenerator.jsx
+│   │   ├── ⚛️ ContentLibrary.jsx
 │   │   ├── ⚛️ ErrorBoundary.jsx
 │   │   ├── ⚛️ Home.jsx
+│   │   ├── ⚛️ LoadingScreen.jsx
 │   │   ├── ⚛️ Login.jsx
 │   │   ├── ⚛️ RegisterTeacher.jsx
+│   │   ├── ⚛️ SahayakContent.jsx
 │   │   ├── ⚛️ WellnessAlert.jsx
 │   │   ├── ⚛️ WellnessAnalytics.jsx
 │   │   ├── ⚛️ WellnessMetrics.jsx
@@ -441,14 +676,17 @@ Path: C:\Users\hp\Documents\kali-linux-2024.4-vmware-amd64\kali-linux-2024.4-vmw
 │   │   └── 📜 firebaseWellnessService.js
 │   ├── 📜 constants.js
 │   ├── 📜 firebase.js
+│   ├── 📁 hooks/
+│   │   └── 📜 useRegionalPrompt.js
 │   ├── 🎨 index.css
 │   ├── ⚛️ main.jsx
 │   └── 📁 pages/
 │       ├── ⚛️ AiChatWindow.jsx
 │       ├── ⚛️ ChatWindow.jsx
+│       ├── ⚛️ ContentHub.jsx
+│       ├── ⚛️ ContentLibrary.jsx
 │       ├── ⚛️ PeerAdvice.jsx
 │       ├── ⚛️ PeersList.jsx
 │       └── ⚛️ WellnessDashboard.jsx
 ├── 📜 tailwind.config.js
 └── 📜 vite.config.js
-

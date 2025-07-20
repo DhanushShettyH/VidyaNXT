@@ -32,54 +32,46 @@ Path: D:\hackathon\Google\AI Agentic Day\VidyaNXT
 │   ├── 📜 index.js
 │   ├── 📋 package-lock.json
 │   ├── 📋 package.json
-│   └── 📁 src/
-│       ├── 📁 agents/
-│       │   ├── 📜 ai-chat-agent.js
-│       │   ├── 📜 calssification-agent.js
-│       │   ├── 📜 differentiation-agent.js
-│       │   ├── 📜 differentiator-agent.js
-│       │   ├── 📜 hyper-local-agent.js
-│       │   ├── 📜 matching-agent.js
-│       │   ├── 📜 network-agent.js
-│       │   ├── 📜 orchestration-agent.js
-│       │   ├── 📜 planner-agent.js
-│       │   ├── 📜 profile-agent.js
-│       │   ├── 📜 regionalizer-agent.js
-│       │   ├── 📜 sahayak-orchestrator.js
-│       │   ├── 📜 simulated-classroom-agent.js
-│       │   ├── 📜 vision-parser-agent.js
-│       │   ├── 📜 visual-aid-agent.js
-│       │   ├── 📜 visual-artist-agent.js
-│       │   └── 📜 wellness-agent.js
-│       ├── 📁 breadboards/
-│       │   ├── 📜 matching-board.js
-│       │   ├── 📜 network-board.js
-│       │   └── 📜 profile-board.js
-│       ├── 📁 config/
-│       │   ├── 📜 constants.js
-│       │   └── 📜 gemini.js
-│       ├── 📁 functions/
-│       │   ├── 📜 admin.js
-│       │   ├── 📜 auth.js
-│       │   ├── 📜 challenge.js
-│       │   ├── 📜 chat.js
-│       │   ├── 📜 sahayak.js
-│       │   ├── 📜 triggers.js
-│       │   └── 📜 wellness.js
-│       ├── 📁 services/
-│       │   ├── 📜 ai.js
-│       │   ├── 📜 auth.js
-│       │   ├── 📜 chat.js
-│       │   ├── 📜 notifications.js
-│       │   ├── 📜 profile.js
-│       │   ├── 📜 teacher.js
-│       │   └── 📜 wellness.js
-│       └── 📁 utils/
-│           ├── 📜 helpers.js
-│           ├── 📜 initialize-collections.js
-│           ├── 📜 logger.js
-│           └── 📜 validation.js
-├── 🖼️ image.png
+│   ├── 📄 pglite-debug.log
+│   ├── 📁 scripts/
+│   │   └── 📜 setup-storage.js
+│   ├── 📁 src/
+│   │   ├── 📁 agents/
+│   │   │   ├── 📜 ai-chat-agent.js
+│   │   │   ├── 📜 calssification-agent.js
+│   │   │   ├── 📜 differentiation-agent.js
+│   │   │   ├── 📜 hyper-local-agent.js
+│   │   │   ├── 📜 matching-agent.js
+│   │   │   ├── 📜 orchestration-agent.js
+│   │   │   ├── 📜 profile-agent.js
+│   │   │   ├── 📜 sahayak-orchestrator.js
+│   │   │   ├── 📜 simulated-classroom-agent.js
+│   │   │   ├── 📜 visual-aid-agent.js
+│   │   │   └── 📜 wellness-agent.js
+│   │   ├── 📁 breadboards/
+│   │   ├── 📁 config/
+│   │   │   ├── 📜 constants.js
+│   │   │   ├── 📜 firebase-config.js
+│   │   │   ├── 📜 gemini.js
+│   │   │   └── 📜 vertex-ai.js
+│   │   ├── 📁 functions/
+│   │   │   ├── 📜 auth.js
+│   │   │   ├── 📜 challenge.js
+│   │   │   ├── 📜 chat.js
+│   │   │   ├── 📜 sahayak.js
+│   │   │   ├── 📜 triggers.js
+│   │   │   └── 📜 wellness.js
+│   │   ├── 📁 services/
+│   │   │   ├── 📜 chat.js
+│   │   │   ├── 📜 notifications.js
+│   │   │   ├── 📜 teacher.js
+│   │   │   └── 📜 wellness.js
+│   │   └── 📁 utils/
+│   │       ├── 📜 helpers.js
+│   │       ├── 📜 location-mapping.js
+│   │       ├── 📜 logger.js
+│   │       └── 📜 validation.js
+│   └── 📋 vidyanxt-service-account.json
 ├── 🌐 index.html
 ├── 📜 index_copy_test.js
 ├── 📋 package-lock.json
@@ -106,11 +98,14 @@ Path: D:\hackathon\Google\AI Agentic Day\VidyaNXT
 │   ├── 📁 assets/
 │   │   └── 🖼️ react.svg
 │   ├── 📁 components/
+│   │   ├── ⚛️ Admininitialization.jsx
 │   │   ├── ⚛️ ChatList.jsx
+│   │   ├── ⚛️ ContentDetailView.jsx
 │   │   ├── ⚛️ ContentGenerator.jsx
 │   │   ├── ⚛️ ContentLibrary.jsx
 │   │   ├── ⚛️ ErrorBoundary.jsx
 │   │   ├── ⚛️ Home.jsx
+│   │   ├── ⚛️ LoadingScreen.jsx
 │   │   ├── ⚛️ Login.jsx
 │   │   ├── ⚛️ RegisterTeacher.jsx
 │   │   ├── ⚛️ SahayakContent.jsx
@@ -124,15 +119,17 @@ Path: D:\hackathon\Google\AI Agentic Day\VidyaNXT
 │   │   └── 📜 firebaseWellnessService.js
 │   ├── 📜 constants.js
 │   ├── 📜 firebase.js
+│   ├── 📁 hooks/
+│   │   └── 📜 useRegionalPrompt.js
 │   ├── 🎨 index.css
 │   ├── ⚛️ main.jsx
 │   └── 📁 pages/
 │       ├── ⚛️ AiChatWindow.jsx
 │       ├── ⚛️ ChatWindow.jsx
 │       ├── ⚛️ ContentHub.jsx
+│       ├── ⚛️ ContentLibrary.jsx
 │       ├── ⚛️ PeerAdvice.jsx
 │       ├── ⚛️ PeersList.jsx
-│       ├── ⚛️ SahayakDashboard.jsx
 │       └── ⚛️ WellnessDashboard.jsx
 ├── 📜 tailwind.config.js
 └── 📜 vite.config.js

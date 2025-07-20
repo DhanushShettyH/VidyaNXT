@@ -18,6 +18,8 @@ class SahayakOrchestrator {
     this.teacherData = null;
     this.language = "english";
     this.regionalContext = null;
+    this.teacherId = null;
+    this.subject = "general"; // Add subject property
   }
 
   async processRequest(teacherId, request, grades) {
@@ -26,13 +28,25 @@ class SahayakOrchestrator {
       await this.initializeSession(teacherId, request, grades);
 
       // Get teacher location data
+      this.teacherId = teacherId;
       const teacherDoc = await db.collection("teachers").doc(teacherId).get();
       if (!teacherDoc.exists) {
         throw new Error("Teacher not found");
       }
 
       this.teacherData = teacherDoc.data();
-      this.language = getLanguageFromLocation(this.teacherData.location);
+
+      // NEW: Extract language and subject from request first
+      const requestAnalysis = await this.analyzeRequest(request);
+
+      // Set language: user-specified takes priority over location-based
+      this.language =
+        requestAnalysis.language ||
+        getLanguageFromLocation(this.teacherData.location);
+
+      // Set subject: user-specified takes priority over content-based extraction
+      this.subject = requestAnalysis.subject || "general";
+
       this.regionalContext = getRegionalContext(this.teacherData.location);
 
       // Parallel agent processing with error handling
@@ -40,7 +54,7 @@ class SahayakOrchestrator {
         await Promise.allSettled([
           this.processHyperLocalContent(request),
           this.processDifferentiatedContent(request, grades),
-          this.processVisualAids(request),
+          this.processVisualAids(request, this.language, grades),
         ]);
 
       // Handle settled promises and provide defaults for failed ones
@@ -119,6 +133,52 @@ class SahayakOrchestrator {
       }
 
       throw error;
+    }
+  }
+
+  // NEW: Analyze request for language and subject
+  async analyzeRequest(request) {
+    try {
+      const analysisPrompt = `
+      Analyze the following educational content request and extract:
+      1. Language preference (if explicitly mentioned)
+      2. Subject area (if explicitly mentioned)
+
+      Request: "${request}"
+
+      Common languages: english, hindi, kannada, marathi, tamil, telugu, bengali, gujarati
+      Common subjects: science, mathematics, language, social_studies, computer_science, general
+
+      Return a JSON object with this structure:
+      {
+        "language": "detected_language_or_null",
+        "subject": "detected_subject_or_null"
+      }
+
+      Rules:
+      - Only return a language if it's EXPLICITLY mentioned (e.g., "in Hindi", "explain in Tamil")
+      - Only return a subject if it's CLEARLY specified (e.g., "math problem", "science experiment", "history lesson", "computer programming", "social studies")
+      - Use null if not explicitly mentioned
+      - Be conservative - only extract if you're confident
+      - For computer/technology related requests, use "computer_science"
+      - For history/geography/civics related requests, use "social_studies"
+    `;
+
+      const response = await generateText(analysisPrompt);
+      const analysis = parseGeminiResponse(response);
+
+      console.log("Request analysis result:", analysis);
+
+      return {
+        language: analysis.language,
+        subject: analysis.subject,
+      };
+    } catch (error) {
+      console.error("Error analyzing request:", error);
+      return {
+        language: null,
+        subject: null,
+      };
     }
   }
 
@@ -221,25 +281,11 @@ class SahayakOrchestrator {
   }
 
   async processVisualAids(request) {
-    console.log("=== PROCESSING VISUAL AIDS ===");
-    console.log("Request:", request);
-    console.log("Language:", this.language);
-
     const VisualAidAgent = require("./visual-aid-agent");
     const agent = new VisualAidAgent();
-    const result = await agent.generateContent(request, this.language);
-
-    console.log("Visual Aid Agent Result:", JSON.stringify(result, null, 2));
-
-    // Verify SVG codes are present
-    if (result.aids) {
-      result.aids.forEach((aid, index) => {
-        console.log(`Aid ${index} has svgCode:`, !!aid.svgCode);
-        if (aid.svgCode) {
-          console.log(`Aid ${index} svgCode length:`, aid.svgCode.length);
-        }
-      });
-    }
+    const result = await agent.generateContent(request, this.language, {
+      priority: "vertex-ai",
+    });
 
     return result;
   }
@@ -253,7 +299,7 @@ class SahayakOrchestrator {
       console.error("Simulation error:", error);
       // Return default simulation result
       return {
-        score: 0.75, // Default acceptable score
+        score: 0.75,
         gradeBreakdown: grades.map((grade) => ({ grade, score: 0.75 })),
         recommendations: ["Content has been generated with standard templates"],
         detailedResults: [],
@@ -262,48 +308,32 @@ class SahayakOrchestrator {
   }
 
   mergeAgentResponses(hyperLocal, differentiated, visual) {
-    console.log("=== MERGE AGENT RESPONSES DEBUG ===");
-    console.log("Visual aids received:", JSON.stringify(visual, null, 2));
-
-    // Preserve ALL fields from visual aids, including svgCode
     const processedVisualAids = visual.aids
       ? visual.aids.map((aid, index) => {
-          console.log(`Processing aid ${index}:`, {
-            hasTitle: !!aid.title,
-            hasDescription: !!aid.description,
-            hasSvgCode: !!aid.svgCode,
-            svgCodeLength: aid.svgCode ? aid.svgCode.length : 0,
-          });
-
-          // Ensure all fields are preserved
           const processedAid = {
             type: aid.type || "svg",
             title: aid.title || "Visual Aid",
             description: aid.description || "Educational diagram",
-            svgCode: aid.svgCode || "", // CRITICAL: Preserve svgCode
+            imageUrl:
+              aid.imageUrl ||
+              (aid.type === "image" ? "placeholder_url_if_missing" : ""),
+            svgCode: aid.svgCode || "",
             teachingPoints: aid.teachingPoints || [],
             interactiveElements: aid.interactiveElements || [],
             drawingInstructions: aid.drawingInstructions || [],
             materials: aid.materials || [],
+            gradeLevel: aid.gradeLevel || "mixed",
+            culturalContext: aid.culturalContext || "Indian classroom context",
           };
 
-          console.log(`Processed aid ${index}:`, {
-            hasTitle: !!processedAid.title,
-            hasDescription: !!processedAid.description,
-            hasSvgCode: !!processedAid.svgCode,
-            svgCodeLength: processedAid.svgCode
-              ? processedAid.svgCode.length
-              : 0,
-          });
-
+          if (processedAid.type === "image" && !processedAid.imageUrl) {
+            console.warn(
+              `Missing imageUrl for aid ${index}; fallback to SVG if available.`
+            );
+          }
           return processedAid;
         })
       : [];
-
-    console.log(
-      "Processed visual aids:",
-      JSON.stringify(processedVisualAids, null, 2)
-    );
 
     const mergedContent = {
       story: hyperLocal.story || "Story content will be provided.",
@@ -320,37 +350,26 @@ class SahayakOrchestrator {
       teachingTips: hyperLocal.teachingTips || [],
     };
 
-    console.log(
-      "Final merged content visual aids:",
-      JSON.stringify(mergedContent.visualAids, null, 2)
-    );
-
     return sanitizeForFirestore(mergedContent);
   }
 
   async reviseContent(content, recommendations) {
     try {
       const revisionPrompt = `
-Revise the following educational content based on these recommendations:
-
-Content: ${JSON.stringify(content)}
-
-Recommendations: ${JSON.stringify(recommendations)}
-
-Language: ${this.language}
-Regional Context: ${JSON.stringify(this.regionalContext)}
-
-Please provide revised content that addresses all the recommendations while maintaining cultural relevance and educational value.
-
-Return response in JSON format with the same structure as the original content.
-Ensure all fields are properly filled and no undefined values are present.
-`;
+      Revise the following educational content based on these recommendations:
+      Content: ${JSON.stringify(content)}
+      Recommendations: ${JSON.stringify(recommendations)}
+      Language: ${this.language}
+      Regional Context: ${JSON.stringify(this.regionalContext)}
+      
+      Provide revised content that addresses all recommendations while maintaining cultural relevance and educational value.
+      Return ONLY the JSON object with the same structure as the original content. Do NOT include any additional text, notes, or markdown.
+    `;
 
       const response = await generateText(revisionPrompt);
       return parseGeminiResponse(response);
     } catch (error) {
       console.error("Content revision error:", error);
-      // Return original content if revision fails
       return content;
     }
   }
@@ -372,10 +391,11 @@ Ensure all fields are properly filled and no undefined values are present.
       // Store in content library for reuse
       const contentLibraryDoc = sanitizeForFirestore({
         sessionId: this.sessionId,
+        teacherId: this.teacherId || "",
         content: sanitizedContent,
-        grades: this.teacherData.matchingCriteria?.grades || ["1", "2", "3"], // FIX: Use correct grades path
-        subject: this.extractSubject(sanitizedContent),
-        language: this.language,
+        grades: this.teacherData.matchingCriteria?.grades || ["1", "2", "3"],
+        subject: this.subject, // Use the analyzed/extracted subject
+        language: this.language, // Use the analyzed/extracted language
         location:
           this.teacherData.matchingCriteria?.location ||
           this.teacherData.location,
@@ -386,33 +406,104 @@ Ensure all fields are properly filled and no undefined values are present.
       await db.collection("content_library").add(contentLibraryDoc);
     } catch (error) {
       console.error("Error finalizing content:", error);
-      // Don't throw error here, as the main content generation was successful
     }
   }
 
+  // UPDATED: Keep existing extraction as fallback but use analyzed subject first
   extractSubject(content) {
+    // If we already have a subject from analysis, use it
+    if (this.subject && this.subject !== "general") {
+      return this.subject;
+    }
+
+    // Otherwise use the existing content-based extraction
     if (!content || !content.story) return "general";
 
     const story = content.story.toLowerCase();
+
+    // Science
     if (
       story.includes("soil") ||
       story.includes("plant") ||
       story.includes("water") ||
-      story.includes("science")
+      story.includes("science") ||
+      story.includes("experiment") ||
+      story.includes("biology") ||
+      story.includes("chemistry") ||
+      story.includes("physics") ||
+      story.includes("animal") ||
+      story.includes("nature")
     )
       return "science";
+
+    // Mathematics
     if (
       story.includes("math") ||
       story.includes("number") ||
-      story.includes("count")
+      story.includes("count") ||
+      story.includes("calculation") ||
+      story.includes("addition") ||
+      story.includes("subtraction") ||
+      story.includes("multiplication") ||
+      story.includes("division") ||
+      story.includes("geometry") ||
+      story.includes("arithmetic")
     )
       return "mathematics";
+
+    // Social Studies/Social Science
+    if (
+      story.includes("history") ||
+      story.includes("geography") ||
+      story.includes("civics") ||
+      story.includes("culture") ||
+      story.includes("society") ||
+      story.includes("community") ||
+      story.includes("festival") ||
+      story.includes("tradition") ||
+      story.includes("government") ||
+      story.includes("map") ||
+      story.includes("country") ||
+      story.includes("state") ||
+      story.includes("city") ||
+      story.includes("village") ||
+      story.includes("social")
+    )
+      return "social_studies";
+
+    // Computer Science
+    if (
+      story.includes("computer") ||
+      story.includes("coding") ||
+      story.includes("programming") ||
+      story.includes("algorithm") ||
+      story.includes("technology") ||
+      story.includes("digital") ||
+      story.includes("internet") ||
+      story.includes("software") ||
+      story.includes("app") ||
+      story.includes("robot") ||
+      story.includes("artificial intelligence") ||
+      story.includes("ai") ||
+      story.includes("machine")
+    )
+      return "computer_science";
+
+    // Language
     if (
       story.includes("story") ||
       story.includes("language") ||
-      story.includes("read")
+      story.includes("read") ||
+      story.includes("write") ||
+      story.includes("grammar") ||
+      story.includes("vocabulary") ||
+      story.includes("poem") ||
+      story.includes("essay") ||
+      story.includes("letter") ||
+      story.includes("communication")
     )
       return "language";
+
     return "general";
   }
 }

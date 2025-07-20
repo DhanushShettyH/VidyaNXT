@@ -10,6 +10,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
  * Classification Agent
  * Classifies challenges and determines urgency using Gemini AI
  */
+
 class ClassificationAgent {
   constructor() {
     this.model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });

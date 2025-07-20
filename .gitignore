@@ -26,3 +26,5 @@ dev-dist
 .env
 
 index_copy_test.js
+
+vidyanxt-service-account.json

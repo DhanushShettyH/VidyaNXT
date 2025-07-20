@@ -60,12 +60,14 @@ function sanitizeForFirestore(obj) {
   if (obj === null || obj === undefined) {
     return null;
   }
-  
+
   if (Array.isArray(obj)) {
-    return obj.map(item => sanitizeForFirestore(item)).filter(item => item !== null);
+    return obj
+      .map((item) => sanitizeForFirestore(item))
+      .filter((item) => item !== null);
   }
-  
-  if (typeof obj === 'object') {
+
+  if (typeof obj === "object") {
     const sanitized = {};
     for (const [key, value] of Object.entries(obj)) {
       const sanitizedValue = sanitizeForFirestore(value);
@@ -76,88 +78,108 @@ function sanitizeForFirestore(obj) {
     }
     return sanitized;
   }
-  
+
   // Return the value as-is for strings (including SVG code)
   return obj;
 }
 
-
 function validateContentStructure(content) {
   const defaultContent = {
-    story: content.story || '',
+    story: content.story || "",
     gradeVersions: content.gradeVersions || {},
     visualAids: content.visualAids || { aids: [], handsonActivities: [] },
-    culturalContext: content.culturalContext || { localReferences: [], culturalConnections: [] },
+    culturalContext: content.culturalContext || {
+      localReferences: [],
+      culturalConnections: [],
+    },
     learningObjectives: content.learningObjectives || [],
-    teachingTips: content.teachingTips || []
+    teachingTips: content.teachingTips || [],
   };
-  
+
   // Ensure grade versions have proper structure
-  Object.keys(defaultContent.gradeVersions).forEach(grade => {
+  Object.keys(defaultContent.gradeVersions).forEach((grade) => {
     const version = defaultContent.gradeVersions[grade];
     defaultContent.gradeVersions[grade] = {
-      content: version.content || '',
+      content: version.content || "",
       objectives: version.objectives || [],
       activities: version.activities || [],
-      vocabulary: version.vocabulary || []
+      vocabulary: version.vocabulary || [],
     };
   });
-  
+
   // CRITICAL: Ensure visual aids preserve svgCode
   if (defaultContent.visualAids.aids) {
-    defaultContent.visualAids.aids = defaultContent.visualAids.aids.map(aid => ({
-      type: aid.type || 'svg',
-      title: aid.title || 'Visual Aid',
-      description: aid.description || '',
-      svgCode: aid.svgCode || '', // PRESERVE SVG CODE
-      teachingPoints: aid.teachingPoints || [],
-      interactiveElements: aid.interactiveElements || [],
-      drawingInstructions: aid.drawingInstructions || [],
-      materials: aid.materials || []
-    }));
+    defaultContent.visualAids.aids = defaultContent.visualAids.aids.map(
+      (aid) => ({
+        type: aid.type || "svg",
+        title: aid.title || "Visual Aid",
+        description: aid.description || "",
+        svgCode: aid.svgCode || "", // PRESERVE SVG CODE
+        imageUrl:
+          aid.imageUrl ||
+          (aid.type === "image" ? "placeholder_url_if_missing" : ""), // NEW: Prioritize and preserve imageUrl for images
+        teachingPoints: aid.teachingPoints || [],
+        interactiveElements: aid.interactiveElements || [],
+        drawingInstructions: aid.drawingInstructions || [],
+        materials: aid.materials || [],
+      })
+    );
   }
-  
+
   // Ensure hands-on activities have proper structure
   if (defaultContent.visualAids.handsonActivities) {
-    defaultContent.visualAids.handsonActivities = defaultContent.visualAids.handsonActivities.map(activity => ({
-      name: activity.name || 'Activity',
-      materials: activity.materials || [],
-      steps: activity.steps || [],
-      learningOutcome: activity.learningOutcome || ''
-    }));
+    defaultContent.visualAids.handsonActivities =
+      defaultContent.visualAids.handsonActivities.map((activity) => ({
+        name: activity.name || "Activity",
+        materials: activity.materials || [],
+        steps: activity.steps || [],
+        learningOutcome: activity.learningOutcome || "",
+      }));
   }
-  
+
   return defaultContent;
 }
-
 
 // Update the existing parseGeminiResponse function
 
 function parseGeminiResponse(responseText) {
   try {
-    // Remove markdown code blocks if present
     let cleanText = responseText.trim();
 
-    // Remove ```json and ``` if present
-    if (cleanText.startsWith("```json")) {
-      cleanText = cleanText.replace(/^```json\s*/, "");
-    }
-    if (cleanText.startsWith("```")) {
-      cleanText = cleanText.replace(/^```\s*/, "");
-    }
-    if (cleanText.endsWith("```")) {
-      cleanText = cleanText.replace(/\s*```$/, "");
+    // Remove markdown code blocks
+    cleanText = cleanText.replace(/^```json\s*/g, "");
+    cleanText = cleanText.replace(/^```\s*/g, "");
+    cleanText = cleanText.replace(/\s*```$/g, "");
+
+    // Remove control characters that break JSON parsing
+    cleanText = cleanText.replace(/[\x00-\x1F\x7F]/g, "");
+
+    // Handle trailing non-JSON content
+    const jsonEnd = cleanText.lastIndexOf("}");
+    if (jsonEnd !== -1) {
+      const potentialJson = cleanText.substring(0, jsonEnd + 1);
+      try {
+        JSON.parse(potentialJson);
+        cleanText = potentialJson;
+      } catch (e) {
+        // If invalid, proceed with original cleanup
+      }
     }
 
-    // Parse the cleaned JSON
-    return JSON.parse(cleanText);
+    // Additional cleanup
+    cleanText = cleanText.replace(/\*\*Note:\*\*.*/g, "");
+
+    const parsed = JSON.parse(cleanText);
+    console.log("✅ Successfully parsed Gemini response");
+    return parsed;
   } catch (error) {
-    console.error("Failed to parse Gemini response:", responseText);
+    console.error(
+      "❌ Failed to parse Gemini response:",
+      responseText.substring(0, 500)
+    );
     throw new Error(`JSON parsing failed: ${error.message}`);
   }
 }
-
-
 
 module.exports = {
   getExperienceLevel,
