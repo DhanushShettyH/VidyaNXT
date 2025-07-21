@@ -8,7 +8,8 @@ import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useAuth } from './AuthContex';
 import LoadingScreen from './LoadingScreen';
-import NetworkIndicator from './NetworkIndicator';
+import FeedbackSystem from "./FeedbackSystem";
+import FeedbackModal from "./FeedbackModal";
 
 // Register GSAP plugins
 gsap.registerPlugin(ScrollTrigger);
@@ -21,7 +22,7 @@ export default function Home() {
 	const [isMobile, setIsMobile] = useState(false);
 	const [activeCardIndex, setActiveCardIndex] = useState(-1);
 	const { currentUser, loading: authLoading } = useAuth();
-
+	const [showFeedbackModal, setShowFeedbackModal] = useState(false);
 
 	const navigate = useNavigate();
 	const cardRefs = useRef([]);
@@ -34,12 +35,12 @@ export default function Home() {
 	// Detect mobile device
 	useEffect(() => {
 		const checkMobile = () => {
-			setIsMobile(window.innerWidth < 1024 || 'ontouchstart' in window);
+			setIsMobile(window.innerWidth < 1024 || "ontouchstart" in window);
 		};
 
 		checkMobile();
-		window.addEventListener('resize', checkMobile);
-		return () => window.removeEventListener('resize', checkMobile);
+		window.addEventListener("resize", checkMobile);
+		return () => window.removeEventListener("resize", checkMobile);
 	}, []);
 
 	useEffect(() => {
@@ -69,16 +70,19 @@ export default function Home() {
 	useEffect(() => {
 		if (loading && loadingRef.current) {
 			const tl = gsap.timeline({ repeat: -1 });
-			tl.to(loadingRef.current.querySelector('.spinner-outer'), {
+			tl.to(loadingRef.current.querySelector(".spinner-outer"), {
 				rotation: 360,
 				duration: 1.5,
-				ease: "power2.inOut"
-			})
-				.to(loadingRef.current.querySelector('.spinner-inner'), {
+				ease: "power2.inOut",
+			}).to(
+				loadingRef.current.querySelector(".spinner-inner"),
+				{
 					rotation: -360,
 					duration: 1,
-					ease: "power2.inOut"
-				}, 0);
+					ease: "power2.inOut",
+				},
+				0
+			);
 		}
 	}, [loading]);
 
@@ -88,36 +92,41 @@ export default function Home() {
 			const tl = gsap.timeline();
 
 			// Header animation
-			tl.fromTo(headerRef.current,
+			tl.fromTo(
+				headerRef.current,
 				{ y: -100, opacity: 0 },
 				{ y: 0, opacity: 1, duration: 0.8, ease: "power3.out" }
 			)
 				// Hero section animation
-				.fromTo(heroRef.current,
+				.fromTo(
+					heroRef.current,
 					{ y: 50, opacity: 0, scale: 0.95 },
 					{ y: 0, opacity: 1, scale: 1, duration: 0.8, ease: "power3.out" },
 					"-=0.4"
 				)
 				// Academic section title
-				.fromTo(academicSectionRef.current.querySelector('h3'),
+				.fromTo(
+					academicSectionRef.current.querySelector("h3"),
 					{ x: -30, opacity: 0 },
 					{ x: 0, opacity: 1, duration: 0.6, ease: "power2.out" },
 					"-=0.2"
 				)
 				// Personal section title
-				.fromTo(personalSectionRef.current.querySelector('h3'),
+				.fromTo(
+					personalSectionRef.current.querySelector("h3"),
 					{ x: -30, opacity: 0 },
 					{ x: 0, opacity: 1, duration: 0.6, ease: "power2.out" },
 					"-=0.4"
 				);
 
 			// Animate cards with stagger
-			gsap.fromTo(cardRefs.current.filter(ref => ref),
+			gsap.fromTo(
+				cardRefs.current.filter((ref) => ref),
 				{
 					y: 40,
 					opacity: 0,
 					scale: 0.9,
-					rotateY: -15
+					rotateY: -15,
 				},
 				{
 					y: 0,
@@ -127,7 +136,7 @@ export default function Home() {
 					duration: 0.6,
 					ease: "power2.out",
 					stagger: 0.1,
-					delay: 0.3
+					delay: 0.3,
 				}
 			);
 		}
@@ -137,32 +146,32 @@ export default function Home() {
 	const applyActiveAnimation = (card, index) => {
 		if (!card) return;
 
-		const icon = card.querySelector('.card-icon');
-		const overlay = card.querySelector('.card-overlay');
-		const arrow = card.querySelector('.card-arrow');
+		const icon = card.querySelector(".card-icon");
+		const overlay = card.querySelector(".card-overlay");
+		const arrow = card.querySelector(".card-arrow");
 
 		gsap.to(card, {
 			y: -8,
 			scale: 1.02,
 			boxShadow: "0 20px 40px -12px rgba(0,0,0,0.15)",
 			duration: 0.4,
-			ease: "power2.out"
+			ease: "power2.out",
 		});
 		gsap.to(icon, {
 			scale: 1.1,
 			rotate: 3,
 			duration: 0.4,
-			ease: "power2.out"
+			ease: "power2.out",
 		});
 		gsap.to(overlay, {
 			opacity: 0.3,
 			duration: 0.4,
-			ease: "power2.out"
+			ease: "power2.out",
 		});
 		gsap.to(arrow, {
 			x: 4,
 			duration: 0.4,
-			ease: "power2.out"
+			ease: "power2.out",
 		});
 
 		setActiveCardIndex(index);
@@ -172,32 +181,32 @@ export default function Home() {
 	const resetCardAnimation = (card) => {
 		if (!card) return;
 
-		const icon = card.querySelector('.card-icon');
-		const overlay = card.querySelector('.card-overlay');
-		const arrow = card.querySelector('.card-arrow');
+		const icon = card.querySelector(".card-icon");
+		const overlay = card.querySelector(".card-overlay");
+		const arrow = card.querySelector(".card-arrow");
 
 		gsap.to(card, {
 			y: 0,
 			scale: 1,
 			boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)",
 			duration: 0.4,
-			ease: "power2.out"
+			ease: "power2.out",
 		});
 		gsap.to(icon, {
 			scale: 1,
 			rotate: 0,
 			duration: 0.4,
-			ease: "power2.out"
+			ease: "power2.out",
 		});
 		gsap.to(overlay, {
 			opacity: 0,
 			duration: 0.4,
-			ease: "power2.out"
+			ease: "power2.out",
 		});
 		gsap.to(arrow, {
 			x: 0,
 			duration: 0.4,
-			ease: "power2.out"
+			ease: "power2.out",
 		});
 	};
 
@@ -205,15 +214,15 @@ export default function Home() {
 	useEffect(() => {
 		if (!loading && teacherData) {
 			// Clean up existing ScrollTriggers and event listeners
-			ScrollTrigger.getAll().forEach(trigger => trigger.kill());
+			ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
 
 			// Remove any existing event listeners
 			cardRefs.current.forEach((card) => {
 				if (card) {
-					card.removeEventListener('mouseenter', card._handleMouseEnter);
-					card.removeEventListener('mouseleave', card._handleMouseLeave);
-					card.removeEventListener('mousedown', card._handleMouseDown);
-					card.removeEventListener('mouseup', card._handleMouseUp);
+					card.removeEventListener("mouseenter", card._handleMouseEnter);
+					card.removeEventListener("mouseleave", card._handleMouseLeave);
+					card.removeEventListener("mousedown", card._handleMouseDown);
+					card.removeEventListener("mouseup", card._handleMouseUp);
 				}
 			});
 
@@ -252,7 +261,7 @@ export default function Home() {
 								if (activeCardIndex === index) {
 									setActiveCardIndex(-1);
 								}
-							}
+							},
 						});
 					}
 				});
@@ -262,41 +271,41 @@ export default function Home() {
 
 				cardRefs.current.forEach((card, index) => {
 					if (card) {
-						const icon = card.querySelector('.card-icon');
-						const overlay = card.querySelector('.card-overlay');
-						const arrow = card.querySelector('.card-arrow');
+						const icon = card.querySelector(".card-icon");
+						const overlay = card.querySelector(".card-overlay");
+						const arrow = card.querySelector(".card-arrow");
 
 						const handleMouseEnter = () => {
 							// Reset previously hovered card if different
 							if (currentHoveredIndex !== -1 && currentHoveredIndex !== index) {
 								const prevCard = cardRefs.current[currentHoveredIndex];
 								if (prevCard) {
-									const prevIcon = prevCard.querySelector('.card-icon');
-									const prevOverlay = prevCard.querySelector('.card-overlay');
-									const prevArrow = prevCard.querySelector('.card-arrow');
+									const prevIcon = prevCard.querySelector(".card-icon");
+									const prevOverlay = prevCard.querySelector(".card-overlay");
+									const prevArrow = prevCard.querySelector(".card-arrow");
 
 									gsap.to(prevCard, {
 										y: 0,
 										scale: 1,
 										boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)",
 										duration: 0.3,
-										ease: "power2.out"
+										ease: "power2.out",
 									});
 									gsap.to(prevIcon, {
 										scale: 1,
 										rotate: 0,
 										duration: 0.3,
-										ease: "power2.out"
+										ease: "power2.out",
 									});
 									gsap.to(prevOverlay, {
 										opacity: 0,
 										duration: 0.3,
-										ease: "power2.out"
+										ease: "power2.out",
 									});
 									gsap.to(prevArrow, {
 										x: 0,
 										duration: 0.3,
-										ease: "power2.out"
+										ease: "power2.out",
 									});
 								}
 							}
@@ -308,23 +317,23 @@ export default function Home() {
 								scale: 1.02,
 								boxShadow: "0 20px 40px -12px rgba(0,0,0,0.15)",
 								duration: 0.3,
-								ease: "power2.out"
+								ease: "power2.out",
 							});
 							gsap.to(icon, {
 								scale: 1.1,
 								rotate: 3,
 								duration: 0.3,
-								ease: "power2.out"
+								ease: "power2.out",
 							});
 							gsap.to(overlay, {
 								opacity: 0.3,
 								duration: 0.3,
-								ease: "power2.out"
+								ease: "power2.out",
 							});
 							gsap.to(arrow, {
 								x: 4,
 								duration: 0.3,
-								ease: "power2.out"
+								ease: "power2.out",
 							});
 						};
 
@@ -336,23 +345,23 @@ export default function Home() {
 									scale: 1,
 									boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)",
 									duration: 0.3,
-									ease: "power2.out"
+									ease: "power2.out",
 								});
 								gsap.to(icon, {
 									scale: 1,
 									rotate: 0,
 									duration: 0.3,
-									ease: "power2.out"
+									ease: "power2.out",
 								});
 								gsap.to(overlay, {
 									opacity: 0,
 									duration: 0.3,
-									ease: "power2.out"
+									ease: "power2.out",
 								});
 								gsap.to(arrow, {
 									x: 0,
 									duration: 0.3,
-									ease: "power2.out"
+									ease: "power2.out",
 								});
 							}
 						};
@@ -362,7 +371,7 @@ export default function Home() {
 								gsap.to(card, {
 									scale: 0.98,
 									duration: 0.1,
-									ease: "power2.out"
+									ease: "power2.out",
 								});
 							}
 						};
@@ -372,7 +381,7 @@ export default function Home() {
 								gsap.to(card, {
 									scale: 1.02,
 									duration: 0.1,
-									ease: "power2.out"
+									ease: "power2.out",
 								});
 							}
 						};
@@ -383,24 +392,24 @@ export default function Home() {
 						card._handleMouseDown = handleMouseDown;
 						card._handleMouseUp = handleMouseUp;
 
-						card.addEventListener('mouseenter', handleMouseEnter);
-						card.addEventListener('mouseleave', handleMouseLeave);
-						card.addEventListener('mousedown', handleMouseDown);
-						card.addEventListener('mouseup', handleMouseUp);
+						card.addEventListener("mouseenter", handleMouseEnter);
+						card.addEventListener("mouseleave", handleMouseLeave);
+						card.addEventListener("mousedown", handleMouseDown);
+						card.addEventListener("mouseup", handleMouseUp);
 					}
 				});
 			}
 
 			// Cleanup function
 			return () => {
-				ScrollTrigger.getAll().forEach(trigger => trigger.kill());
+				ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
 				// Clean up event listeners
 				cardRefs.current.forEach((card) => {
 					if (card) {
-						card.removeEventListener('mouseenter', card._handleMouseEnter);
-						card.removeEventListener('mouseleave', card._handleMouseLeave);
-						card.removeEventListener('mousedown', card._handleMouseDown);
-						card.removeEventListener('mouseup', card._handleMouseUp);
+						card.removeEventListener("mouseenter", card._handleMouseEnter);
+						card.removeEventListener("mouseleave", card._handleMouseLeave);
+						card.removeEventListener("mousedown", card._handleMouseDown);
+						card.removeEventListener("mouseup", card._handleMouseUp);
 					}
 				});
 			};
@@ -471,9 +480,10 @@ export default function Home() {
 			to: "/content-hub",
 			icon: "🎓",
 			title: "AI Content Studio",
-			description: "Generate hyper-local, multi-grade educational content instantly",
+			description:
+				"Generate hyper-local, multi-grade educational content instantly",
 			primaryColor: "indigo",
-			stats: "Generate in seconds"
+			stats: "Generate in seconds",
 		},
 		{
 			to: "/content-library",
@@ -481,16 +491,17 @@ export default function Home() {
 			title: "Knowledge Vault",
 			description: "Your curated collection of AI-generated teaching resources",
 			primaryColor: "emerald",
-			stats: "Always accessible"
+			stats: "Always accessible",
 		},
 		{
 			to: "/peer-advice",
 			icon: "🤝",
 			title: "Teacher Network",
-			description: "Connect with India's distributed teaching intelligence community",
+			description:
+				"Connect with India's distributed teaching intelligence community",
 			primaryColor: "indigo",
-			stats: "50,000+ teachers"
-		}
+			stats: "50,000+ teachers",
+		},
 	];
 
 	const personalActions = [
@@ -501,7 +512,13 @@ export default function Home() {
 			description: "Real-time conversations with your teaching peers",
 			primaryColor: "emerald",
 			badge: unreadTotal,
-			stats: unreadTotal > 0 ? `${unreadTotal} unread` : "Stay connected"
+			stats: unreadTotal > 0 ? `${unreadTotal} unread` : "Stay connected",
+		},
+		{
+			to: "/training-hub",
+			icon: "",
+			title: "Training Hub",
+			description: "personalized learning path",
 		},
 		{
 			to: "/wellness-dashboard",
@@ -510,30 +527,48 @@ export default function Home() {
 			description: "AI-powered insights for sustainable teaching practices",
 			primaryColor: "indigo",
 			badge: wellnessAlerts,
-			stats: wellnessAlerts > 0 ? `${wellnessAlerts} alerts` : "Monitor health"
-		}
+			stats: wellnessAlerts > 0 ? `${wellnessAlerts} alerts` : "Monitor health",
+		},
 	];
 
-	const getColorClasses = (color, variant = 'default') => {
+	const getColorClasses = (color, variant = "default") => {
 		const colorMap = {
 			indigo: {
-				default: 'from-indigo-600 to-indigo-800',
-				light: 'from-indigo-50 to-indigo-100',
-				text: 'text-indigo-700',
-				bg: 'bg-indigo-600',
-				hover: 'hover:bg-indigo-700',
-				border: 'border-indigo-200'
+				default: "from-indigo-600 to-indigo-800",
+				light: "from-indigo-50 to-indigo-100",
+				text: "text-indigo-700",
+				bg: "bg-indigo-600",
+				hover: "hover:bg-indigo-700",
+				border: "border-indigo-200",
 			},
 			emerald: {
-				default: 'from-emerald-600 to-emerald-800',
-				light: 'from-emerald-50 to-emerald-100',
-				text: 'text-emerald-700',
-				bg: 'bg-emerald-600',
-				hover: 'hover:bg-emerald-700',
-				border: 'border-emerald-200'
-			}
+				default: "from-emerald-600 to-emerald-800",
+				light: "from-emerald-50 to-emerald-100",
+				text: "text-emerald-700",
+				bg: "bg-emerald-600",
+				hover: "hover:bg-emerald-700",
+				border: "border-emerald-200",
+			},
 		};
 		return colorMap[color]?.[variant] || colorMap.indigo[variant];
+	};
+
+	// ! feed back
+
+	const handleOpenFeedbackModal = () => {
+		setShowFeedbackModal(true);
+	};
+
+	const handleCloseFeedbackModal = () => {
+		setShowFeedbackModal(false);
+	};
+
+	// Handle outside click to close modal
+	const handleModalBackdropClick = (e) => {
+		// Only close if clicking the backdrop itself, not the modal content
+		if (e.target === e.currentTarget) {
+			handleCloseFeedbackModal();
+		}
 	};
 
 	return (
@@ -550,7 +585,7 @@ export default function Home() {
 								<div className="w-12 h-12 bg-gradient-to-r from-indigo-600 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg">
 									<span className="text-white font-bold text-xl">V</span>
 								</div>
-								<NetworkIndicator />
+								<div className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white animate-pulse"></div>
 							</div>
 							<div>
 								<h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-800 via-indigo-700 to-emerald-700 bg-clip-text text-transparent">
@@ -561,12 +596,15 @@ export default function Home() {
 						</div>
 						<div className="flex items-center space-x-4">
 							<div className="hidden md:flex items-center space-x-3 bg-gradient-to-r from-indigo-50 to-emerald-50 px-4 py-2 rounded-xl">
-								<div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse bg-transparent relative overflow-hidden"><NetworkIndicator /></div>
-								<span className="text-sm font-medium text-slate-700">AI Active</span>
+								<div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+								<span className="text-sm font-medium text-slate-700">
+									AI Active
+								</span>
 							</div>
 							<button
 								onClick={handleLogout}
-								className={`${isMobile ? 'p-3' : 'px-6 py-3'} bg-gradient-to-r from-slate-800 to-slate-900 hover:from-slate-900 hover:to-slate-950 text-white font-semibold rounded-xl transition-all duration-300 hover:shadow-lg hover:scale-105 flex items-center justify-center`}
+								className={`${isMobile ? "p-3" : "px-6 py-3"
+									} bg-gradient-to-r from-slate-800 to-slate-900 hover:from-slate-900 hover:to-slate-950 text-white font-semibold rounded-xl transition-all duration-300 hover:shadow-lg hover:scale-105 flex items-center justify-center`}
 								title={isMobile ? "Sign Out" : ""}
 							>
 								{isMobile ? (
@@ -612,9 +650,17 @@ export default function Home() {
 											Welcome back, {teacherData.displayName}
 										</h2>
 										<p className="text-indigo-200 text-xl leading-relaxed max-w-3xl">
-											Your distributed AI teaching intelligence network is ready to transform multi-grade education across India.
+											Your distributed AI teaching intelligence network is ready
+											to transform multi-grade education across India.
 										</p>
 									</div>
+
+									{/* Floating Feedback Button */}
+									<FeedbackSystem
+										onOpenFeedbackModal={handleOpenFeedbackModal}
+										teacherId={teacherData.ownerUid || teacherData.id}
+										teacherData={teacherData}
+									/>
 								</div>
 								{/* 
 								<div className="flex flex-wrap gap-4 mt-8">
@@ -643,7 +689,9 @@ export default function Home() {
 				<div ref={academicSectionRef} className="mb-16">
 					<div className="flex items-center mb-8">
 						<div>
-							<h3 className="text-3xl font-bold text-slate-900">Academic Intelligence</h3>
+							<h3 className="text-3xl font-bold text-slate-900">
+								Academic Intelligence
+							</h3>
 						</div>
 					</div>
 
@@ -652,16 +700,21 @@ export default function Home() {
 							<Link
 								key={idx}
 								to={action.to}
-								ref={(el) => cardRefs.current[idx] = el}
+								ref={(el) => (cardRefs.current[idx] = el)}
 								className="group relative bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-200/50 p-8 overflow-hidden shadow-lg"
 							>
 								<div
-									className={`card-overlay absolute inset-0 bg-gradient-to-br ${getColorClasses(action.primaryColor, 'light')} opacity-0`}
+									className={`card-overlay absolute inset-0 bg-gradient-to-br ${getColorClasses(
+										action.primaryColor,
+										"light"
+									)} opacity-0`}
 								></div>
 
 								<div className="relative z-10">
 									<div
-										className={`card-icon w-16 h-16 bg-gradient-to-r ${getColorClasses(action.primaryColor)} rounded-2xl flex items-center justify-center mb-6 shadow-lg`}
+										className={`card-icon w-16 h-16 bg-gradient-to-r ${getColorClasses(
+											action.primaryColor
+										)} rounded-2xl flex items-center justify-center mb-6 shadow-lg`}
 									>
 										<span className="text-2xl">{action.icon}</span>
 									</div>
@@ -673,16 +726,41 @@ export default function Home() {
 										{action.description}
 									</p>
 
-									<div className={`inline-flex items-center px-3 py-1 ${getColorClasses(action.primaryColor, 'light')} rounded-lg mb-4`}>
-										<span className={`text-xs font-semibold ${getColorClasses(action.primaryColor, 'text')}`}>
+									<div
+										className={`inline-flex items-center px-3 py-1 ${getColorClasses(
+											action.primaryColor,
+											"light"
+										)} rounded-lg mb-4`}
+									>
+										<span
+											className={`text-xs font-semibold ${getColorClasses(
+												action.primaryColor,
+												"text"
+											)}`}
+										>
 											{action.stats}
 										</span>
 									</div>
 
-									<div className={`card-arrow flex items-center ${getColorClasses(action.primaryColor, 'text')} font-semibold`}>
+									<div
+										className={`card-arrow flex items-center ${getColorClasses(
+											action.primaryColor,
+											"text"
+										)} font-semibold`}
+									>
 										<span>Explore Now</span>
-										<svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+										<svg
+											className="w-4 h-4 ml-2"
+											fill="none"
+											stroke="currentColor"
+											viewBox="0 0 24 24"
+										>
+											<path
+												strokeLinecap="round"
+												strokeLinejoin="round"
+												strokeWidth="2"
+												d="M9 5l7 7-7 7"
+											></path>
 										</svg>
 									</div>
 								</div>
@@ -695,7 +773,9 @@ export default function Home() {
 				<div ref={personalSectionRef}>
 					<div className="flex items-center mb-8">
 						<div>
-							<h3 className="text-3xl font-bold text-slate-900">Personal Hub</h3>
+							<h3 className="text-3xl font-bold text-slate-900">
+								Personal Hub
+							</h3>
 						</div>
 					</div>
 
@@ -704,11 +784,16 @@ export default function Home() {
 							<Link
 								key={idx}
 								to={action.to}
-								ref={(el) => cardRefs.current[academicActions.length + idx] = el}
+								ref={(el) =>
+									(cardRefs.current[academicActions.length + idx] = el)
+								}
 								className="group relative bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-200/50 p-8 overflow-hidden shadow-lg"
 							>
 								<div
-									className={`card-overlay absolute inset-0 bg-gradient-to-br ${getColorClasses(action.primaryColor, 'light')} opacity-0`}
+									className={`card-overlay absolute inset-0 bg-gradient-to-br ${getColorClasses(
+										action.primaryColor,
+										"light"
+									)} opacity-0`}
 								></div>
 
 								{action.badge > 0 && (
@@ -724,7 +809,9 @@ export default function Home() {
 
 								<div className="relative z-10">
 									<div
-										className={`card-icon w-16 h-16 bg-gradient-to-r ${getColorClasses(action.primaryColor)} rounded-2xl flex items-center justify-center mb-6 shadow-lg`}
+										className={`card-icon w-16 h-16 bg-gradient-to-r ${getColorClasses(
+											action.primaryColor
+										)} rounded-2xl flex items-center justify-center mb-6 shadow-lg`}
 									>
 										<span className="text-2xl">{action.icon}</span>
 									</div>
@@ -736,16 +823,41 @@ export default function Home() {
 										{action.description}
 									</p>
 
-									<div className={`inline-flex items-center px-3 py-1 ${getColorClasses(action.primaryColor, 'light')} rounded-lg mb-4`}>
-										<span className={`text-xs font-semibold ${getColorClasses(action.primaryColor, 'text')}`}>
+									<div
+										className={`inline-flex items-center px-3 py-1 ${getColorClasses(
+											action.primaryColor,
+											"light"
+										)} rounded-lg mb-4`}
+									>
+										<span
+											className={`text-xs font-semibold ${getColorClasses(
+												action.primaryColor,
+												"text"
+											)}`}
+										>
 											{action.stats}
 										</span>
 									</div>
 
-									<div className={`card-arrow flex items-center ${getColorClasses(action.primaryColor, 'text')} font-semibold`}>
+									<div
+										className={`card-arrow flex items-center ${getColorClasses(
+											action.primaryColor,
+											"text"
+										)} font-semibold`}
+									>
 										<span>Open Hub</span>
-										<svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+										<svg
+											className="w-4 h-4 ml-2"
+											fill="none"
+											stroke="currentColor"
+											viewBox="0 0 24 24"
+										>
+											<path
+												strokeLinecap="round"
+												strokeLinejoin="round"
+												strokeWidth="2"
+												d="M9 5l7 7-7 7"
+											></path>
 										</svg>
 									</div>
 								</div>
@@ -754,6 +866,18 @@ export default function Home() {
 					</div>
 				</div>
 			</main>
+			{showFeedbackModal && (
+				<div
+					className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
+					onClick={handleModalBackdropClick}
+				>
+					<FeedbackModal
+						teacherId={teacherData.ownerUid || teacherData.id}
+						teacherData={teacherData}
+						onClose={handleCloseFeedbackModal}
+					/>
+				</div>
+			)}
 		</div>
 	);
 }

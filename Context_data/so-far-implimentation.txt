@@ -29,6 +29,7 @@ firebase collection ---------Document------------------Inside collections
 7.sahayak_sessions
 8.simulation_reports
 9.content_library
+10.community_feedback
 10.differentiated_materials
 
 teacher:{
@@ -568,6 +569,30 @@ differentiated_materials:{
       "vocabulary": []
     }
   }
+}
+
+
+community_feedback:{
+  "analysis": {
+    "analyzedAt": "",
+    "confidenceScore": "",
+    "emotionalState": "",
+    "keyThemes": [],
+    "model": "",
+    "originalIntent": "",
+    "positiveHighlights": [],
+    "sentiment": "",
+    "suggestedSupport": [],
+    "teachingChallenges": []
+  },
+  "anonymized": "",
+  "isWeekendSubmission": "",
+  "originalFeedback": "",
+  "sharedWithCommunity": "",
+  "status": "",
+  "submittedAt": "",
+  "teacherId": "",
+  "weekOf": ""
 }
 
 
