@@ -2,9 +2,12 @@ import React, { useState, useEffect } from "react";
 import { httpsCallable } from "firebase/functions";
 import { functions } from "../firebase";
 import LoadingScreen from "../components/LoadingScreen";
+import MaterialGenerator from "./MaterialGenerator";
 
 
 const ContentHub = () => {
+	// Add activeMainTab state for switching between content creation and material generator
+	const [activeMainTab, setActiveMainTab] = useState("content");
 	const [request, setRequest] = useState("");
 	const [selectedGrades, setSelectedGrades] = useState([]);
 	const [isLoading, setIsLoading] = useState(false);
@@ -100,7 +103,6 @@ const ContentHub = () => {
 		}
 	};
 
-
 	const handleGradeToggle = (grade) => {
 		setSelectedGrades((prev) =>
 			prev.includes(grade) ? prev.filter((g) => g !== grade) : [...prev, grade]
@@ -126,77 +128,114 @@ const ContentHub = () => {
 						Create localized, differentiated content for your multi-grade classroom
 					</p>
 
-					{/* Content Request Input */}
+					{/* Main Tab Navigation */}
 					<div className="mb-6">
-						<label className="block text-sm font-medium text-gray-700 mb-2">
-							Content Request
-						</label>
-						<textarea
-							value={request}
-							onChange={(e) => setRequest(e.target.value)}
-							placeholder="Example: Create a story about soil types for farming, or Explain the water cycle with local examples"
-							className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
-							rows="4"
-						/>
-					</div>
-
-					{/* Grade Selection */}
-					<div className="mb-6">
-						<label className="block text-sm font-medium text-gray-700 mb-2">
-							Select Grades
-						</label>
-						<div className="flex flex-wrap gap-2">
-							{["1", "2", "3", "4", "5"].map((grade) => (
-								<button
-									key={grade}
-									onClick={() => handleGradeToggle(grade)}
-									className={`px-3 py-2 rounded-full text-sm font-medium transition-colors ${selectedGrades.includes(grade)
-										? "bg-blue-500 text-white"
-										: "bg-gray-200 text-gray-700 hover:bg-gray-300"
-										}`}
-								>
-									Grade {grade}
-								</button>
-							))}
+						<div className="overflow-x-auto">
+							<div className="flex border-b border-gray-200 mb-4 min-w-max sm:min-w-0">
+								{[
+									{ id: "content", label: "Content Creator", icon: "✨", shortLabel: "Creator" },
+									{ id: "materials", label: "Material Generator", icon: "📄", shortLabel: "Materials" },
+								].map((tab) => (
+									<button
+										key={tab.id}
+										onClick={() => setActiveMainTab(tab.id)}
+										className={`flex items-center gap-1 sm:gap-2 px-4 sm:px-6 py-3 border-b-2 font-medium text-sm sm:text-base transition-colors whitespace-nowrap ${activeMainTab === tab.id
+												? "border-blue-500 text-blue-600"
+												: "border-transparent text-gray-500 hover:text-gray-700"
+											}`}
+									>
+										<span>{tab.icon}</span>
+										<span className="sm:hidden">{tab.shortLabel}</span>
+										<span className="hidden sm:inline">{tab.label}</span>
+									</button>
+								))}
+							</div>
 						</div>
 					</div>
 
-					{/* Teacher Location Info */}
-					{teacherData && (
-						<div className="mb-6 p-4 bg-blue-50 rounded-md">
-							<p className="text-sm text-blue-800">
-								<strong>Location:</strong> {teacherData?.location}
-							</p>
-							<p className="text-sm text-blue-600 mt-1">
-								Content will be localized for your region with cultural context
-								and local language support.
-							</p>
-						</div>
+					{/* Tab Content */}
+					{activeMainTab === "content" && (
+						<>
+							{/* Content Request Input */}
+							<div className="mb-6">
+								<label className="block text-sm font-medium text-gray-700 mb-2">
+									Content Request
+								</label>
+								<textarea
+									value={request}
+									onChange={(e) => setRequest(e.target.value)}
+									placeholder="Example: Create a story about soil types for farming, or Explain the water cycle with local examples"
+									className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
+									rows="4"
+								/>
+							</div>
+
+							{/* Grade Selection */}
+							<div className="mb-6">
+								<label className="block text-sm font-medium text-gray-700 mb-2">
+									Select Grades
+								</label>
+								<div className="flex flex-wrap gap-2">
+									{["1", "2", "3", "4", "5"].map((grade) => (
+										<button
+											key={grade}
+											onClick={() => handleGradeToggle(grade)}
+											className={`px-3 py-2 rounded-full text-sm font-medium transition-colors ${selectedGrades.includes(grade)
+													? "bg-blue-500 text-white"
+													: "bg-gray-200 text-gray-700 hover:bg-gray-300"
+												}`}
+										>
+											Grade {grade}
+										</button>
+									))}
+								</div>
+							</div>
+
+							{/* Teacher Location Info */}
+							{teacherData && (
+								<div className="mb-6 p-4 bg-blue-50 rounded-md">
+									<p className="text-sm text-blue-800">
+										<strong>Location:</strong> {teacherData?.location}
+									</p>
+									<p className="text-sm text-blue-600 mt-1">
+										Content will be localized for your region with cultural context
+										and local language support.
+									</p>
+								</div>
+							)}
+
+							{/* Error Message */}
+							{error && (
+								<div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
+									<p className="text-red-800 text-sm sm:text-base">{error}</p>
+								</div>
+							)}
+
+							{/* Create Button */}
+							<button
+								onClick={handleCreateContent}
+								disabled={isLoading}
+								className="w-full bg-blue-500 text-white py-3 px-6 rounded-md font-medium hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+							>
+								Create Localized Content
+							</button>
+
+							{/* Content Display */}
+							{content && (
+								<ContentDisplay
+									content={content}
+									reliabilityScore={content.reliabilityScore}
+									wasRevised={content.wasRevised}
+								/>
+							)}
+						</>
 					)}
 
-					{/* Error Message */}
-					{error && (
-						<div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
-							<p className="text-red-800 text-sm sm:text-base">{error}</p>
+					{/* Material Generator Tab */}
+					{activeMainTab === "materials" && (
+						<div>
+							<MaterialGenerator />
 						</div>
-					)}
-
-					{/* Create Button */}
-					<button
-						onClick={handleCreateContent}
-						disabled={isLoading}
-						className="w-full bg-blue-500 text-white py-3 px-6 rounded-md font-medium hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
-					>
-						Create Localized Content
-					</button>
-
-					{/* Content Display */}
-					{content && (
-						<ContentDisplay
-							content={content}
-							reliabilityScore={content.reliabilityScore}
-							wasRevised={content.wasRevised}
-						/>
 					)}
 				</div>
 			</div>
@@ -219,8 +258,8 @@ const ContentDisplay = ({ content, reliabilityScore, wasRevised }) => {
 						</span>
 						<div
 							className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${reliabilityScore > 0.8
-								? "bg-green-100 text-green-800"
-								: "bg-yellow-100 text-yellow-800"
+									? "bg-green-100 text-green-800"
+									: "bg-yellow-100 text-yellow-800"
 								}`}
 						>
 							{Math.round(reliabilityScore * 100)}%
@@ -247,8 +286,8 @@ const ContentDisplay = ({ content, reliabilityScore, wasRevised }) => {
 							key={tab.id}
 							onClick={() => setActiveTab(tab.id)}
 							className={`flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap ${activeTab === tab.id
-								? "border-blue-500 text-blue-600"
-								: "border-transparent text-gray-500 hover:text-gray-700"
+									? "border-blue-500 text-blue-600"
+									: "border-transparent text-gray-500 hover:text-gray-700"
 								}`}
 						>
 							<span>{tab.icon}</span>
@@ -259,7 +298,7 @@ const ContentDisplay = ({ content, reliabilityScore, wasRevised }) => {
 				</div>
 			</div>
 
-			{/* Tab Content */}
+			{/* Tab Content - Rest of your existing ContentDisplay content remains the same */}
 			{activeTab === "story" && (
 				<div>
 					<h3 className="text-lg font-semibold mb-3">Main Story</h3>

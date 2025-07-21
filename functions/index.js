@@ -23,6 +23,8 @@ const wellnessFunctions = require("./src/functions/wellness");
 
 const sahayakFunction = require("./src/functions/sahayak");
 
+const generateDifferentiatedMaterials = require("./src/functions/differentiation");
+
 // Export all functions
 module.exports = {
   // Auth functions
@@ -39,4 +41,6 @@ module.exports = {
   ...wellnessFunctions,
 
   ...sahayakFunction,
+
+  ...generateDifferentiatedMaterials,
 };

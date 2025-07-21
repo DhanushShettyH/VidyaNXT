@@ -69,7 +69,6 @@ Path: D:\hackathon\Google\AI Agentic Day\VidyaNXT
 │   │   └── 📁 utils/
 │   │       ├── 📜 helpers.js
 │   │       ├── 📜 location-mapping.js
-│   │       ├── 📜 logger.js
 │   │       └── 📜 validation.js
 │   └── 📋 vidyanxt-service-account.json
 ├── 🌐 index.html
@@ -99,6 +98,7 @@ Path: D:\hackathon\Google\AI Agentic Day\VidyaNXT
 │   │   └── 🖼️ react.svg
 │   ├── 📁 components/
 │   │   ├── ⚛️ Admininitialization.jsx
+│   │   ├── ⚛️ AuthContex.jsx
 │   │   ├── ⚛️ ChatList.jsx
 │   │   ├── ⚛️ ContentDetailView.jsx
 │   │   ├── ⚛️ ContentGenerator.jsx
@@ -107,6 +107,7 @@ Path: D:\hackathon\Google\AI Agentic Day\VidyaNXT
 │   │   ├── ⚛️ Home.jsx
 │   │   ├── ⚛️ LoadingScreen.jsx
 │   │   ├── ⚛️ Login.jsx
+│   │   ├── ⚛️ NetworkIndicator.jsx
 │   │   ├── ⚛️ RegisterTeacher.jsx
 │   │   ├── ⚛️ SahayakContent.jsx
 │   │   ├── ⚛️ WellnessAlert.jsx
@@ -128,6 +129,7 @@ Path: D:\hackathon\Google\AI Agentic Day\VidyaNXT
 │       ├── ⚛️ ChatWindow.jsx
 │       ├── ⚛️ ContentHub.jsx
 │       ├── ⚛️ ContentLibrary.jsx
+│       ├── ⚛️ MaterialGenerator.jsx
 │       ├── ⚛️ PeerAdvice.jsx
 │       ├── ⚛️ PeersList.jsx
 │       └── ⚛️ WellnessDashboard.jsx

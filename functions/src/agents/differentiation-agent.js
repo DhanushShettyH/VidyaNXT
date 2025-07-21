@@ -83,6 +83,56 @@ Return response in JSON format:
     }
   }
 
+  async processImageBasedContent(analysisResult, grades, language, location) {
+    const curriculumData = await this.getCurriculumStandards(location, grades);
+    const regionalContext =
+      require("../utils/location-mapping").getRegionalContext(location);
+
+    const prompt = `
+  You are an expert teacher creating differentiated learning materials for multi-grade classrooms in ${location}, India.
+  
+  Content Analysis:
+  - Subject: ${analysisResult.subject}
+  - Topic: ${analysisResult.topic}  
+  - Content: ${analysisResult.content}
+  - Key Terms: ${analysisResult.keyTerms?.join(", ") || "None"}
+  - Difficulty Level: ${analysisResult.difficulty}
+  
+  Target Grades: ${grades.join(", ")}
+  Language: ${language}
+  Regional Context: ${JSON.stringify(regionalContext)}
+  
+  Create differentiated worksheet versions for each grade level that:
+  1. Adapt complexity appropriately for each grade
+  2. Include local cultural references from ${location}
+  3. Use grade-appropriate vocabulary and sentence structure
+  4. Provide hands-on activities suitable for low-resource classrooms
+  5. Include assessment questions of varying difficulty
+  
+  Response format JSON:
+  {
+    "versions": {
+      ${grades
+        .map(
+          (grade) => `"grade${grade}": {
+        "content": "main lesson adapted for grade ${grade}",
+        "objectives": ["specific learning objectives for grade ${grade}"],
+        "activities": ["hands-on activities for grade ${grade}"],
+        "vocabulary": ["key terms with simple definitions for grade ${grade}"],
+        "assessmentQuestions": ["evaluation questions for grade ${grade}"]
+      }`
+        )
+        .join(",\n      ")}
+    },
+    "commonObjectives": ["shared learning goals across all grades"],
+    "differentiationStrategy": "explanation of how content varies by grade level"
+  }
+  `;
+
+    const response = await generateText(prompt);
+    return parseGeminiResponse(response);
+  }
+
   getDefaultStandards(grades) {
     const defaultStandards = {
       grade1: [

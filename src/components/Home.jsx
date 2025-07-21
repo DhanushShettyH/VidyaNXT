@@ -43,8 +43,8 @@ export default function Home() {
 	}, []);
 
 	useEffect(() => {
-		const storedTeacherData = localStorage.getItem("teacherData");
-		const displayName = localStorage.getItem("displayName");
+		const storedTeacherData = sessionStorage.getItem("teacherData");
+		const displayName = sessionStorage.getItem("displayName");
 
 		if (!storedTeacherData || !displayName) {
 			navigate("/login");
@@ -446,8 +446,8 @@ export default function Home() {
 	const handleLogout = async () => {
 		try {
 			await signOut(auth);
-			localStorage.removeItem("teacherData");
-			localStorage.removeItem("displayName");
+			sessionStorage.removeItem("teacherData");
+			sessionStorage.removeItem("displayName");
 			navigate("/login");
 		} catch (error) {
 			console.error("Logout error:", error);

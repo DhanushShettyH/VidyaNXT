@@ -29,6 +29,7 @@ firebase collection ---------Document------------------Inside collections
 7.sahayak_sessions
 8.simulation_reports
 9.content_library
+10.differentiated_materials
 
 teacher:{
   "createdAt": "2025-07-18T06:08:19.658Z",
@@ -510,6 +511,66 @@ content_library:{
   }
 }
 
+differentiated_materials:{
+  "analysis": {
+    "content": "",
+    "culturalRelevance": "",
+    "difficulty": "",
+    "extractedText": "",
+    "keyTerms": [],
+    "language": "",
+    "objectives": [],
+    "subject": "",
+    "topic": "",
+    "visualElements": []
+  },
+  "commonObjectives": [],
+  "createdAt": "",
+  "differentiationStrategy": "",
+  "hasContext": "",
+  "hasImage": "",
+  "language": "",
+  "lastUpdated": "",
+  "location": "",
+  "materialId": "",
+  "regionalContext": {
+    "crops": [],
+    "festivals": [],
+    "landmarks": [],
+    "localHeroes": []
+  },
+  "status": "",
+  "targetGrades": [],
+  "teacherId": "",
+  "versions": {
+    "grade1": {
+      "activities": [],
+      "content": "",
+      "objectives": [],
+      "vocabulary": []
+    },
+    "grade2": {
+      "activities": [],
+      "content": "",
+      "objectives": [],
+      "vocabulary": []
+    },
+    "grade3": {
+      "activities": [],
+      "content": "",
+      "objectives": [],
+      "vocabulary": []
+    },
+    "grade4": {
+      "activities": [],
+      "content": "",
+      "objectives": [],
+      "vocabulary": []
+    }
+  }
+}
+
+
 ============================================================================
         Implimentation Context : React + firebase(funtion,Auth)
 ============================================================================
@@ -528,6 +589,8 @@ ai chat -> (createAiChatSession, Listen for new messages,) -> createAiChatSessio
 wellness dashboard.
 content_generation ->content req (grades:1,2,3) -> createSahayakContent = onCall(SahayakOrchestrator(analyzeRequest->(lang,sub),regionalContext,{processHyperLocalContent,processDifferentiatedContent,processVisualAids}testWithSimulatedClassroom->finalizeContent (also stored in content_library)))
 content_library -> req(teacherid....) -> searchContentLibrary= onCall()
+differentiatedMaterial ->(imageBase64, context ) -> generateDifferentiatedMaterialsonCall(analyzeImageContent(gemini.js ->analyzeImageWithText()),analyzeTextContent,DifferentiationAgent)-> worksheet
+
 
 note:- gemini.js -> export generateText(prompt) - all agents send there prepared prompt to here to call gemini.
 for this i also have function to parse the response helpers.js
@@ -626,7 +689,6 @@ Path: D:\hackathon\Google\AI Agentic Day\VidyaNXT
 │   │   └── 📁 utils/
 │   │       ├── 📜 helpers.js
 │   │       ├── 📜 location-mapping.js
-│   │       ├── 📜 logger.js
 │   │       └── 📜 validation.js
 │   └── 📋 vidyanxt-service-account.json
 ├── 🌐 index.html
@@ -656,6 +718,7 @@ Path: D:\hackathon\Google\AI Agentic Day\VidyaNXT
 │   │   └── 🖼️ react.svg
 │   ├── 📁 components/
 │   │   ├── ⚛️ Admininitialization.jsx
+│   │   ├── ⚛️ AuthContex.jsx
 │   │   ├── ⚛️ ChatList.jsx
 │   │   ├── ⚛️ ContentDetailView.jsx
 │   │   ├── ⚛️ ContentGenerator.jsx
@@ -664,6 +727,7 @@ Path: D:\hackathon\Google\AI Agentic Day\VidyaNXT
 │   │   ├── ⚛️ Home.jsx
 │   │   ├── ⚛️ LoadingScreen.jsx
 │   │   ├── ⚛️ Login.jsx
+│   │   ├── ⚛️ NetworkIndicator.jsx
 │   │   ├── ⚛️ RegisterTeacher.jsx
 │   │   ├── ⚛️ SahayakContent.jsx
 │   │   ├── ⚛️ WellnessAlert.jsx
@@ -685,6 +749,7 @@ Path: D:\hackathon\Google\AI Agentic Day\VidyaNXT
 │       ├── ⚛️ ChatWindow.jsx
 │       ├── ⚛️ ContentHub.jsx
 │       ├── ⚛️ ContentLibrary.jsx
+│       ├── ⚛️ MaterialGenerator.jsx
 │       ├── ⚛️ PeerAdvice.jsx
 │       ├── ⚛️ PeersList.jsx
 │       └── ⚛️ WellnessDashboard.jsx
