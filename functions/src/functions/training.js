@@ -240,6 +240,25 @@ exports.getPersonalizedTraining = onCall(async (request) => {
     if (!teacherId) {
       throw new HttpsError("invalid-argument", "Teacher ID is required");
     }
+    const feedbackSnapshot = await db
+      .collection("community_feedback")
+      .where("sharedWithCommunity", "==", true)
+      .orderBy("submittedAt", "desc")
+      .limit(1)
+      .get();
+
+    let recentCommunityContext = null;
+
+    if (!feedbackSnapshot.empty) {
+      const doc = feedbackSnapshot.docs[0].data();
+      recentCommunityContext = {
+        sentiment: doc.analysis?.sentiment,
+        keyThemes: doc.analysis?.keyThemes || [],
+        teacherEmotion: doc.analysis?.emotionalState || "unknown",
+        coreFeedback: doc.originalFeedback || "",
+        weekOf: doc.weekOf,
+      };
+    }
 
     // Get teacher data
     const teacherDoc = await db.collection("teachers").doc(teacherId).get();
@@ -280,7 +299,8 @@ exports.getPersonalizedTraining = onCall(async (request) => {
     // Generate personalized recommendations
     const recommendations = await generatePersonalizedRecommendations(
       teacherData,
-      progress
+      progress,
+      recentCommunityContext
     );
 
     // Check if teacher needs personalized modules
@@ -322,12 +342,18 @@ exports.getTrainingModules = onCall(async (request) => {
       .orderBy("prerequisiteLevel", "asc")
       .get();
     const modules = [];
-
     modulesSnapshot.forEach((doc) => {
-      modules.push({
-        id: doc.id,
-        ...doc.data(),
-      });
+      const data = doc.data();
+      // Core modules are visible to all; personalized only to correct teacher
+      if (
+        data.type === "core" ||
+        (data.type === "personalized" && data.targetTeacher === teacherId)
+      ) {
+        modules.push({
+          id: doc.id,
+          ...data,
+        });
+      }
     });
 
     // Get teacher progress if provided
@@ -588,7 +614,11 @@ function checkPrerequisites(module, moduleProgress) {
   });
 }
 
-async function generatePersonalizedRecommendations(teacherData, progress) {
+async function generatePersonalizedRecommendations(
+  teacherData,
+  progress,
+  sharedFeedback = null
+) {
   const promptData = {
     experience: teacherData.experienceYears,
     grades: teacherData.grades,
@@ -597,27 +627,47 @@ async function generatePersonalizedRecommendations(teacherData, progress) {
     skillLevels: progress.skillLevels || {},
   };
 
-  const prompt = `Generate personalized training recommendations for this teacher:
-  
-  Teacher Profile: ${JSON.stringify(promptData, null, 2)}
-  
-  Generate JSON response with:
-  {
-    "immediateNeeds": [
-      {
-        "skill": "specific skill area",
-        "urgency": "high|medium|low", 
-        "reason": "why this is needed",
-        "recommendedModule": "module id or title"
-      }
-    ],
-    "suggestedNextSteps": [
-      "specific actionable step"
-    ],
-    "focusAreas": [
-      "key area to improve"
-    ]
-  }`;
+  let communityHintBlock = "";
+
+  if (sharedFeedback) {
+    communityHintBlock = `
+Recent community feedback shared by an experienced teacher:
+
+- Emotion: ${sharedFeedback.teacherEmotion}
+- Key Themes: ${sharedFeedback.keyThemes.join(", ")}
+- Feedback: "${sharedFeedback.coreFeedback}"
+- Week Reported: ${sharedFeedback.weekOf}
+
+Use this real-world feedback to guide practical, teacher-relevant suggestions.
+`;
+  }
+
+  const prompt = `
+Generate personalized training recommendations for this teacher:
+
+Teacher Profile: ${JSON.stringify(promptData, null, 2)}
+
+${communityHintBlock}
+
+Generate JSON response with:
+
+{
+  "immediateNeeds": [
+    {
+      "skill": "specific skill area",
+      "urgency": "high|medium|low",
+      "reason": "why this is needed",
+      "recommendedModule": "module id or title"
+    }
+  ],
+  "suggestedNextSteps": [
+    "specific actionable step"
+  ],
+  "focusAreas": [
+    "key area to improve"
+  ]
+}
+`;
 
   try {
     const response = await generateText(prompt);
