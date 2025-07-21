@@ -17,6 +17,7 @@ import WellnessMetrics from "./components/WellnessMetrics.jsx";
 import ContentHub from "./pages/ContentHub.jsx";
 import AdminInitialization from "./components/Admininitialization.jsx";
 import ContentLibrary from "./pages/ContentLibrary.jsx";
+import TrainingHub from "./pages/TrainingHub.jsx";
 
 function App() {
   return (
@@ -39,6 +40,7 @@ function App() {
         <Route path="/wellness/metrics" element={<WellnessMetrics />} />
         <Route path="/wellness/alerts" element={<WellnessAlerts />} />
         <Route path="/wellness/analytics" element={<WellnessAnalytics />} />
+        <Route path="/training-hub" element={<TrainingHub />} />
         <Route
           path="/wellness/notifications"
           element={<WellnessNotifications />}

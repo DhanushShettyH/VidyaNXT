@@ -99,7 +99,11 @@
         "explanation": "Session management in VidyaNXT uses browser sessionStorage to store teacher data locally after successful authentication. This approach provides quick access to user information during the session without requiring repeated server calls.",
         "code_example": "// Store teacher data after successful login\nsessionStorage.setItem('teacherData', JSON.stringify(result.data));\n\n// Retrieve teacher data in other components\nconst teacherData = JSON.parse(sessionStorage.getItem('teacherData'));\n\n// Check if user is logged in\nif (!sessionStorage.getItem('teacherData')) {\n  navigate('/login');\n}",
         "technical_details": {
-          "components": ["sessionStorage", "Login component", "Navigation system"],
+          "components": [
+            "sessionStorage",
+            "Login component",
+            "Navigation system"
+          ],
           "tech_stack": ["Browser Storage API", "React Router"],
           "flow": [
             "Successful login stores teacher data in sessionStorage",
@@ -108,7 +112,7 @@
             "Session data cleared when browser closes"
           ]
         },
-        "implementation_notes": "Uses sessionStorage instead of localStorage for security - data is automatically cleared when the browser session ends. Provides quick access to user data without server round trips."
+        "implementation_notes": "Uses sessionStorage instead of sessionStorage for security - data is automatically cleared when the browser session ends. Provides quick access to user data without server round trips."
       }
     },
     {

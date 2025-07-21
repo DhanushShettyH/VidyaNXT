@@ -29,6 +29,7 @@ firebase collection ---------Document------------------Inside collections
 7.sahayak_sessions
 8.simulation_reports
 9.content_library
+10.community_feedback
 
 teacher:{
   "createdAt": "2025-07-18T06:08:19.658Z",
@@ -510,6 +511,30 @@ content_library:{
   }
 }
 
+community_feedback:{
+  "analysis": {
+    "analyzedAt": "",
+    "confidenceScore": "",
+    "emotionalState": "",
+    "keyThemes": [],
+    "model": "",
+    "originalIntent": "",
+    "positiveHighlights": [],
+    "sentiment": "",
+    "suggestedSupport": [],
+    "teachingChallenges": []
+  },
+  "anonymized": "",
+  "isWeekendSubmission": "",
+  "originalFeedback": "",
+  "sharedWithCommunity": "",
+  "status": "",
+  "submittedAt": "",
+  "teacherId": "",
+  "weekOf": ""
+}
+
+
 ============================================================================
         Implimentation Context : React + firebase(funtion,Auth)
 ============================================================================
@@ -626,7 +651,6 @@ Path: D:\hackathon\Google\AI Agentic Day\VidyaNXT
 │   │   └── 📁 utils/
 │   │       ├── 📜 helpers.js
 │   │       ├── 📜 location-mapping.js
-│   │       ├── 📜 logger.js
 │   │       └── 📜 validation.js
 │   └── 📋 vidyanxt-service-account.json
 ├── 🌐 index.html

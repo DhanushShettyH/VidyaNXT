@@ -23,6 +23,10 @@ const wellnessFunctions = require("./src/functions/wellness");
 
 const sahayakFunction = require("./src/functions/sahayak");
 
+const feedbackFunction = require("./src/functions/feedback");
+
+const trainingFunction = require("./src/functions/training");
+
 // Export all functions
 module.exports = {
   // Auth functions
@@ -39,4 +43,8 @@ module.exports = {
   ...wellnessFunctions,
 
   ...sahayakFunction,
+
+  ...feedbackFunction,
+
+  ...trainingFunction,
 };

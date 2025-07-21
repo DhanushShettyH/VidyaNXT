@@ -44,7 +44,7 @@ additional
 ##1. Edge-Optimized Offline Capabilities
 You can design for intermittent connectivity by integrating these:
 
-RAG with LocalStorage: Use llama-index or Haystack to enable a local mini-RAG with stored textbook content and past prompts.
+RAG with sessionStorage: Use llama-index or Haystack to enable a local mini-RAG with stored textbook content and past prompts.
 
 Tiny local models: Deploy a TinyML model (e.g., DistillBERT) for basic Q&A or reading-level classification when offline. It can run inside a mobile device or even on a Raspberry Pi—great for demo impressiveness.
 ## 3. Data Privacy & Ownership
@@ -84,13 +84,20 @@ note:- i already built orchestration for creating content and generating differe
 <!-- alternate fall back if google fail is open source tools -->
 🔧 Hybrid Architecture Suggestion
 -------------------|--------------------|---------------------------------
-Task	           | Google Product	    |    Open Source Support
+Task	             | Google Product	    |    Open Source Support
 -------------------|--------------------|---------------------------------
 RAG content	       | Vertex AI Search   |	LlamaIndex with FAISS
-Q&A generation	   | Gemini 1.5 Flash	|    DistilBERT for fallback
+Q&A generation	   | Gemini 1.5 Flash	  |    DistilBERT for fallback
 STT reading tools  | Chirp (Vertex AI)  |	AI4Bharat ASR, Coqui STT
-Worksheet OCR	   | Gemini Vision	    |    Tesseract + LayoutParser
-Diagrams	       | Imagen / Gemini    |    Turtle / D3.js fallback
+Worksheet OCR	     | Gemini Vision	    |    Tesseract + LayoutParser
+Diagrams	         | Imagen / Gemini    |    Turtle / D3.js fallback
 Storage	           | Firestore	        |    IndexedDB, SQLite Offline
-Frontend	       | Firebase Studio	|   Tailwind + Preact for custom PWA
-------------------------------------------------------------------------
+Frontend	         | Firebase Studio	  |   Tailwind + Preact for custom PWA
+-------------------|--------------------|---------------------------------
+
+
+i want to build teacher training module, as teacher may lack of skill to handle multi grade classroom.
+now i have this 
+community_feedback -> collection where all other teacher in app can submit there 
+"Share your classroom experiences, teaching moments, challenges you've overcome, or insights you've gained this week. Your story can inspire and help other teachers! 🌟"
+so for this also include this as part to design this module
