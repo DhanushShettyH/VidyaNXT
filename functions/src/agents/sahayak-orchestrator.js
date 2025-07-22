@@ -137,47 +137,54 @@ class SahayakOrchestrator {
   }
 
   // NEW: Analyze request for language and subject
+  // NEW: Analyze request for language, subject, and classroom type
   async analyzeRequest(request) {
     try {
       const analysisPrompt = `
-      Analyze the following educational content request and extract:
-      1. Language preference (if explicitly mentioned)
-      2. Subject area (if explicitly mentioned)
+Analyze the following educational content request and extract:
 
-      Request: "${request}"
+1. Language preference (if explicitly mentioned)
+2. Subject area (if explicitly mentioned) 
+3. Classroom type: Is this for a MULTI-ABILITY classroom (mixed ability students in same class) or MULTI-GRADE classroom (different class levels)?
 
-      Common languages: english, hindi, kannada, marathi, tamil, telugu, bengali, gujarati
-      Common subjects: science, mathematics, language, social_studies, computer_science, general
+Request: "${request}"
 
-      Return a JSON object with this structure:
-      {
-        "language": "detected_language_or_null",
-        "subject": "detected_subject_or_null"
-      }
+IMPORTANT DISTINCTION:
+- MULTI-ABILITY: One classroom with students of different learning abilities (high achievers, average, struggling learners)
+- MULTI-GRADE: Teaching multiple class levels (Grade 1, Grade 2, Grade 3, etc.)
 
-      Rules:
-      - Only return a language if it's EXPLICITLY mentioned (e.g., "in Hindi", "explain in Tamil")
-      - Only return a subject if it's CLEARLY specified (e.g., "math problem", "science experiment", "history lesson", "computer programming", "social studies")
-      - Use null if not explicitly mentioned
-      - Be conservative - only extract if you're confident
-      - For computer/technology related requests, use "computer_science"
-      - For history/geography/civics related requests, use "social_studies"
-    `;
+Common languages: english, hindi, kannada, marathi, tamil, telugu, bengali, gujarati
+Common subjects: science, mathematics, language, social_studies, computer_science, general
+
+Return a JSON object with this structure:
+{
+  "language": "detected_language_or_null",
+  "subject": "detected_subject_or_null", 
+  "classroomType": "multi-ability" | "multi-grade" | "single-level"
+}
+
+Rules:
+- If request mentions "different abilities", "mixed ability", "high/low achievers" = "multi-ability"
+- If request mentions "Grade 1, Grade 2" or "different classes" = "multi-grade"  
+- Default to "single-level" if unclear
+- Only return language/subject if EXPLICITLY mentioned
+`;
 
       const response = await generateText(analysisPrompt);
       const analysis = parseGeminiResponse(response);
 
       console.log("Request analysis result:", analysis);
-
       return {
         language: analysis.language,
         subject: analysis.subject,
+        classroomType: analysis.classroomType || "multi-ability", // Default to multi-ability based on your use case
       };
     } catch (error) {
       console.error("Error analyzing request:", error);
       return {
         language: null,
         subject: null,
+        classroomType: "multi-ability",
       };
     }
   }

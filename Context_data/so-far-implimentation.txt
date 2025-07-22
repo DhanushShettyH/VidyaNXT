@@ -572,7 +572,6 @@ differentiated_materials:{
   }
 }
 
-
 community_feedback:{
   "analysis": {
     "analyzedAt": "",
@@ -596,6 +595,9 @@ community_feedback:{
   "weekOf": ""
 }
 
+differentiated_materials:{}
+
+training_modules:{}
 
 ============================================================================
         Implimentation Context : React + firebase(funtion,Auth)
@@ -640,7 +642,7 @@ firebase -> vertex ai (setup)
 - update Your Firebase Functions Configuration
 firebase functions:config:set vertex.credentials_path="./vidyanxt-service-account.json"
 - npm install @google-cloud/aiplatform @google-cloud/storage
-- if you are using storage than seperatly have to setit up
+- if you are using storage than seperatly have to setit up only once(cloud bucket)
 node scripts/setup-storage.js
 
 --------------------------------------------------------------------------------
