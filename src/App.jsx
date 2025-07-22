@@ -15,7 +15,6 @@ import WellnessAnalytics from "./components/WellnessAnalytics.jsx";
 import WellnessAlerts from "./components/WellnessAlert.jsx";
 import WellnessMetrics from "./components/WellnessMetrics.jsx";
 import ContentHub from "./pages/ContentHub.jsx";
-import AdminInitialization from "./components/Admininitialization.jsx";
 import ContentLibrary from "./pages/ContentLibrary.jsx";
 import TrainingHub from "./pages/TrainingHub.jsx";
 
@@ -23,7 +22,6 @@ function App() {
   return (
     <>
       <Routes>
-        <Route path="/admin" element={<AdminInitialization />} />
         {/* user routes */}
         <Route path="/" element={<Navigate to="/register" replace />} />
         <Route path="/login" element={<Login />} />

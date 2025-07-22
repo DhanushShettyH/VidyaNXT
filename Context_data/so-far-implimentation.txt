@@ -30,7 +30,8 @@ firebase collection ---------Document------------------Inside collections
 8.simulation_reports
 9.content_library
 10.community_feedback
-10.differentiated_materials
+11.differentiated_materials
+12.training_modules---------multi-grade-basics-001 & time-management-002
 
 teacher:{
   "createdAt": "2025-07-18T06:08:19.658Z",
@@ -643,8 +644,8 @@ firebase functions:config:set vertex.credentials_path="./vidyanxt-service-accoun
 node scripts/setup-storage.js
 
 --------------------------------------------------------------------------------
-Project Structure: VidyaNXT
-Path: D:\hackathon\Google\AI Agentic Day\VidyaNXT
+Project Structure: vidya-nxt1
+Path: /home/kali/My_Projects/hackathon/vidya-nxt1
 ============================================================
 
 ├── 📁 .firebase/
@@ -674,48 +675,52 @@ Path: D:\hackathon\Google\AI Agentic Day\VidyaNXT
 ├── 🐍 folder_structure.py
 ├── 📁 functions/
 │   ├── 📜 .eslintrc.js
+│   ├── 📄 firestore-debug.log
 │   ├── 📜 index.js
 │   ├── 📋 package-lock.json
 │   ├── 📋 package.json
 │   ├── 📄 pglite-debug.log
 │   ├── 📁 scripts/
+│   │   ├── 📜 init-training-data.js
 │   │   └── 📜 setup-storage.js
-│   ├── 📁 src/
-│   │   ├── 📁 agents/
-│   │   │   ├── 📜 ai-chat-agent.js
-│   │   │   ├── 📜 calssification-agent.js
-│   │   │   ├── 📜 differentiation-agent.js
-│   │   │   ├── 📜 hyper-local-agent.js
-│   │   │   ├── 📜 matching-agent.js
-│   │   │   ├── 📜 orchestration-agent.js
-│   │   │   ├── 📜 profile-agent.js
-│   │   │   ├── 📜 sahayak-orchestrator.js
-│   │   │   ├── 📜 simulated-classroom-agent.js
-│   │   │   ├── 📜 visual-aid-agent.js
-│   │   │   └── 📜 wellness-agent.js
-│   │   ├── 📁 breadboards/
-│   │   ├── 📁 config/
-│   │   │   ├── 📜 constants.js
-│   │   │   ├── 📜 firebase-config.js
-│   │   │   ├── 📜 gemini.js
-│   │   │   └── 📜 vertex-ai.js
-│   │   ├── 📁 functions/
-│   │   │   ├── 📜 auth.js
-│   │   │   ├── 📜 challenge.js
-│   │   │   ├── 📜 chat.js
-│   │   │   ├── 📜 sahayak.js
-│   │   │   ├── 📜 triggers.js
-│   │   │   └── 📜 wellness.js
-│   │   ├── 📁 services/
-│   │   │   ├── 📜 chat.js
-│   │   │   ├── 📜 notifications.js
-│   │   │   ├── 📜 teacher.js
-│   │   │   └── 📜 wellness.js
-│   │   └── 📁 utils/
-│   │       ├── 📜 helpers.js
-│   │       ├── 📜 location-mapping.js
-│   │       └── 📜 validation.js
-│   └── 📋 vidyanxt-service-account.json
+│   └── 📁 src/
+│       ├── 📁 agents/
+│       │   ├── 📜 ai-chat-agent.js
+│       │   ├── 📜 calssification-agent.js
+│       │   ├── 📜 differentiation-agent.js
+│       │   ├── 📜 hyper-local-agent.js
+│       │   ├── 📜 matching-agent.js
+│       │   ├── 📜 orchestration-agent.js
+│       │   ├── 📜 profile-agent.js
+│       │   ├── 📜 sahayak-orchestrator.js
+│       │   ├── 📜 simulated-classroom-agent.js
+│       │   ├── 📜 training-agent.js
+│       │   ├── 📜 visual-aid-agent.js
+│       │   └── 📜 wellness-agent.js
+│       ├── 📁 config/
+│       │   ├── 📜 constants.js
+│       │   ├── 📜 firebase-config.js
+│       │   ├── 📜 gemini.js
+│       │   └── 📜 vertex-ai.js
+│       ├── 📁 functions/
+│       │   ├── 📜 auth.js
+│       │   ├── 📜 challenge.js
+│       │   ├── 📜 chat.js
+│       │   ├── 📜 differentiation.js
+│       │   ├── 📜 feedback.js
+│       │   ├── 📜 sahayak.js
+│       │   ├── 📜 training.js
+│       │   ├── 📜 triggers.js
+│       │   └── 📜 wellness.js
+│       ├── 📁 services/
+│       │   ├── 📜 chat.js
+│       │   ├── 📜 notifications.js
+│       │   ├── 📜 teacher.js
+│       │   └── 📜 wellness.js
+│       └── 📁 utils/
+│           ├── 📜 helpers.js
+│           ├── 📜 location-mapping.js
+│           └── 📜 validation.js
 ├── 🌐 index.html
 ├── 📜 index_copy_test.js
 ├── 📋 package-lock.json
@@ -742,27 +747,21 @@ Path: D:\hackathon\Google\AI Agentic Day\VidyaNXT
 │   ├── 📁 assets/
 │   │   └── 🖼️ react.svg
 │   ├── 📁 components/
-│   │   ├── ⚛️ Admininitialization.jsx
-│   │   ├── ⚛️ AuthContex.jsx
-│   │   ├── ⚛️ ChatList.jsx
 │   │   ├── ⚛️ ContentDetailView.jsx
-│   │   ├── ⚛️ ContentGenerator.jsx
-│   │   ├── ⚛️ ContentLibrary.jsx
+│   │   ├── ⚛️ DifferentiatedMaterialsLibrary.jsx
 │   │   ├── ⚛️ ErrorBoundary.jsx
+│   │   ├── ⚛️ FeedbackModal.jsx
+│   │   ├── ⚛️ FeedbackSystem.jsx
 │   │   ├── ⚛️ Home.jsx
 │   │   ├── ⚛️ LoadingScreen.jsx
 │   │   ├── ⚛️ Login.jsx
 │   │   ├── ⚛️ NetworkIndicator.jsx
 │   │   ├── ⚛️ RegisterTeacher.jsx
-│   │   ├── ⚛️ SahayakContent.jsx
 │   │   ├── ⚛️ WellnessAlert.jsx
 │   │   ├── ⚛️ WellnessAnalytics.jsx
 │   │   ├── ⚛️ WellnessMetrics.jsx
-│   │   ├── ⚛️ WellnessNavigation.jsx
 │   │   ├── ⚛️ WellnessNotifications.jsx
-│   │   ├── ⚛️ WellnessRecommendations.jsx
-│   │   ├── ⚛️ WellnessTrendChart.jsx
-│   │   └── 📜 firebaseWellnessService.js
+│   │   └── ⚛️ WellnessRecommendations.jsx
 │   ├── 📜 constants.js
 │   ├── 📜 firebase.js
 │   ├── 📁 hooks/
@@ -777,6 +776,7 @@ Path: D:\hackathon\Google\AI Agentic Day\VidyaNXT
 │       ├── ⚛️ MaterialGenerator.jsx
 │       ├── ⚛️ PeerAdvice.jsx
 │       ├── ⚛️ PeersList.jsx
+│       ├── ⚛️ TrainingHub.jsx
 │       └── ⚛️ WellnessDashboard.jsx
 ├── 📜 tailwind.config.js
 └── 📜 vite.config.js

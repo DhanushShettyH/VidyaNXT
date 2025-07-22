@@ -5,15 +5,14 @@ import { Link, useNavigate } from "react-router-dom";
 import { collection, onSnapshot, query, where } from 'firebase/firestore';
 import { db } from '../firebase';
 import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { useAuth } from './AuthContex';
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import LoadingScreen from './LoadingScreen';
 import FeedbackSystem from "./FeedbackSystem";
 import FeedbackModal from "./FeedbackModal";
 
 // Register GSAP plugins
 gsap.registerPlugin(ScrollTrigger);
-
+// 
 export default function Home() {
 	const [teacherData, setTeacherData] = useState(null);
 	const [loading, setLoading] = useState(true);
@@ -21,7 +20,6 @@ export default function Home() {
 	const [wellnessAlerts, setWellnessAlerts] = useState(0);
 	const [isMobile, setIsMobile] = useState(false);
 	const [activeCardIndex, setActiveCardIndex] = useState(-1);
-	const { currentUser, loading: authLoading } = useAuth();
 	const [showFeedbackModal, setShowFeedbackModal] = useState(false);
 
 	const navigate = useNavigate();
