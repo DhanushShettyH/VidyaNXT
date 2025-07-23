@@ -1,53 +1,75 @@
-hidden insights
----------------
+## hidden insights
+
 ## Agent-to-Agent protocol (A2A) in Vertex allows future expansion
+
 ## Teacher Pain-Points: classroom management, administrative load, and lack of diagnostic tools agents for scheduling
-## in rural schools. Gemini 1.5 Flash (smaller, faster) 
+
+## in rural schools. Gemini 1.5 Flash (smaller, faster)
+
 ## Dialect fidelity: Chirp’s self-supervised training across 125+ languages and variants improves rural accent transcription; fine-tune a recognizer with model adaptation for Marathi or Bundeli names
 
-step by step system design.
----------------------------
-##. Agent Orchestration	Create TeacherMaster parent agent in Vertex Agent Builder.
-##Tool Integration	Connect each sub-agent to specific Google tools (see §3).	Use ADK’s function-calling; test with Agent Engine sandbox.
+## step by step system design.
+
+##. Agent Orchestration Create TeacherMaster parent agent in Vertex Agent Builder.
+##Tool Integration Connect each sub-agent to specific Google tools (see §3). Use ADK’s function-calling; test with Agent Engine sandbox.
+
 ## Cache last 10 answers & worksheets in IndexedDB. Use Workbox in PWA build; background-sync heavy calls.
 
-tech stack
------------
-##Multimodal reasoning	Gemini 1.5 Pro / Vision	Text, image understanding, long context.
-## Fast edge responses	Gemini 1.5 Flash	Low-latency look-ups.
+## tech stack
+
+##Multimodal reasoning Gemini 1.5 Pro / Vision Text, image understanding, long context.
+
+## Fast edge responses Gemini 1.5 Flash Low-latency look-ups.
+
 ## Chirp Speech-to-Text (Vertex AI). Real-time WCPM & miscue detection.
+
 ## Imagen / Gemini-Vision
-## RAG & indexing	Vertex AI Search & Grounding Tool
-## Orchestration	Vertex AI Agent Builder (ADK + Agent Engine)
+
+## RAG & indexing Vertex AI Search & Grounding Tool
+
+## Orchestration Vertex AI Agent Builder (ADK + Agent Engine)
+
 ## Firebase Studio + Firebase Hosting / Functions, Firebase Auth + Firestore
 
-agent & Feature flow
----------------------
-## content generation - Gemini 1.5 Pro; Vertex Search for grounding
-## differentiated worksheet - Gemini Vision for OCR → Gemini Pro for rewrite
-##Quick Q&A knowledge base	ExplainAgent Voice or typed question	Gemini Flash; Vertex Search; function-calling for glossary links	Simple analogy + follow-up question suggestion\
-## visual aid - SVG + ASCII sketch steps
-## Reading assessment	AssessAgent	30-sec child audio	Chirp STT with word-level confidences	WCPM score, mispronunciation list
-## Weekly lesson planner	PlannerAgent	Week start date + syllabus	Gemini Pro with calendar function call	Drag-drop timetable + resource links
+## agent & Feature flow
 
-winning strategy
----------------
+## content generation - Gemini 1.5 Pro; Vertex Search for grounding
+
+## differentiated worksheet - Gemini Vision for OCR → Gemini Pro for rewrite
+
+##Quick Q&A knowledge base ExplainAgent Voice or typed question Gemini Flash; Vertex Search; function-calling for glossary links Simple analogy + follow-up question suggestion\
+
+## visual aid - SVG + ASCII sketch steps
+
+## Reading assessment AssessAgent 30-sec child audio Chirp STT with word-level confidences WCPM score, mispronunciation list
+
+## Weekly lesson planner PlannerAgent Week start date + syllabus Gemini Pro with calendar function call Drag-drop timetable + resource links
+
+## winning strategy
+
 ## Edge/offline resilience while others rely purely on online calls. Queue uploads, cache prior worksheets—demo in airplane mode.
+
 ## Dialect-adapted Speech-to-Text: Fine-tune Chirp recognizer on 30 min of local children’s reading samples; competitors will overlook this nuance.
+
 ## Transparent grounding & citations: Vertex Agent Builder can automatically cite textbook lines; judges care about hallucination control
+
 ## Roadmap slide: A2A protocol for future student agents, data dashboards for administrators—positions project as scalable product, not hack.
+
 ##Context-aware fallback: Even if Gemini API fails (rate limits, latency), you don’t break flow—your open-source fallback gives resilience.
+
 ## when ever model finishes computation send push notification so teacher don't have to wait in application(he just need to initiate rest is managed and notified.)
 
-additional
----------
+## additional
+
 ##1. Edge-Optimized Offline Capabilities
 You can design for intermittent connectivity by integrating these:
 
 RAG with sessionStorage: Use llama-index or Haystack to enable a local mini-RAG with stored textbook content and past prompts.
 
 Tiny local models: Deploy a TinyML model (e.g., DistillBERT) for basic Q&A or reading-level classification when offline. It can run inside a mobile device or even on a Raspberry Pi—great for demo impressiveness.
+
 ## 3. Data Privacy & Ownership
+
 Open-source storage tools like DuckDB (use for lesson logs locally) or SQLite in the browser (via sql.js) can help keep sensitive teacher/student data offline and locally owned. This reduces parent/community resistance.
 ##4. Custom Visualization Frameworks
 For your visual agents:
@@ -66,38 +88,34 @@ Tesseract OCR with Indic models as fallback if Gemini or Vision APIs time out.
 
 ====================================================================
 i want to build week lession planner.
-ui_input:{
-  "week_start": "2025-07-22",
-  "grades": ["Grade 2", "Grade 3", "Grade 5"],
-  "syllabus":'periodic table',
-  "must_cover_topics":['history of it','present of it','importentance of it', etc.....],
-  }
+ui_input_from_ui:{
+"week_start": "2025-07-22",
+"grades": ["Grade 2", "Grade 3", "Grade 5"],
+"syllabus":'periodic table',
+"must_cover_topics":['history of it','present of it','importentance of it', etc.....],
+}
 weekly lesson plan -> createSahayakContent & differentiatedMaterial(worksheet generator)
 note:- see also you have to plan how to percist data don't put duplicated data like if create sahayakcontent already stored data than don't store that content again in week planner just map it. also don't forget to store teacher id with his weekplane. and also if teacher in future req for similer sullabus which he have req previusly than give him that alredy ready week plane.
 
 note:- i already built orchestration for creating content and generating differenitonate worksheet based on input so week planner can call these by passing them parameters they need to trigger them.
 
-
-
-
-
 <!-- alternate fall back if google fail is open source tools -->
+
 🔧 Hybrid Architecture Suggestion
 -------------------|--------------------|---------------------------------
-Task	             | Google Product	    |    Open Source Support
+Task | Google Product | Open Source Support
 -------------------|--------------------|---------------------------------
-RAG content	       | Vertex AI Search   |	LlamaIndex with FAISS
-Q&A generation	   | Gemini 1.5 Flash	  |    DistilBERT for fallback
-STT reading tools  | Chirp (Vertex AI)  |	AI4Bharat ASR, Coqui STT
-Worksheet OCR	     | Gemini Vision	    |    Tesseract + LayoutParser
-Diagrams	         | Imagen / Gemini    |    Turtle / D3.js fallback
-Storage	           | Firestore	        |    IndexedDB, SQLite Offline
-Frontend	         | Firebase Studio	  |   Tailwind + Preact for custom PWA
+RAG content | Vertex AI Search | LlamaIndex with FAISS
+Q&A generation | Gemini 1.5 Flash | DistilBERT for fallback
+STT reading tools | Chirp (Vertex AI) | AI4Bharat ASR, Coqui STT
+Worksheet OCR | Gemini Vision | Tesseract + LayoutParser
+Diagrams | Imagen / Gemini | Turtle / D3.js fallback
+Storage | Firestore | IndexedDB, SQLite Offline
+Frontend | Firebase Studio | Tailwind + Preact for custom PWA
 -------------------|--------------------|---------------------------------
-
 
 i want to build teacher training module, as teacher may lack of skill to handle multi grade classroom.
-now i have this 
-community_feedback -> collection where all other teacher in app can submit there 
+now i have this
+community_feedback -> collection where all other teacher in app can submit there
 "Share your classroom experiences, teaching moments, challenges you've overcome, or insights you've gained this week. Your story can inspire and help other teachers! 🌟"
 so for this also include this as part to design this module

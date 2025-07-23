@@ -8,10 +8,10 @@ const genAI = new GoogleGenerativeAI(
 );
 
 // Get the text-only model
-const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+const model = genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
 
 // Get the vision model for image analysis
-const visionModel = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+const visionModel = genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
 
 // Helper function to generate text
 async function generateText(prompt) {
