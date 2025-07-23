@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { auth } from '../firebase';
+import { auth, functions } from '../firebase';
 import { signOut } from 'firebase/auth';
 import { Link, useNavigate } from "react-router-dom";
 import { collection, onSnapshot, query, where } from 'firebase/firestore';
@@ -9,6 +9,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import LoadingScreen from './LoadingScreen';
 import FeedbackSystem from "./FeedbackSystem";
 import FeedbackModal from "./FeedbackModal";
+import { httpsCallable } from 'firebase/functions';
 
 // Register GSAP plugins
 gsap.registerPlugin(ScrollTrigger);
@@ -481,7 +482,7 @@ export default function Home() {
 			description:
 				"Generate hyper-local, multi-grade educational content instantly",
 			primaryColor: "indigo",
-			stats: "Generate in seconds",
+			stats: "Generate in minutes",
 		},
 		{
 			to: "/content-library",
@@ -514,16 +515,19 @@ export default function Home() {
 		},
 		{
 			to: "/training-hub",
-			icon: "",
+			icon: "⚡",
 			title: "Training Hub",
 			description: "personalized learning path",
+			primaryColor: "indigo",
+			badge: unreadTotal,
+			stats: unreadTotal > 0 ? `${unreadTotal} unread` : "Develop skills",
 		},
 		{
 			to: "/wellness-dashboard",
 			icon: "🧘",
 			title: "Wellness Intelligence",
 			description: "AI-powered insights for sustainable teaching practices",
-			primaryColor: "indigo",
+			primaryColor: "emerald",
 			badge: wellnessAlerts,
 			stats: wellnessAlerts > 0 ? `${wellnessAlerts} alerts` : "Monitor health",
 		},
@@ -643,15 +647,7 @@ export default function Home() {
 						<div className="relative z-10 flex items-center justify-between">
 							<div className="flex-1">
 								<div className="flex items-center mb-4">
-									<div>
-										<h2 className="text-4xl font-bold text-white mb-2">
-											Welcome back, {teacherData.displayName}
-										</h2>
-										<p className="text-indigo-200 text-xl leading-relaxed max-w-3xl">
-											Your distributed AI teaching intelligence network is ready
-											to transform multi-grade education across India.
-										</p>
-									</div>
+									<TodaysPlan teacherData={teacherData} />
 
 									{/* Floating Feedback Button */}
 									<FeedbackSystem
@@ -777,7 +773,7 @@ export default function Home() {
 						</div>
 					</div>
 
-					<div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+					<div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 						{personalActions.map((action, idx) => (
 							<Link
 								key={idx}
@@ -879,3 +875,154 @@ export default function Home() {
 		</div>
 	);
 }
+
+// Add this component for today's plan display
+const TodaysPlan = ({ teacherData }) => {
+	const [todaysPlan, setTodaysPlan] = useState(null);
+	const [hasWeeklyPlan, setHasWeeklyPlan] = useState(false);
+	const [loading, setLoading] = useState(true);
+	const navigate = useNavigate();
+	useEffect(() => {
+		fetchTodaysPlan();
+	}, []);
+
+	const fetchTodaysPlan = async () => {
+		try {
+			const today = new Date().toISOString().split('T')[0];
+			// Call function to get today's plan
+			const getTodaysPlan = httpsCallable(functions, 'getTodaysPlan');
+			const result = await getTodaysPlan({ teacherId: teacherData.uid, date: today });
+
+			if (result.data.success) {
+				setTodaysPlan(result.data.plan);
+				setHasWeeklyPlan(!!result.data.plan); // true if plan exists, false if null
+			}
+		} catch (error) {
+			console.error('Error fetching today\'s plan:', error);
+			setHasWeeklyPlan(false);
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	if (loading) {
+		return <div className="animate-pulse">Loading today's plan...</div>;
+	}
+
+	// If no weekly plan exists, show the original welcome message
+	if (!hasWeeklyPlan) {
+		return (
+			<div className=" bg-transparent w-full h-full rounded-2xl text-white">
+				<div className="flex justify-between items-start mb-6">
+					<div>
+						<h2 className="text-4xl font-bold text-white mb-2">
+							Welcome back, {teacherData.displayName}
+						</h2>
+						<p className="text-indigo-200 text-xl leading-relaxed max-w-3xl">
+							Your distributed AI teaching intelligence network is ready
+							to transform multi-grade education across India.
+						</p>
+					</div>
+				</div>
+
+				<div className="flex flex-col sm:flex-row gap-4">
+					<button
+						onClick={() => navigate('/weekly-planner')}
+						className="flex-1 bg-white text-indigo-600 font-semibold py-3 px-6 rounded-lg hover:bg-gray-100 transition-all duration-200 flex items-center justify-center gap-2"
+					>
+						<span>📋</span>
+						Create Your First Weekly Plan
+					</button>
+					<button
+						onClick={() => navigate('/content-hub')}
+						className="flex-1 bg-indigo-500 hover:bg-indigo-400 font-semibold py-3 px-6 rounded-lg transition-all duration-200 flex items-center justify-center gap-2"
+					>
+						<span>📚</span>
+						Browse Materials
+					</button>
+					<button
+						onClick={() => navigate('/material-generator')}
+						className="flex-1 bg-purple-500 hover:bg-purple-400 font-semibold py-3 px-6 rounded-lg transition-all duration-200 flex items-center justify-center gap-2"
+					>
+						<span>✨</span>
+						Generate Worksheets
+					</button>
+				</div>
+			</div>
+		);
+	}
+
+	// If weekly plan exists, show the personalized plan view
+	return (
+		<div className="bg-gradient-to-r from-indigo-600 to-purple-700 rounded-2xl p-8 text-white">
+			<div className="flex justify-between items-start mb-6">
+				<div>
+					<h2 className="text-4xl font-bold mb-2">
+						Welcome back, {teacherData.displayName}
+					</h2>
+					<p className="text-indigo-200 text-xl leading-relaxed max-w-3xl">
+						Your AI teaching assistant is ready with today's personalized lesson plan.
+					</p>
+				</div>
+			</div>
+
+			{todaysPlan ? (
+				<div className="bg-white/10 backdrop-blur rounded-xl p-6 mb-6">
+					<h3 className="text-2xl font-semibold mb-3">📅 Today's Plan</h3>
+					<div className="grid md:grid-cols-2 gap-4">
+						<div>
+							<h4 className="font-semibold text-lg text-yellow-300 mb-2">
+								🎯 {todaysPlan.topic}
+							</h4>
+							<p className="text-indigo-100 mb-3">{todaysPlan.description}</p>
+							<div className="text-sm">
+								<span className="bg-white/20 px-3 py-1 rounded-full">
+									📚 {todaysPlan.syllabus}
+								</span>
+								<span className="ml-2 bg-white/20 px-3 py-1 rounded-full">
+									⏱️ {todaysPlan.estimatedDuration}
+								</span>
+							</div>
+						</div>
+						<div>
+							<h5 className="font-medium text-indigo-200 mb-2">Key Activities:</h5>
+							<ul className="text-sm text-indigo-100 space-y-1">
+								{todaysPlan.activities?.slice(0, 3).map((activity, idx) => (
+									<li key={idx}>• {activity}</li>
+								))}
+							</ul>
+						</div>
+					</div>
+				</div>
+			) : (
+				<div className="bg-white/10 backdrop-blur rounded-xl p-6 mb-6 text-center">
+					<p className="text-lg">No lesson plan for today. Your weekly plan is ready but today doesn't have activities scheduled.</p>
+				</div>
+			)}
+
+			<div className="flex flex-col sm:flex-row gap-4">
+				<button
+					onClick={() => navigate('/weekly-planner')}
+					className="flex-1 bg-white text-indigo-600 font-semibold py-3 px-6 rounded-lg hover:bg-gray-100 transition-all duration-200 flex items-center justify-center gap-2"
+				>
+					<span>📋</span>
+					View Weekly Plan
+				</button>
+				<button
+					onClick={() => navigate('/content-hub')}
+					className="flex-1 bg-indigo-500 hover:bg-indigo-400 font-semibold py-3 px-6 rounded-lg transition-all duration-200 flex items-center justify-center gap-2"
+				>
+					<span>📚</span>
+					Browse Materials
+				</button>
+				<button
+					onClick={() => navigate('/material-generator')}
+					className="flex-1 bg-purple-500 hover:bg-purple-400 font-semibold py-3 px-6 rounded-lg transition-all duration-200 flex items-center justify-center gap-2"
+				>
+					<span>✨</span>
+					Generate Worksheets
+				</button>
+			</div>
+		</div>
+	);
+};

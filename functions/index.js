@@ -29,6 +29,8 @@ const trainingFunction = require("./src/functions/training");
 
 const generateDifferentiatedMaterials = require("./src/functions/differentiation");
 
+const weeklyPlanFunction = require("./src/functions/weekly-planner");
+
 // Export all functions
 module.exports = {
   // Auth functions
@@ -51,4 +53,6 @@ module.exports = {
   ...feedbackFunction,
 
   ...trainingFunction,
+
+  ...weeklyPlanFunction,
 };
