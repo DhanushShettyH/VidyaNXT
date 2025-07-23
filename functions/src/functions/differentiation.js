@@ -9,7 +9,14 @@ const {
 } = require("../utils/location-mapping");
 const DifferentiationAgent = require("../agents/differentiation-agent");
 
-exports.generateDifferentiatedMaterials = onCall(async (request) => {
+// Configuration for resource-intensive functions
+const heavyProcessingConfig = {
+  timeoutSeconds: 300, // 5 minutes
+  memory: "2GiB", // 2GB memory
+  maxInstances: 10,
+};
+
+exports.generateDifferentiatedMaterials = onCall(heavyProcessingConfig,async (request) => {
   try {
     const {
       imageBase64,

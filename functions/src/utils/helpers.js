@@ -140,45 +140,197 @@ function validateContentStructure(content) {
   return defaultContent;
 }
 
-// Update the existing parseGeminiResponse function
-
+//!parseGeminiResponse function
 function parseGeminiResponse(responseText) {
   try {
+    console.log("📝 Processing response, length:", responseText.length);
+    
     let cleanText = responseText.trim();
 
     // Remove markdown code blocks
-    cleanText = cleanText.replace(/^```json\s*/g, "");
+    cleanText = cleanText.replace(/^```json\s*/gi, "");
     cleanText = cleanText.replace(/^```\s*/g, "");
     cleanText = cleanText.replace(/\s*```$/g, "");
 
-    // Remove control characters that break JSON parsing
-    cleanText = cleanText.replace(/[\x00-\x1F\x7F]/g, "");
+    // Remove control characters and BOM
+    cleanText = cleanText.replace(/[\x00-\x1F\x7F-\x9F]/g, "");
+    cleanText = cleanText.replace(/^\uFEFF/, "");
 
-    // Handle trailing non-JSON content
-    const jsonEnd = cleanText.lastIndexOf("}");
-    if (jsonEnd !== -1) {
-      const potentialJson = cleanText.substring(0, jsonEnd + 1);
-      try {
-        JSON.parse(potentialJson);
-        cleanText = potentialJson;
-      } catch (e) {
-        // If invalid, proceed with original cleanup
-      }
+    // Find JSON boundaries
+    const firstBrace = cleanText.indexOf("{");
+    const lastBrace = cleanText.lastIndexOf("}");
+
+    if (firstBrace === -1 || lastBrace === -1 || firstBrace >= lastBrace) {
+      throw new Error("No valid JSON object found in response");
     }
 
-    // Additional cleanup
+    // Extract JSON content
+    cleanText = cleanText.substring(firstBrace, lastBrace + 1);
+
+    // CRITICAL FIX: Handle unescaped quotes in Kannada/Unicode text
+    cleanText = fixUnescapedQuotes(cleanText);
+
+    // Fix other common JSON issues
+    cleanText = cleanText
+      // Fix trailing commas before closing braces/brackets
+      .replace(/,(\s*[}\]])/g, "$1")
+      // Remove any trailing content after the last brace
+      .replace(/}\s*[^}]*$/, "}");
+
+    // Remove notes and other non-JSON content
     cleanText = cleanText.replace(/\*\*Note:\*\*.*/g, "");
 
-    const parsed = JSON.parse(cleanText);
+    // Try parsing with recovery
+    let parsed;
+    try {
+      parsed = JSON.parse(cleanText);
+    } catch (parseError) {
+      console.error("❌ Initial parse failed, attempting recovery...");
+      console.error("❌ Error:", parseError.message);
+
+      // Show context around error
+      const match = parseError.message.match(/position (\d+)/);
+      if (match) {
+        const pos = parseInt(match[1]);
+        console.error(
+          "❌ Context around error:",
+          cleanText.substring(Math.max(0, pos - 30), pos + 30)
+        );
+        console.error("❌ Problem character:", cleanText[pos] || "EOF");
+      }
+
+      // Final recovery attempt
+      cleanText = recoverJson(cleanText);
+      parsed = JSON.parse(cleanText);
+    }
+
     console.log("✅ Successfully parsed Gemini response");
     return parsed;
+    
   } catch (error) {
-    console.error(
-      "❌ Failed to parse Gemini response:",
-      responseText.substring(0, 500)
-    );
+    console.error("❌ Complete failure to parse Gemini response");
+    console.error("❌ Final error:", error.message);
+    console.error("❌ Response sample:", responseText.substring(0, 300));
+    
     throw new Error(`JSON parsing failed: ${error.message}`);
   }
+}
+function fixUnescapedQuotes(jsonString) {
+  console.log("🔧 Fixing unescaped quotes in JSON string...");
+
+  let result = "";
+  let i = 0;
+  let inString = false;
+  let escapeNext = false;
+
+  while (i < jsonString.length) {
+    const char = jsonString[i];
+
+    if (escapeNext) {
+      result += char;
+      escapeNext = false;
+      i++;
+      continue;
+    }
+
+    if (char === "\\" && inString) {
+      result += char;
+      escapeNext = true;
+      i++;
+      continue;
+    }
+
+    if (char === '"') {
+      if (!inString) {
+        // Starting a string
+        inString = true;
+        result += char;
+      } else {
+        // Check if this is actually the end of the string or an unescaped quote
+        // Look ahead to see what comes next
+        let j = i + 1;
+        while (j < jsonString.length && /\s/.test(jsonString[j])) {
+          j++; // Skip whitespace
+        }
+
+        const nextChar = jsonString[j];
+
+        // If next significant character suggests end of string value, it's probably the closing quote
+        if (
+          nextChar === "," ||
+          nextChar === "}" ||
+          nextChar === "]" ||
+          nextChar === ":"
+        ) {
+          inString = false;
+          result += char;
+        } else {
+          // This is likely an unescaped quote inside the string, escape it
+          result += '\\"';
+        }
+      }
+    } else {
+      result += char;
+    }
+
+    i++;
+  }
+
+  console.log("🔧 Quote fixing complete");
+  return result;
+}
+function recoverJson(jsonString) {
+  console.log("🔧 Attempting final JSON recovery...");
+
+  // Try a more aggressive quote fixing approach
+  jsonString = fixUnescapedQuotesAggressive(jsonString);
+
+  // Remove trailing commas
+  jsonString = jsonString.replace(/,(\s*[}\]])/g, "$1");
+
+  // Remove incomplete properties at the end
+  jsonString = jsonString.replace(/,\s*"[^"]*"?\s*:?\s*[^,}\]]*$/, "");
+
+  // Remove trailing comma
+  if (jsonString.trim().endsWith(",")) {
+    jsonString = jsonString.trim().slice(0, -1);
+  }
+
+  // Ensure proper closure
+  const openBraces = (jsonString.match(/{/g) || []).length;
+  const closeBraces = (jsonString.match(/}/g) || []).length;
+  const openBrackets = (jsonString.match(/\[/g) || []).length;
+  const closeBrackets = (jsonString.match(/]/g) || []).length;
+
+  if (openBraces > closeBraces) {
+    jsonString += "}".repeat(openBraces - closeBraces);
+  }
+
+  if (openBrackets > closeBrackets) {
+    jsonString += "]".repeat(openBrackets - closeBrackets);
+  }
+
+  console.log("🔧 Final recovery complete");
+  return jsonString;
+}
+function fixUnescapedQuotesAggressive(jsonString) {
+  console.log("🔧 Aggressive quote fixing...");
+
+  // Split by lines and fix each line that looks like it contains string values
+  const lines = jsonString.split("\n");
+  const fixedLines = lines.map((line) => {
+    // If line contains string assignment pattern like: "key": "value with "quotes" inside"
+    const stringAssignMatch = line.match(/^(\s*"[^"]+"\s*:\s*")(.*)("[\s,]*)$/);
+    if (stringAssignMatch) {
+      const [, prefix, content, suffix] = stringAssignMatch;
+      // Escape all quotes in the content part
+      const fixedContent = content.replace(/"/g, '\\"');
+      return prefix + fixedContent + suffix;
+    }
+    return line;
+  });
+
+  return fixedLines.join("\n");
 }
 
 module.exports = {
