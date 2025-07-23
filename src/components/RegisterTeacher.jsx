@@ -206,8 +206,8 @@ export default function RegisterTeacher() {
             </div>
 
             {/* Row 3: Grades and Location */}
-            <div className="grid grid-cols-2 lg:grid-cols-2 gap-2">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-1">
+            <div className="grid grid-cols-2 lg:grid-cols-1 gap-2">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
                 <div>
                   <label
                     htmlFor="grades"
@@ -250,7 +250,7 @@ export default function RegisterTeacher() {
               </div>
 
               {/* Row 4: Experience and Expertise */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-1">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
                 <div>
                   <label
                     htmlFor="experienceYears"
