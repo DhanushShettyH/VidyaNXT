@@ -386,3 +386,34 @@ function calculateReliabilityScore(analysis, content) {
 
   return Math.min(score, 1.0);
 }
+exports.getMaterialById = onCall(async (request) => {
+  try {
+    const { materialId } = request.data;
+
+    if (!materialId) {
+      throw new Error("Material ID is required");
+    }
+
+    const materialDoc = await db
+      .collection("differentiated_materials")
+      .doc(materialId)
+      .get();
+
+    if (!materialDoc.exists) {
+      throw new Error("Material not found");
+    }
+
+    const materialData = materialDoc.data();
+
+    return {
+      success: true,
+      data: {
+        materialId: materialDoc.id,
+        ...materialData,
+      },
+    };
+  } catch (error) {
+    console.error("Get material by ID error:", error);
+    throw new Error(`Failed to get material: ${error.message}`);
+  }
+});

@@ -290,6 +290,11 @@ educational poster style, no complex shading, vector-like appearance, clean line
               imageResults[0],
               fileName
             );
+            // console.log(
+            //   `🔍 DEBUG: Generated imageUrl for aid ${index}:`,
+            //   imageUrl
+            // ); // ADD THIS LINE
+
             //console.log(`✅ Image ${index + 1} saved successfully`);
           } catch (storageError) {
             console.error(`Storage failed for image ${index}:`, storageError);
@@ -340,6 +345,11 @@ educational poster style, no complex shading, vector-like appearance, clean line
 
   async finalizeResponse(visualAids, structuredContent, request, language) {
     // Ensure we have at least 2 visual aids
+    // console.log(
+    //   `🔍 DEBUG: Visual aids before finalization:`,
+    //   JSON.stringify(visualAids, null, 2)
+    // );
+
     while (visualAids.length < 2) {
       visualAids.push({
         type: "svg",

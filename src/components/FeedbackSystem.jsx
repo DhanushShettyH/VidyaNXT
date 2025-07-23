@@ -3,7 +3,7 @@ import { MessageCircle } from "lucide-react";
 
 const FeedbackSystem = ({ onOpenFeedbackModal, teacherId, teacherData }) => {
   const [showWeekendPrompt, setShowWeekendPrompt] = useState(false);
-  const [buttonOpacity, setButtonOpacity] = useState(0.5);
+  const [buttonOpacity, setButtonOpacity] = useState(0.75);
 
   // Check if it's weekend and show prompt
   useEffect(() => {

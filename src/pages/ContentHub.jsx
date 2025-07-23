@@ -4,6 +4,7 @@ import { functions } from "../firebase";
 import { useNavigate } from "react-router-dom";
 import LoadingScreen from "../components/LoadingScreen";
 import MaterialGenerator from "./MaterialGenerator";
+import Header from "../components/Header";
 
 const ContentHub = () => {
   // Add activeMainTab state for switching between content creation and material generator
@@ -155,37 +156,7 @@ const ContentHub = () => {
 
       <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-emerald-50">
         {/* Header */}
-        <header className="bg-white/90 backdrop-blur-xl border-b border-slate-200/60 sticky top-0 z-50 shadow-sm">
-          <div className="max-w-7xl mx-auto px-6 lg:px-8">
-            <div className="flex justify-between items-center py-6">
-              <div className="flex items-center space-x-4">
-                <button
-                  onClick={() => navigate("/home")}
-                  className="p-3 bg-gradient-to-r from-slate-800 to-slate-900 hover:from-slate-900 hover:to-slate-950 text-white font-semibold rounded-xl transition-all duration-300 hover:shadow-lg hover:scale-105"
-                >
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                    />
-                  </svg>
-                </button>
-                <div>
-                  <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-800 via-indigo-700 to-emerald-700 bg-clip-text text-transparent">
-                    AI Content Studio
-                  </h1>
-                </div>
-              </div>
-            </div>
-          </div>
-        </header>
+        <Header Heading={"AI Contnet Studio"} />
 
         {/* Main Content */}
         <main className="max-w-7xl mx-auto px-6 lg:px-8 py-10">
@@ -463,142 +434,151 @@ const ContentHub = () => {
         <pre className="text-xs">
           {JSON.stringify({
             hasContent: !!content?.content,
-            hasVisualAids: !!content?.content?.visualAids,
-            hasAids: !!content?.content?.visualAids,
-            aidsLength: content?.content?.visualAids?.length || 0,
-            aids: content?.content?.visualAids
+            hasVisualAids: !!content?.content?.visualAids?.aids?.,
+            hasAids: !!content?.content?.visualAids?.aids?.,
+            aidsLength: content?.content?.visualAids?.aids?.length || 0,
+            aids: content?.content?.visualAids?.aids?.
           }, null, 2)}
         </pre>
       </div>
     )} */}
 
-                      {content?.content?.visualAids &&
-                      content?.content?.visualAids.length > 0 ? (
+                      {content?.content?.visualAids?.aids &&
+                      content?.content?.visualAids?.aids?.length > 0 ? (
                         <div>
                           <h4 className="text-lg font-bold text-slate-900 mb-4">
                             Visual Aids
                           </h4>
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {content?.content?.visualAids.map((aid, index) => (
-                              <div
-                                key={index}
-                                className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm"
-                              >
-                                {/* Check for imageUrl first */}
-                                {aid.imageUrl ? (
-                                  <div className="relative group">
-                                    <img
-                                      src={aid.imageUrl}
-                                      alt={aid.title || aid.description}
-                                      className="w-full h-48 object-cover rounded-lg mb-3 cursor-pointer hover:opacity-90 transition-all duration-300 hover:scale-105"
-                                      onClick={() =>
-                                        openImageModal(aid.imageUrl, aid.title)
-                                      }
-                                      onError={(e) => {
-                                        console.log(
-                                          "Image failed to load:",
-                                          aid.imageUrl
+                            {content?.content?.visualAids?.aids?.map(
+                              (aid, index) => (
+                                <div
+                                  key={index}
+                                  className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm"
+                                >
+                                  {/* Check for imageUrl first */}
+                                  {aid.imageUrl ? (
+                                    <div className="relative group">
+                                      <img
+                                        src={aid.imageUrl}
+                                        alt={aid.title || aid.description}
+                                        className="w-full h-48 object-cover rounded-lg mb-3 cursor-pointer hover:opacity-90 transition-all duration-300 hover:scale-105"
+                                        onClick={() =>
+                                          openImageModal(
+                                            aid.imageUrl,
+                                            aid.title
+                                          )
+                                        }
+                                        onError={(e) => {
+                                          console.log(
+                                            "Image failed to load:",
+                                            aid.imageUrl
+                                          );
+                                          e.target.style.display = "none";
+                                          const fallback =
+                                            e.target.parentElement
+                                              .nextElementSibling;
+                                          if (fallback)
+                                            fallback.style.display = "flex";
+                                        }}
+                                      />
+                                      {/* Fullscreen icon overlay */}
+                                      <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 rounded-lg">
+                                        <svg
+                                          className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                                          fill="none"
+                                          stroke="currentColor"
+                                          viewBox="0 0 24 24"
+                                        >
+                                          <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth="2"
+                                            d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v4m0 0h-4m4 0l-5-5"
+                                          />
+                                        </svg>
+                                      </div>
+                                    </div>
+                                  ) : aid.svgCode ? (
+                                    /* Display SVG if svgCode exists and no imageUrl */
+                                    <div
+                                      className="w-full h-48 flex items-center justify-center bg-slate-50 rounded-lg mb-3 overflow-hidden cursor-pointer hover:bg-slate-100 transition-colors duration-300"
+                                      onClick={() => {
+                                        // For SVG, we'll create a data URL
+                                        const svgBlob = new Blob(
+                                          [aid.svgCode],
+                                          {
+                                            type: "image/svg+xml",
+                                          }
                                         );
-                                        e.target.style.display = "none";
-                                        const fallback =
-                                          e.target.parentElement
-                                            .nextElementSibling;
-                                        if (fallback)
-                                          fallback.style.display = "flex";
+                                        const svgUrl =
+                                          URL.createObjectURL(svgBlob);
+                                        openImageModal(svgUrl, aid.title);
+                                      }}
+                                      dangerouslySetInnerHTML={{
+                                        __html: aid.svgCode,
                                       }}
                                     />
-                                    {/* Fullscreen icon overlay */}
-                                    <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 rounded-lg">
-                                      <svg
-                                        className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                      >
-                                        <path
-                                          strokeLinecap="round"
-                                          strokeLinejoin="round"
-                                          strokeWidth="2"
-                                          d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v4m0 0h-4m4 0l-5-5"
-                                        />
-                                      </svg>
-                                    </div>
-                                  </div>
-                                ) : aid.svgCode ? (
-                                  /* Display SVG if svgCode exists and no imageUrl */
-                                  <div
-                                    className="w-full h-48 flex items-center justify-center bg-slate-50 rounded-lg mb-3 overflow-hidden cursor-pointer hover:bg-slate-100 transition-colors duration-300"
-                                    onClick={() => {
-                                      // For SVG, we'll create a data URL
-                                      const svgBlob = new Blob([aid.svgCode], {
-                                        type: "image/svg+xml",
-                                      });
-                                      const svgUrl =
-                                        URL.createObjectURL(svgBlob);
-                                      openImageModal(svgUrl, aid.title);
-                                    }}
-                                    dangerouslySetInnerHTML={{
-                                      __html: aid.svgCode,
-                                    }}
-                                  />
-                                ) : (
-                                  /* Show placeholder if neither exists */
-                                  <div className="w-full h-48 flex items-center justify-center bg-slate-50 rounded-lg mb-3 border-2 border-dashed border-slate-300">
-                                    <p className="text-sm text-slate-500 text-center">
-                                      Visual not available
-                                    </p>
-                                  </div>
-                                )}
-
-                                {/* Fallback div for image errors - hidden by default */}
-                                <div className="w-full h-48 items-center justify-center bg-slate-50 rounded-lg mb-3 border-2 border-dashed border-slate-300 hidden">
-                                  <p className="text-sm text-slate-500 text-center">
-                                    Image failed to load
-                                  </p>
-                                </div>
-
-                                {/* Title */}
-                                {aid.title && (
-                                  <h5 className="text-sm font-semibold text-slate-800 mb-2">
-                                    {aid.title}
-                                  </h5>
-                                )}
-
-                                {/* Description */}
-                                <p className="text-sm text-slate-600 leading-relaxed mb-3">
-                                  {aid.description}
-                                </p>
-
-                                {/* Teaching Points */}
-                                {aid.teachingPoints &&
-                                  aid.teachingPoints.length > 0 && (
-                                    <div className="mt-2">
-                                      <p className="text-xs font-medium text-slate-700 mb-1">
-                                        Teaching Points:
+                                  ) : (
+                                    /* Show placeholder if neither exists */
+                                    <div className="w-full h-48 flex items-center justify-center bg-slate-50 rounded-lg mb-3 border-2 border-dashed border-slate-300">
+                                      <p className="text-sm text-slate-500 text-center">
+                                        Visual not available
                                       </p>
-                                      <ul className="text-xs text-slate-600 list-disc list-inside">
-                                        {aid.teachingPoints.map(
-                                          (point, idx) => (
-                                            <li key={idx}>{point}</li>
-                                          )
-                                        )}
-                                      </ul>
                                     </div>
                                   )}
-                              </div>
-                            ))}
+
+                                  {/* Fallback div for image errors - hidden by default */}
+                                  <div className="w-full h-48 items-center justify-center bg-slate-50 rounded-lg mb-3 border-2 border-dashed border-slate-300 hidden">
+                                    <p className="text-sm text-slate-500 text-center">
+                                      Image failed to load
+                                    </p>
+                                  </div>
+
+                                  {/* Title */}
+                                  {aid.title && (
+                                    <h5 className="text-sm font-semibold text-slate-800 mb-2">
+                                      {aid.title}
+                                    </h5>
+                                  )}
+
+                                  {/* Description */}
+                                  <p className="text-sm text-slate-600 leading-relaxed mb-3">
+                                    {aid.description}
+                                  </p>
+
+                                  {/* Teaching Points */}
+                                  {aid.teachingPoints &&
+                                    aid.teachingPoints.length > 0 && (
+                                      <div className="mt-2">
+                                        <p className="text-xs font-medium text-slate-700 mb-1">
+                                          Teaching Points:
+                                        </p>
+                                        <ul className="text-xs text-slate-600 list-disc list-inside">
+                                          {aid.teachingPoints.map(
+                                            (point, idx) => (
+                                              <li key={idx}>{point}</li>
+                                            )
+                                          )}
+                                        </ul>
+                                      </div>
+                                    )}
+                                </div>
+                              )
+                            )}
                           </div>
 
                           {/* Hands-on Activities if available */}
-                          {content?.content?.visualAids?.handsonActivities &&
-                            content?.content?.visualAids.handsonActivities
-                              .length > 0 && (
+                          {content?.content?.visualAids?.aids
+                            ?.handsonActivities &&
+                            content?.content?.visualAids?.aids
+                              ?.handsonActivities.length > 0 && (
                               <div className="mt-8">
                                 <h4 className="text-lg font-bold text-slate-900 mb-4">
                                   Hands-on Activities
                                 </h4>
                                 <div className="space-y-6">
-                                  {content?.content?.visualAids.handsonActivities.map(
+                                  {content?.content?.visualAids?.aids?.handsonActivities.map(
                                     (activity, index) => (
                                       <div
                                         key={index}

@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { httpsCallable } from "firebase/functions";
 import { functions } from "../firebase";
 import { MaterialDetailView } from "./MaterialDetailView";
+import { useNavigate } from "react-router-dom";
 
 const DifferentiatedMaterialsLibrary = () => {
   const [materials, setMaterials] = useState([]);
@@ -14,6 +15,7 @@ const DifferentiatedMaterialsLibrary = () => {
     language: "",
   });
   const [teacherData, setTeacherData] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const storedTeacherData = JSON.parse(sessionStorage.getItem("teacherData"));
@@ -63,6 +65,10 @@ const DifferentiatedMaterialsLibrary = () => {
         ? prev.grades.filter((g) => g !== grade)
         : [...prev.grades, grade],
     }));
+  };
+
+  const handleSelectMaterial = (material) => {
+    navigate(`/material/${material.materialId}`);
   };
 
   const downloadWorksheet = (materialId, grade, content) => {
@@ -134,25 +140,25 @@ ${content.assessmentQuestions.map((q, idx) => `${idx + 1}. ${q}`).join("\n")}
     });
   };
 
-  if (selectedMaterial) {
-    return (
-      <MaterialDetailView
-        material={selectedMaterial}
-        onBack={() => setSelectedMaterial(null)}
-        onDownload={downloadWorksheet}
-        onDownloadAll={downloadAllGrades}
-      />
-    );
-  }
+  // if (selectedMaterial) {
+  //   return (
+  //     <MaterialDetailView
+  //       material={selectedMaterial}
+  //       onBack={() => setSelectedMaterial(null)}
+  //       onDownload={downloadWorksheet}
+  //       onDownloadAll={downloadAllGrades}
+  //     />
+  //   );
+  // }
 
   return (
     <div className="space-y-8">
       {/* Filters Section */}
       <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-200/50 p-6 shadow-sm">
         <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
-          <div className="w-6 h-6 bg-gradient-to-r from-indigo-600 to-emerald-600 rounded-lg flex items-center justify-center">
+          {/* <div className="w-6 h-6 bg-gradient-to-r from-indigo-600 to-emerald-600 rounded-lg flex items-center justify-center">
             <span className="text-white text-xs">🔍</span>
-          </div>
+          </div> */}
           Filters
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -235,7 +241,7 @@ ${content.assessmentQuestions.map((q, idx) => `${idx + 1}. ${q}`).join("\n")}
             <MaterialCard
               key={material.materialId}
               material={material}
-              onClick={() => setSelectedMaterial(material)}
+              onClick={() => handleSelectMaterial(material)}
               onDownload={downloadWorksheet}
               onDownloadAll={downloadAllGrades}
             />

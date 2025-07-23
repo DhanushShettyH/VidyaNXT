@@ -90,14 +90,17 @@ Tesseract OCR with Indic models as fallback if Gemini or Vision APIs time out.
 i want to build week lession planner.
 ui_input_from_ui:{
 "week_start": "2025-07-22",
-"grades": ["Grade 2", "Grade 3", "Grade 5"],
+"grades": ["1 ", "2", "3"], // here grade means in single classroom different intelligence of students are these grade represent.
 "syllabus":'periodic table',
 "must_cover_topics":['history of it','present of it','importentance of it', etc.....],
+lang:"english",
 }
 weekly lesson plan -> createSahayakContent & differentiatedMaterial(worksheet generator)
 note:- see also you have to plan how to percist data don't put duplicated data like if create sahayakcontent already stored data than don't store that content again in week planner just map it. also don't forget to store teacher id with his weekplane. and also if teacher in future req for similer sullabus which he have req previusly than give him that alredy ready week plane.
 
 note:- i already built orchestration for creating content and generating differenitonate worksheet based on input so week planner can call these by passing them parameters they need to trigger them.
+
+note:- first in front end i fill form for weekly plane and send now in backend first create a entire that week plane but don't call creating content or generating differenitonate worksheet yet, rather on each day once week plane is ready first give teacher topic heading and one line summary than ask with two button create content and another button create worksheets if user click on that call the those respective functions with filling parameters note here use lang which we stored earlier.
 
 <!-- alternate fall back if google fail is open source tools -->
 
@@ -119,3 +122,9 @@ now i have this
 community_feedback -> collection where all other teacher in app can submit there
 "Share your classroom experiences, teaching moments, challenges you've overcome, or insights you've gained this week. Your story can inspire and help other teachers! 🌟"
 so for this also include this as part to design this module
+
+
+
+
+<!-- optimization -->
+note:- (Fire-and-poll strategy)

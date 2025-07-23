@@ -53,7 +53,7 @@
 		},
 		"functions": {
       "port": 5001,
-      "timeout": "300s"
+      "timeout": 300000
     },
 		"firestore": {
 			"port": 8080

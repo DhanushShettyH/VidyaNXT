@@ -83,12 +83,16 @@ class SahayakOrchestrator {
 
       if (simulationResult.score > 0.8) {
         // Content approved
-        await this.finalizeContent(sanitizedContent, simulationResult);
+        const contentId = await this.finalizeContent(
+          sanitizedContent,
+          simulationResult
+        );
         return {
           success: true,
           content: sanitizedContent,
           reliabilityScore: simulationResult.score,
           sessionId: this.sessionId,
+          contentId: contentId,
         };
       } else {
         // Content needs revision
@@ -107,13 +111,17 @@ class SahayakOrchestrator {
           grades
         );
 
-        await this.finalizeContent(sanitizedRevisedContent, finalSimulation);
+        const contentId = await this.finalizeContent(
+          sanitizedRevisedContent,
+          finalSimulation
+        );
         return {
           success: true,
           content: sanitizedRevisedContent,
           reliabilityScore: finalSimulation.score,
           sessionId: this.sessionId,
           wasRevised: true,
+          contentId: contentId,
         };
       }
     } catch (error) {
@@ -317,29 +325,34 @@ Rules:
   mergeAgentResponses(hyperLocal, differentiated, visual) {
     const processedVisualAids = visual.aids
       ? visual.aids.map((aid, index) => {
-          const processedAid = {
-            type: aid.type || "svg",
-            title: aid.title || "Visual Aid",
-            description: aid.description || "Educational diagram",
-            imageUrl:
-              aid.imageUrl ||
-              (aid.type === "image" ? "placeholder_url_if_missing" : ""),
-            svgCode: aid.svgCode || "",
-            teachingPoints: aid.teachingPoints || [],
-            interactiveElements: aid.interactiveElements || [],
-            drawingInstructions: aid.drawingInstructions || [],
-            materials: aid.materials || [],
-            gradeLevel: aid.gradeLevel || "mixed",
-            culturalContext: aid.culturalContext || "Indian classroom context",
-          };
+        // console.log(
+        //   `🔍 DEBUG: Processing aid ${index}:`,
+        //   JSON.stringify(aid, null, 2)
+        // ); // ADD THIS
 
-          if (processedAid.type === "image" && !processedAid.imageUrl) {
-            console.warn(
-              `Missing imageUrl for aid ${index}; fallback to SVG if available.`
-            );
-          }
-          return processedAid;
-        })
+        const processedAid = {
+          type: aid.type || "svg",
+          title: aid.title || "Visual Aid",
+          description: aid.description || "Educational diagram",
+          imageUrl:
+            aid.imageUrl ||
+            (aid.type === "image" ? "placeholder_url_if_missing" : ""),
+          svgCode: aid.svgCode || "",
+          teachingPoints: aid.teachingPoints || [],
+          interactiveElements: aid.interactiveElements || [],
+          drawingInstructions: aid.drawingInstructions || [],
+          materials: aid.materials || [],
+          gradeLevel: aid.gradeLevel || "mixed",
+          culturalContext: aid.culturalContext || "Indian classroom context",
+        };
+
+        if (processedAid.type === "image" && !processedAid.imageUrl) {
+          console.warn(
+            `Missing imageUrl for aid ${index}; fallback to SVG if available.`
+          );
+        }
+        return processedAid;
+      })
       : [];
 
     const mergedContent = {
@@ -410,7 +423,10 @@ Rules:
         createdAt: new Date().toISOString(),
       });
 
-      await db.collection("content_library").add(contentLibraryDoc);
+      const content1 = await db
+        .collection("content_library")
+        .add(contentLibraryDoc);
+      return content1.id;
     } catch (error) {
       console.error("Error finalizing content:", error);
     }

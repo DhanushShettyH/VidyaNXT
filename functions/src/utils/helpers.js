@@ -144,7 +144,7 @@ function validateContentStructure(content) {
 function parseGeminiResponse(responseText) {
   try {
     console.log("📝 Processing response, length:", responseText.length);
-    
+
     let cleanText = responseText.trim();
 
     // Remove markdown code blocks
@@ -156,16 +156,17 @@ function parseGeminiResponse(responseText) {
     cleanText = cleanText.replace(/[\x00-\x1F\x7F-\x9F]/g, "");
     cleanText = cleanText.replace(/^\uFEFF/, "");
 
-    // Find JSON boundaries
-    const firstBrace = cleanText.indexOf("{");
-    const lastBrace = cleanText.lastIndexOf("}");
-
-    if (firstBrace === -1 || lastBrace === -1 || firstBrace >= lastBrace) {
+    // Find the actual JSON boundaries more accurately
+    const jsonBoundaries = findJsonBoundaries(cleanText);
+    if (!jsonBoundaries) {
       throw new Error("No valid JSON object found in response");
     }
 
     // Extract JSON content
-    cleanText = cleanText.substring(firstBrace, lastBrace + 1);
+    cleanText = cleanText.substring(
+      jsonBoundaries.start,
+      jsonBoundaries.end + 1
+    );
 
     // CRITICAL FIX: Handle unescaped quotes in Kannada/Unicode text
     cleanText = fixUnescapedQuotes(cleanText);
@@ -174,7 +175,7 @@ function parseGeminiResponse(responseText) {
     cleanText = cleanText
       // Fix trailing commas before closing braces/brackets
       .replace(/,(\s*[}\]])/g, "$1")
-      // Remove any trailing content after the last brace
+      // Remove any trailing content after the last brace (this was missing proper handling)
       .replace(/}\s*[^}]*$/, "}");
 
     // Remove notes and other non-JSON content
@@ -206,14 +207,66 @@ function parseGeminiResponse(responseText) {
 
     console.log("✅ Successfully parsed Gemini response");
     return parsed;
-    
   } catch (error) {
     console.error("❌ Complete failure to parse Gemini response");
     console.error("❌ Final error:", error.message);
     console.error("❌ Response sample:", responseText.substring(0, 300));
-    
+
     throw new Error(`JSON parsing failed: ${error.message}`);
   }
+}
+function findJsonBoundaries(text) {
+  console.log("🔍 Finding JSON boundaries...");
+
+  const firstBrace = text.indexOf("{");
+  if (firstBrace === -1) {
+    return null;
+  }
+
+  // Count braces to find the matching closing brace
+  let braceCount = 0;
+  let inString = false;
+  let escapeNext = false;
+  let jsonEnd = -1;
+
+  for (let i = firstBrace; i < text.length; i++) {
+    const char = text[i];
+
+    if (escapeNext) {
+      escapeNext = false;
+      continue;
+    }
+
+    if (char === "\\" && inString) {
+      escapeNext = true;
+      continue;
+    }
+
+    if (char === '"' && !escapeNext) {
+      inString = !inString;
+      continue;
+    }
+
+    if (!inString) {
+      if (char === "{") {
+        braceCount++;
+      } else if (char === "}") {
+        braceCount--;
+        if (braceCount === 0) {
+          jsonEnd = i;
+          break;
+        }
+      }
+    }
+  }
+
+  if (jsonEnd === -1) {
+    console.log("❌ No matching closing brace found");
+    return null;
+  }
+
+  console.log(`✅ JSON boundaries found: ${firstBrace} to ${jsonEnd}`);
+  return { start: firstBrace, end: jsonEnd };
 }
 function fixUnescapedQuotes(jsonString) {
   console.log("🔧 Fixing unescaped quotes in JSON string...");
@@ -260,7 +313,8 @@ function fixUnescapedQuotes(jsonString) {
           nextChar === "," ||
           nextChar === "}" ||
           nextChar === "]" ||
-          nextChar === ":"
+          nextChar === ":" ||
+          j >= jsonString.length // End of string
         ) {
           inString = false;
           result += char;
@@ -296,21 +350,75 @@ function recoverJson(jsonString) {
     jsonString = jsonString.trim().slice(0, -1);
   }
 
-  // Ensure proper closure
-  const openBraces = (jsonString.match(/{/g) || []).length;
-  const closeBraces = (jsonString.match(/}/g) || []).length;
-  const openBrackets = (jsonString.match(/\[/g) || []).length;
-  const closeBrackets = (jsonString.match(/]/g) || []).length;
-
-  if (openBraces > closeBraces) {
-    jsonString += "}".repeat(openBraces - closeBraces);
-  }
-
-  if (openBrackets > closeBrackets) {
-    jsonString += "]".repeat(openBrackets - closeBrackets);
-  }
+  // More aggressive cleanup of extra closing braces
+  jsonString = cleanupExtraClosingBraces(jsonString);
 
   console.log("🔧 Final recovery complete");
+  return jsonString;
+}
+function cleanupExtraClosingBraces(jsonString) {
+  console.log("🔧 Cleaning up extra closing braces...");
+
+  // Count opening and closing braces, brackets
+  let braceCount = 0;
+  let bracketCount = 0;
+  let inString = false;
+  let escapeNext = false;
+  let validEnd = jsonString.length;
+
+  for (let i = 0; i < jsonString.length; i++) {
+    const char = jsonString[i];
+
+    if (escapeNext) {
+      escapeNext = false;
+      continue;
+    }
+
+    if (char === "\\" && inString) {
+      escapeNext = true;
+      continue;
+    }
+
+    if (char === '"' && !escapeNext) {
+      inString = !inString;
+      continue;
+    }
+
+    if (!inString) {
+      if (char === "{") {
+        braceCount++;
+      } else if (char === "}") {
+        braceCount--;
+        // If we go negative, we have extra closing braces
+        if (braceCount < 0) {
+          validEnd = i;
+          break;
+        }
+        // If we hit zero and this is a top-level object, this might be the end
+        if (braceCount === 0) {
+          // Check if there's meaningful content after this
+          const remainingContent = jsonString.substring(i + 1).trim();
+          if (remainingContent && !remainingContent.match(/^[\s}]*$/)) {
+            // There's content after, but if it's just extra braces, cut it off
+            if (remainingContent.match(/^[\s}]+$/)) {
+              validEnd = i + 1;
+              break;
+            }
+          }
+        }
+      } else if (char === "[") {
+        bracketCount++;
+      } else if (char === "]") {
+        bracketCount--;
+      }
+    }
+  }
+
+  if (validEnd < jsonString.length) {
+    console.log(`🔧 Trimming extra content from position ${validEnd}`);
+    jsonString = jsonString.substring(0, validEnd);
+  }
+
   return jsonString;
 }
 function fixUnescapedQuotesAggressive(jsonString) {
@@ -324,7 +432,7 @@ function fixUnescapedQuotesAggressive(jsonString) {
     if (stringAssignMatch) {
       const [, prefix, content, suffix] = stringAssignMatch;
       // Escape all quotes in the content part
-      const fixedContent = content.replace(/"/g, '\\"');
+      const fixedContent = content.replace(/(?<!\\)"/g, '\\"');
       return prefix + fixedContent + suffix;
     }
     return line;

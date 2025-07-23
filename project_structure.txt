@@ -37,46 +37,48 @@ Path: /home/kali/My_Projects/hackathon/vidya-nxt1
 │   ├── 📁 scripts/
 │   │   ├── 📜 init-training-data.js
 │   │   └── 📜 setup-storage.js
-│   └── 📁 src/
-│       ├── 📁 agents/
-│       │   ├── 📜 ai-chat-agent.js
-│       │   ├── 📜 calssification-agent.js
-│       │   ├── 📜 differentiation-agent.js
-│       │   ├── 📜 hyper-local-agent.js
-│       │   ├── 📜 matching-agent.js
-│       │   ├── 📜 orchestration-agent.js
-│       │   ├── 📜 profile-agent.js
-│       │   ├── 📜 sahayak-orchestrator.js
-│       │   ├── 📜 simulated-classroom-agent.js
-│       │   ├── 📜 training-agent.js
-│       │   ├── 📜 visual-aid-agent.js
-│       │   └── 📜 wellness-agent.js
-│       ├── 📁 config/
-│       │   ├── 📜 constants.js
-│       │   ├── 📜 firebase-config.js
-│       │   ├── 📜 gemini.js
-│       │   └── 📜 vertex-ai.js
-│       ├── 📁 functions/
-│       │   ├── 📜 auth.js
-│       │   ├── 📜 challenge.js
-│       │   ├── 📜 chat.js
-│       │   ├── 📜 differentiation.js
-│       │   ├── 📜 feedback.js
-│       │   ├── 📜 sahayak.js
-│       │   ├── 📜 training.js
-│       │   ├── 📜 triggers.js
-│       │   └── 📜 wellness.js
-│       ├── 📁 services/
-│       │   ├── 📜 chat.js
-│       │   ├── 📜 notifications.js
-│       │   ├── 📜 teacher.js
-│       │   └── 📜 wellness.js
-│       └── 📁 utils/
-│           ├── 📜 helpers.js
-│           ├── 📜 location-mapping.js
-│           └── 📜 validation.js
+│   ├── 📁 src/
+│   │   ├── 📁 agents/
+│   │   │   ├── 📜 ai-chat-agent.js
+│   │   │   ├── 📜 calssification-agent.js
+│   │   │   ├── 📜 differentiation-agent.js
+│   │   │   ├── 📜 hyper-local-agent.js
+│   │   │   ├── 📜 matching-agent.js
+│   │   │   ├── 📜 orchestration-agent.js
+│   │   │   ├── 📜 profile-agent.js
+│   │   │   ├── 📜 sahayak-orchestrator.js
+│   │   │   ├── 📜 simulated-classroom-agent.js
+│   │   │   ├── 📜 training-agent.js
+│   │   │   ├── 📜 visual-aid-agent.js
+│   │   │   ├── 📜 weekly-planner-agent.js
+│   │   │   └── 📜 wellness-agent.js
+│   │   ├── 📁 config/
+│   │   │   ├── 📜 constants.js
+│   │   │   ├── 📜 firebase-config.js
+│   │   │   ├── 📜 gemini.js
+│   │   │   └── 📜 vertex-ai.js
+│   │   ├── 📁 functions/
+│   │   │   ├── 📜 auth.js
+│   │   │   ├── 📜 challenge.js
+│   │   │   ├── 📜 chat.js
+│   │   │   ├── 📜 differentiation.js
+│   │   │   ├── 📜 feedback.js
+│   │   │   ├── 📜 sahayak.js
+│   │   │   ├── 📜 training.js
+│   │   │   ├── 📜 triggers.js
+│   │   │   ├── 📜 weekly-planner.js
+│   │   │   └── 📜 wellness.js
+│   │   ├── 📁 services/
+│   │   │   ├── 📜 chat.js
+│   │   │   ├── 📜 notifications.js
+│   │   │   ├── 📜 teacher.js
+│   │   │   └── 📜 wellness.js
+│   │   └── 📁 utils/
+│   │       ├── 📜 helpers.js
+│   │       ├── 📜 location-mapping.js
+│   │       └── 📜 validation.js
+│   └── 📋 vidyanxt-service-account.json
 ├── 🌐 index.html
-├── 📜 index_copy_test.js
 ├── 📋 package-lock.json
 ├── 📋 package.json
 ├── 📄 pglite-debug.log
@@ -109,6 +111,7 @@ Path: /home/kali/My_Projects/hackathon/vidya-nxt1
 │   │   ├── ⚛️ Home.jsx
 │   │   ├── ⚛️ LoadingScreen.jsx
 │   │   ├── ⚛️ Login.jsx
+│   │   ├── ⚛️ MaterialDetailView.jsx
 │   │   ├── ⚛️ NetworkIndicator.jsx
 │   │   ├── ⚛️ RegisterTeacher.jsx
 │   │   ├── ⚛️ WellnessAlert.jsx
@@ -131,6 +134,8 @@ Path: /home/kali/My_Projects/hackathon/vidya-nxt1
 │       ├── ⚛️ PeerAdvice.jsx
 │       ├── ⚛️ PeersList.jsx
 │       ├── ⚛️ TrainingHub.jsx
+│       ├── ⚛️ WeeklyPlanner.jsx
 │       └── ⚛️ WellnessDashboard.jsx
 ├── 📜 tailwind.config.js
+├── 📋 vidyanxt-service-account.json
 └── 📜 vite.config.js

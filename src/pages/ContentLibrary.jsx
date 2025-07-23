@@ -1,16 +1,16 @@
-// src/pages/ContentLibrary.jsx (Updated with VidyaNXT theme)
+// src/pages/ContentLibrary.jsx
 import React, { useState, useEffect } from "react";
 import { httpsCallable } from "firebase/functions";
 import { functions } from "../firebase";
 import ContentDetailView from "../components/ContentDetailView";
 import DifferentiatedMaterialsLibrary from "../components/DifferentiatedMaterialsLibrary";
 import { useNavigate } from "react-router-dom";
+import Header from "../components/Header";
 
 const ContentLibrary = () => {
   const [activeTab, setActiveTab] = useState("Vidya");
   const [content, setContent] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedContent, setSelectedContent] = useState(null);
   const [filters, setFilters] = useState({
     subject: "",
     grades: [],
@@ -76,54 +76,17 @@ const ContentLibrary = () => {
     }));
   };
 
-  // Show detailed content view for Vidya content
-  if (selectedContent && activeTab === "Vidya") {
-    return (
-      <ContentDetailView
-        content={selectedContent}
-        onBack={() => setSelectedContent(null)}
-      />
-    );
-  }
+  // Navigate to content detail page instead of showing inline
+  const handleSelectContent = (contentItem) => {
+    navigate(`/content/${contentItem.id}`);
+  };
 
   return (
     <>
-      <header className="bg-white/90 backdrop-blur-xl border-b border-slate-200/60 sticky top-0 z-50 shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => navigate("/home")}
-                className="p-3 bg-gradient-to-r from-slate-800 to-slate-900 hover:from-slate-900 hover:to-slate-950 text-white font-semibold rounded-xl transition-all duration-300 hover:shadow-lg hover:scale-105"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                  />
-                </svg>
-              </button>
-              <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-800 via-indigo-700 to-emerald-700 bg-clip-text text-transparent">
-                  AI Content Library
-                </h1>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header Heading={"AI Contnet Library"} />
 
       <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-emerald-50 py-6 lg:py-10">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          {/* Header */}
-
           {/* Tab Navigation matching the image */}
           <div className="flex space-x-2 bg-white/80 backdrop-blur-sm rounded-2xl p-2 border border-slate-200/50 shadow-lg mb-8 max-w-md">
             {tabs.map((tab) => (
@@ -152,7 +115,7 @@ const ContentLibrary = () => {
                 filters={filters}
                 onFilterChange={handleFilterChange}
                 onGradeToggle={handleGradeToggle}
-                onSelectContent={setSelectedContent}
+                onSelectContent={handleSelectContent}
               />
             )}
 
@@ -164,7 +127,7 @@ const ContentLibrary = () => {
   );
 };
 
-// Vidya Content Tab Component
+// Rest of your VidyaContentTab component remains the same...
 const VidyaContentTab = ({
   content,
   isLoading,
@@ -178,9 +141,9 @@ const VidyaContentTab = ({
       {/* Mobile-Responsive Filters */}
       <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-200/50 p-6 shadow-sm">
         <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
-          <div className="w-6 h-6 bg-gradient-to-r from-indigo-600 to-emerald-600 rounded-lg flex items-center justify-center">
+          {/* <div className="w-6 h-6 bg-gradient-to-r from-indigo-600 to-emerald-600 rounded-lg flex items-center justify-center">
             <span className="text-white text-xs">🔍</span>
-          </div>
+          </div> */}
           Filters
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -291,7 +254,7 @@ const VidyaContentTab = ({
   );
 };
 
-// Content Card Component with Clean, Minimal & Premium Design
+// Your existing ContentCard component remains the same...
 const ContentCard = ({ item, onClick, grades }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
