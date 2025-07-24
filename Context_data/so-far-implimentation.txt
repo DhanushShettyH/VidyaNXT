@@ -32,6 +32,7 @@ firebase collection ---------Document------------------Inside collections
 10.community_feedback
 11.differentiated_materials
 12.training_modules---------multi-grade-basics-001 & time-management-002
+13. weekly_lesson_plans
 
 teacher:{
   "createdAt": "2025-07-18T06:08:19.658Z",
@@ -597,8 +598,87 @@ community_feedback:{
 
 differentiated_materials:{}
 
-training_modules:{}
+// initially they get 2 common modules after completing that they get personalized(localized module) 
+training_modules:{
+}
 
+weekly_lesson_plans:{
+  "createdAt": "",
+  "dailyPlans": {
+    "2025-07-23": {
+      "activities": [],
+      "contentIds": [],
+      "contentStatus": "",
+      "description": "",
+      "estimatedDuration": "",
+      "keyPoints": [],
+      "objectives": [],
+      "topic": "",
+      "worksheetIds": [],
+      "worksheetStatus": ""
+    },
+    "2025-07-24": {
+      "activities": [],
+      "contentIds": [],
+      "contentStatus": "",
+      "description": "",
+      "estimatedDuration": "",
+      "keyPoints": [],
+      "objectives": [],
+      "topic": "",
+      "worksheetIds": [],
+      "worksheetStatus": ""
+    },
+    "2025-07-25": {
+      "activities": [],
+      "contentIds": [],
+      "contentStatus": "",
+      "description": "",
+      "estimatedDuration": "",
+      "keyPoints": [],
+      "objectives": [],
+      "topic": "",
+      "worksheetIds": [],
+      "worksheetStatus": ""
+    },
+    "2025-07-26": {
+      "activities": [],
+      "contentIds": [],
+      "contentStatus": "",
+      "description": "",
+      "estimatedDuration": "",
+      "keyPoints": [],
+      "objectives": [],
+      "topic": "",
+      "worksheetIds": [],
+      "worksheetStatus": ""
+    },
+    "2025-07-27": {
+      "activities": [],
+      "contentIds": [],
+      "contentStatus": "",
+      "description": "",
+      "estimatedDuration": "",
+      "keyPoints": [],
+      "objectives": [],
+      "topic": "",
+      "worksheetIds": [],
+      "worksheetStatus": ""
+    }
+  },
+  "grades": [],
+  "language": "",
+  "lastUpdated": "",
+  "location": "",
+  "mustCoverTopics": [],
+  "planId": "",
+  "status": "",
+  "syllabus": "",
+  "teacherId": "",
+  "totalEstimatedHours": 0,
+  "weekEnd": "",
+  "weeklyObjective": ""
+}
 
 ============================================================================
         Implimentation Context : React + firebase(funtion,Auth)
@@ -686,46 +766,48 @@ Path: /home/kali/My_Projects/hackathon/vidya-nxt1
 │   ├── 📁 scripts/
 │   │   ├── 📜 init-training-data.js
 │   │   └── 📜 setup-storage.js
-│   └── 📁 src/
-│       ├── 📁 agents/
-│       │   ├── 📜 ai-chat-agent.js
-│       │   ├── 📜 calssification-agent.js
-│       │   ├── 📜 differentiation-agent.js
-│       │   ├── 📜 hyper-local-agent.js
-│       │   ├── 📜 matching-agent.js
-│       │   ├── 📜 orchestration-agent.js
-│       │   ├── 📜 profile-agent.js
-│       │   ├── 📜 sahayak-orchestrator.js
-│       │   ├── 📜 simulated-classroom-agent.js
-│       │   ├── 📜 training-agent.js
-│       │   ├── 📜 visual-aid-agent.js
-│       │   └── 📜 wellness-agent.js
-│       ├── 📁 config/
-│       │   ├── 📜 constants.js
-│       │   ├── 📜 firebase-config.js
-│       │   ├── 📜 gemini.js
-│       │   └── 📜 vertex-ai.js
-│       ├── 📁 functions/
-│       │   ├── 📜 auth.js
-│       │   ├── 📜 challenge.js
-│       │   ├── 📜 chat.js
-│       │   ├── 📜 differentiation.js
-│       │   ├── 📜 feedback.js
-│       │   ├── 📜 sahayak.js
-│       │   ├── 📜 training.js
-│       │   ├── 📜 triggers.js
-│       │   └── 📜 wellness.js
-│       ├── 📁 services/
-│       │   ├── 📜 chat.js
-│       │   ├── 📜 notifications.js
-│       │   ├── 📜 teacher.js
-│       │   └── 📜 wellness.js
-│       └── 📁 utils/
-│           ├── 📜 helpers.js
-│           ├── 📜 location-mapping.js
-│           └── 📜 validation.js
+│   ├── 📁 src/
+│   │   ├── 📁 agents/
+│   │   │   ├── 📜 ai-chat-agent.js
+│   │   │   ├── 📜 calssification-agent.js
+│   │   │   ├── 📜 differentiation-agent.js
+│   │   │   ├── 📜 hyper-local-agent.js
+│   │   │   ├── 📜 matching-agent.js
+│   │   │   ├── 📜 orchestration-agent.js
+│   │   │   ├── 📜 profile-agent.js
+│   │   │   ├── 📜 sahayak-orchestrator.js
+│   │   │   ├── 📜 simulated-classroom-agent.js
+│   │   │   ├── 📜 training-agent.js
+│   │   │   ├── 📜 visual-aid-agent.js
+│   │   │   ├── 📜 weekly-planner-agent.js
+│   │   │   └── 📜 wellness-agent.js
+│   │   ├── 📁 config/
+│   │   │   ├── 📜 constants.js
+│   │   │   ├── 📜 firebase-config.js
+│   │   │   ├── 📜 gemini.js
+│   │   │   └── 📜 vertex-ai.js
+│   │   ├── 📁 functions/
+│   │   │   ├── 📜 auth.js
+│   │   │   ├── 📜 challenge.js
+│   │   │   ├── 📜 chat.js
+│   │   │   ├── 📜 differentiation.js
+│   │   │   ├── 📜 feedback.js
+│   │   │   ├── 📜 sahayak.js
+│   │   │   ├── 📜 training.js
+│   │   │   ├── 📜 triggers.js
+│   │   │   ├── 📜 weekly-planner.js
+│   │   │   └── 📜 wellness.js
+│   │   ├── 📁 services/
+│   │   │   ├── 📜 chat.js
+│   │   │   ├── 📜 notifications.js
+│   │   │   ├── 📜 teacher.js
+│   │   │   └── 📜 wellness.js
+│   │   └── 📁 utils/
+│   │       ├── 📜 helpers.js
+│   │       ├── 📜 location-mapping.js
+│   │       └── 📜 validation.js
+│   └── 📋 vidyanxt-service-account.json
 ├── 🌐 index.html
-├── 📜 index_copy_test.js
 ├── 📋 package-lock.json
 ├── 📋 package.json
 ├── 📄 pglite-debug.log
@@ -750,16 +832,23 @@ Path: /home/kali/My_Projects/hackathon/vidya-nxt1
 │   ├── 📁 assets/
 │   │   └── 🖼️ react.svg
 │   ├── 📁 components/
+│   │   ├── ⚛️ ContentDetailPage.jsx
 │   │   ├── ⚛️ ContentDetailView.jsx
 │   │   ├── ⚛️ DifferentiatedMaterialsLibrary.jsx
 │   │   ├── ⚛️ ErrorBoundary.jsx
 │   │   ├── ⚛️ FeedbackModal.jsx
 │   │   ├── ⚛️ FeedbackSystem.jsx
+│   │   ├── ⚛️ Header.jsx
 │   │   ├── ⚛️ Home.jsx
 │   │   ├── ⚛️ LoadingScreen.jsx
 │   │   ├── ⚛️ Login.jsx
+│   │   ├── ⚛️ MaterialDetailPage.jsx
+│   │   ├── ⚛️ MaterialDetailView.jsx
 │   │   ├── ⚛️ NetworkIndicator.jsx
 │   │   ├── ⚛️ RegisterTeacher.jsx
+│   │   ├── ⚛️ TodaysPlan.jsx
+│   │   ├── ⚛️ WeeklyPlanPage.jsx
+│   │   ├── ⚛️ WeeklyPlanView.jsx
 │   │   ├── ⚛️ WellnessAlert.jsx
 │   │   ├── ⚛️ WellnessAnalytics.jsx
 │   │   ├── ⚛️ WellnessMetrics.jsx
@@ -780,6 +869,8 @@ Path: /home/kali/My_Projects/hackathon/vidya-nxt1
 │       ├── ⚛️ PeerAdvice.jsx
 │       ├── ⚛️ PeersList.jsx
 │       ├── ⚛️ TrainingHub.jsx
+│       ├── ⚛️ WeeklyPlanner.jsx
 │       └── ⚛️ WellnessDashboard.jsx
 ├── 📜 tailwind.config.js
+├── 📋 vidyanxt-service-account.json
 └── 📜 vite.config.js

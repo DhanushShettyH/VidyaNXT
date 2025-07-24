@@ -11,6 +11,7 @@ import FeedbackSystem from "./FeedbackSystem";
 import FeedbackModal from "./FeedbackModal";
 import { httpsCallable } from 'firebase/functions';
 import { TodaysPlan } from "./TodaysPlan";
+import FloatingVoiceController from "./FloatingVoiceController";
 
 // Register GSAP plugins
 gsap.registerPlugin(ScrollTrigger);
@@ -23,6 +24,7 @@ export default function Home() {
   const [isMobile, setIsMobile] = useState(false);
   const [activeCardIndex, setActiveCardIndex] = useState(-1);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [isVoiceControlOpen, setIsVoiceControlOpen] = useState(false);
 
   const navigate = useNavigate();
   const cardRefs = useRef([]);
@@ -862,6 +864,12 @@ export default function Home() {
           </div>
         </div>
       </main>
+      {/* Floating Voice Controller */}
+      <FloatingVoiceController
+        isOpen={isVoiceControlOpen}
+        onToggle={setIsVoiceControlOpen}
+        userId={teacherData.id}
+      />
       {showFeedbackModal && (
         <div
           className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 backdrop-blur-sm"

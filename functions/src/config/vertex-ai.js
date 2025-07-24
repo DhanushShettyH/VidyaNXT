@@ -18,35 +18,139 @@ const PROJECT_ID =
   process.env.GOOGLECLOUD_PROJECT || functions.config()?.project?.id;
 const LOCATION = "us-central1";
 const BUCKET_NAME = `${PROJECT_ID}-sahayak-images`;
+const AUDIO_BUCKET_NAME = `${PROJECT_ID}-sahayak-audio`;
 
 // Model endpoints
 const IMAGEN_ENDPOINT = `projects/${PROJECT_ID}/locations/${LOCATION}/publishers/google/models/imagen-3.0-generate-002`;
+const CHIRP_ENDPOINT = `projects/${PROJECT_ID}/locations/${LOCATION}/publishers/google/models/chirp-2`;
 
 class VertexAIService {
   constructor() {
     this.predictionClient = predictionClient;
     this.storage = storage;
     this.bucket = storage.bucket(BUCKET_NAME);
+    this.audioBucket = storage.bucket(AUDIO_BUCKET_NAME);
   }
 
-  // In your vertex-ai.js or a setup file
-  async ensureBucketExists() {
+  // Ensure both image and audio buckets exist
+  async ensureBucketsExist() {
     try {
-      const { Storage } = require("@google-cloud/storage");
-      const storage = new Storage();
-      const PROJECT_ID = process.env.GOOGLECLOUD_PROJECT;
-      const BUCKET_NAME = `${PROJECT_ID}-sahayak-images`;
-
-      const [exists] = await storage.bucket(BUCKET_NAME).exists();
-      if (!exists) {
-        await storage.createBucket(BUCKET_NAME, {
+      // Image bucket
+      const [imageExists] = await this.bucket.exists();
+      if (!imageExists) {
+        await this.storage.createBucket(BUCKET_NAME, {
           location: "US",
           storageClass: "STANDARD",
         });
-        console.log(`✅ Created storage bucket: ${BUCKET_NAME}`);
+        console.log(`✅ Created image storage bucket: ${BUCKET_NAME}`);
+      }
+
+      // Audio bucket
+      const [audioExists] = await this.audioBucket.exists();
+      if (!audioExists) {
+        await this.storage.createBucket(AUDIO_BUCKET_NAME, {
+          location: "US",
+          storageClass: "STANDARD",
+        });
+        console.log(`✅ Created audio storage bucket: ${AUDIO_BUCKET_NAME}`);
       }
     } catch (error) {
       console.error("❌ Storage bucket setup failed:", error);
+    }
+  }
+
+  // Speech-to-Text using Chirp model
+  async transcribeAudioWithChirp(audioData, options = {}) {
+    try {
+      const instanceValue = {
+        audio_content: { stringValue: audioData },
+        config: {
+          structValue: {
+            fields: {
+              encoding: { stringValue: options.encoding || "WEBM_OPUS" },
+              sample_rate_hertz: { numberValue: options.sampleRate || 48000 },
+              language_code: { stringValue: options.languageCode || "hi-IN" },
+              enable_automatic_punctuation: { boolValue: true },
+              model: { stringValue: "chirp_2" },
+            },
+          },
+        },
+      };
+
+      const request = {
+        endpoint: CHIRP_ENDPOINT,
+        instances: [{ structValue: { fields: instanceValue } }],
+      };
+
+      const [response] = await this.predictionClient.predict(request);
+
+      // Extract transcript from response
+      let transcript = "";
+      if (
+        response.predictions?.[0]?.structValue?.fields?.transcript?.stringValue
+      ) {
+        transcript =
+          response.predictions[0].structValue.fields.transcript.stringValue;
+      }
+
+      return { transcript: transcript.trim(), confidence: 0.8 };
+    } catch (error) {
+      throw new Error(`Speech transcription failed: ${error.message}`);
+    }
+  }
+
+  // Extract confidence score from prediction
+  extractConfidence(prediction) {
+    try {
+      if (prediction.structValue?.fields?.results?.listValue?.values) {
+        const results = prediction.structValue.fields.results.listValue.values;
+        if (
+          results.length > 0 &&
+          results[0].structValue?.fields?.alternatives?.listValue?.values
+        ) {
+          const alternatives =
+            results[0].structValue.fields.alternatives.listValue.values;
+          if (
+            alternatives.length > 0 &&
+            alternatives[0].structValue?.fields?.confidence?.numberValue
+          ) {
+            return alternatives[0].structValue.fields.confidence.numberValue;
+          }
+        }
+      }
+      return 0.8; // Default confidence
+    } catch (error) {
+      return 0.8;
+    }
+  }
+
+  // Save audio file to storage
+  async saveAudioToStorage(audioData, fileName) {
+    try {
+      const file = this.audioBucket.file(fileName);
+      let buffer;
+
+      if (Buffer.isBuffer(audioData)) {
+        buffer = audioData;
+      } else if (typeof audioData === "string") {
+        buffer = Buffer.from(audioData, "base64");
+      } else {
+        throw new Error("Invalid audio data format");
+      }
+
+      await file.save(buffer, {
+        metadata: {
+          contentType: "audio/webm",
+          cacheControl: "public, max-age=3600",
+        },
+      });
+
+      const publicUrl = `https://storage.googleapis.com/${AUDIO_BUCKET_NAME}/${fileName}`;
+      console.log("✅ Audio saved successfully:", publicUrl);
+      return publicUrl;
+    } catch (error) {
+      console.error("❌ Audio storage error:", error);
+      throw new Error(`Failed to save audio: ${error.message}`);
     }
   }
 
@@ -205,4 +309,5 @@ module.exports = {
   PROJECT_ID,
   LOCATION,
   BUCKET_NAME,
+  AUDIO_BUCKET_NAME,
 };

@@ -103,17 +103,23 @@ Path: /home/kali/My_Projects/hackathon/vidya-nxt1
 │   ├── 📁 assets/
 │   │   └── 🖼️ react.svg
 │   ├── 📁 components/
+│   │   ├── ⚛️ ContentDetailPage.jsx
 │   │   ├── ⚛️ ContentDetailView.jsx
 │   │   ├── ⚛️ DifferentiatedMaterialsLibrary.jsx
 │   │   ├── ⚛️ ErrorBoundary.jsx
 │   │   ├── ⚛️ FeedbackModal.jsx
 │   │   ├── ⚛️ FeedbackSystem.jsx
+│   │   ├── ⚛️ Header.jsx
 │   │   ├── ⚛️ Home.jsx
 │   │   ├── ⚛️ LoadingScreen.jsx
 │   │   ├── ⚛️ Login.jsx
+│   │   ├── ⚛️ MaterialDetailPage.jsx
 │   │   ├── ⚛️ MaterialDetailView.jsx
 │   │   ├── ⚛️ NetworkIndicator.jsx
 │   │   ├── ⚛️ RegisterTeacher.jsx
+│   │   ├── ⚛️ TodaysPlan.jsx
+│   │   ├── ⚛️ WeeklyPlanPage.jsx
+│   │   ├── ⚛️ WeeklyPlanView.jsx
 │   │   ├── ⚛️ WellnessAlert.jsx
 │   │   ├── ⚛️ WellnessAnalytics.jsx
 │   │   ├── ⚛️ WellnessMetrics.jsx
