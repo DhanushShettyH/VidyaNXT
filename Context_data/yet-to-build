@@ -62,6 +62,7 @@ const reasoningChain = {
 -fallback mechanisms
 -## Agent-to-Agent protocol (A2A) in Vertex allows future expansion
 -Chirp’s 
+-MCP
 -Cache last 10 answers & worksheets in IndexedDB. Use Workbox in PWA build; background-sync heavy calls.
 Fast edge responses Gemini 1.5 Flash Low-latency look-ups
 ## Orchestration Vertex AI Agent Builder (ADK + Agent Engine)
