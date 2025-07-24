@@ -279,6 +279,7 @@ export default function AiChatWindow() {
 
 		return (
 			<div className="text-sm space-y-3">
+
 				{/* Main message content */}
 				<div>{formatMessage(messageText)}</div>
 
@@ -378,7 +379,7 @@ export default function AiChatWindow() {
 	}
 
 	return (
-		<div className="flex flex-col h-screen bg-gray-100">
+		<div className="flex flex-col h-screen bg-gray-100 " >
 			{/* Header */}
 			<div className="bg-white shadow-sm p-4 flex items-center justify-between">
 				<button
@@ -399,115 +400,134 @@ export default function AiChatWindow() {
 				</div>
 				<button
 					onClick={endSession}
-					className="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600 disabled:opacity-50"
+					className="bg-red-500 text-white px-3 py-3 rounded text-sm hover:bg-red-600 disabled:opacity-50"
 					disabled={!sessionId || isLoading}
 				>
-					End Session
+					<svg
+						className="w-6 h-6"
+						fill="none"
+						stroke="currentColor"
+						viewBox="0 0 24 24"
+						strokeWidth="2"
+					>
+						<path
+							strokeLinecap="round"
+							strokeLinejoin="round"
+							d="M5.636 5.636a9 9 0 1012.728 0M12 3v9"
+						/>
+					</svg>
 				</button>
 			</div>
 
-			{/* Error Banner */}
-			{error && !isLoading && (
-				<div className="bg-red-50 border-l-4 border-red-400 p-4 mx-4 mt-2">
-					<div className="flex items-center">
-						<div className="text-red-700 text-sm flex-1">{error}</div>
-						<button
-							onClick={() => setError(null)}
-							className="text-red-500 hover:text-red-700 ml-2"
-						>
-							×
-						</button>
-					</div>
-				</div>
-			)}
-
-			{/* Messages */}
-			<div className="flex-1 overflow-y-auto p-4 space-y-4">
-				{isLoading ? (
-					<div className="flex justify-center items-center h-full">
-						<div className="flex flex-col items-center space-y-2">
-							<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-							<div className="text-gray-500">Loading AI chat...</div>
-						</div>
-					</div>
-				) : (
-					messages.map((m) => (
-						<div
-							key={m.id}
-							className={`flex ${m.type === "user" ? "justify-end" : "justify-start"}`}
-						>
-							<div
-								className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${m.type === "user"
-									? "bg-blue-500 text-white"
-									: "bg-white text-gray-800 shadow-sm border"
-									}`}
+			{/* Main Chat Container */}
+			<div className="flex-1 flex flex-col max-w-4xl w-full mx-auto overflow-hidden">
+				{/* Error Banner */}
+				{error && !isLoading && (
+					<div className="bg-red-50 border-l-4 border-red-400 p-4 mx-4 mt-2">
+						<div className="flex items-center">
+							<div className="text-red-700 text-sm flex-1">{error}</div>
+							<button
+								onClick={() => setError(null)}
+								className="text-red-500 hover:text-red-700 ml-2"
 							>
-								<div className="text-sm">
-									{m.type === "ai" ? renderAiMessage(m) : formatMessage(m.message)}
-								</div>
-								<div className="text-xs opacity-70 mt-1">
-									{new Date(m.timestamp).toLocaleTimeString()}
-								</div>
-							</div>
-						</div>
-					))
-				)}
-
-				{/* Typing indicator */}
-				{isTyping && (
-					<div className="flex justify-start">
-						<div className="bg-white text-gray-800 shadow-sm px-4 py-2 rounded-lg border">
-							<div className="flex space-x-1">
-								<div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
-								<div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0.1s" }} />
-								<div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0.2s" }} />
-							</div>
+								×
+							</button>
 						</div>
 					</div>
 				)}
 
-				{/* Suggested questions */}
-				{sessionData && messages.length === 1 && sessionData.suggestedQuestions && (
-					<div className="bg-blue-50 p-4 rounded-lg">
-						<h4 className="font-semibold text-blue-800 mb-2">Suggested Questions:</h4>
-						<div className="space-y-2">
-							{sessionData.suggestedQuestions.map((question, index) => (
-								<button
-									key={index}
-									onClick={() => handleSuggestedQuestion(question)}
-									className="block w-full text-left p-2 bg-white rounded border hover:bg-gray-50 text-sm transition-colors"
+				{/* Messages Container - This will take remaining space and be scrollable */}
+				<div className="flex-1 overflow-y-auto no-scrollbar p-4 space-y-4">
+					{/* All your messages content here - same as before */}
+					{isLoading ? (
+						<div className="flex justify-center items-center h-full">
+							<div className="flex flex-col items-center space-y-2">
+								<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+								<div className="text-gray-500">Loading AI chat...</div>
+							</div>
+						</div>
+					) : (
+						messages.map((m) => (
+							<div
+								key={m.id}
+								className={`flex ${m.type === "user" ? "justify-end" : "justify-start"}`}
+							>
+								<div
+									className={`w-full max-w-[75%] px-4 py-2 rounded-lg ${m.type === "user"
+										? "bg-blue-500 text-white"
+										: "bg-white text-gray-800 shadow-sm border"
+										}`}
 								>
-									{question}
-								</button>
-							))}
+									<div className="text-sm">
+										{m.type === "ai" ? renderAiMessage(m) : formatMessage(m.message)}
+									</div>
+									<div className="text-xs opacity-70 mt-1">
+										{new Date(m.timestamp).toLocaleTimeString()}
+									</div>
+								</div>
+							</div>
+						))
+					)}
+
+					{/* Typing indicator */}
+					{isTyping && (
+						<div className="flex justify-start">
+							<div className="bg-white text-gray-800 shadow-sm px-4 py-2 rounded-lg border">
+								<div className="flex space-x-1">
+									<div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
+									<div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0.1s" }} />
+									<div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0.2s" }} />
+								</div>
+							</div>
 						</div>
-					</div>
-				)}
+					)}
 
-				<div ref={bottomRef} />
-			</div>
+					{/* Suggested questions */}
+					{sessionData && messages.length === 1 && sessionData.suggestedQuestions && (
+						<div className="bg-blue-50 p-4 rounded-lg">
+							<h4 className="font-semibold text-blue-800 mb-2">Suggested Questions:</h4>
+							<div className="space-y-2">
+								{sessionData.suggestedQuestions.map((question, index) => (
+									<button
+										key={index}
+										onClick={() => handleSuggestedQuestion(question)}
+										className="block w-full text-left p-2 bg-white rounded border hover:bg-gray-50 text-sm transition-colors"
+									>
+										{question}
+									</button>
+								))}
+							</div>
+						</div>
+					)}
 
-			{/* Message Input */}
-			<form onSubmit={sendMessage} className="p-4 bg-white shadow-sm border-t">
-				<div className="flex space-x-2">
-					<textarea
-						value={newMsg}
-						onChange={(e) => setNewMsg(e.target.value)}
-						onKeyPress={handleKeyPress}
-						placeholder="Ask me anything about teaching..."
-						rows={1}
-						className="flex-1 border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-						disabled={isTyping || isLoading}
-					/>
-					<button
-						type="submit"
-						disabled={!newMsg.trim() || isTyping || isLoading}
-						className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-					>
-						{isTyping ? "..." : "Send"}
-					</button>
+					<div ref={bottomRef} />
 				</div>
-			</form>
+
+				{/* Input Form - This will stick to bottom */}
+				<div className="flex-shrink-0 p-4 bg-white shadow-sm border-t">
+					<form onSubmit={sendMessage}>
+						<div className="flex space-x-2">
+							<textarea
+								value={newMsg}
+								onChange={(e) => setNewMsg(e.target.value)}
+								onKeyPress={handleKeyPress}
+								placeholder="Ask me anything about teaching..."
+								rows={1}
+								className="flex-1 border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+								disabled={isTyping || isLoading}
+							/>
+							<button
+								type="submit"
+								disabled={!newMsg.trim() || isTyping || isLoading}
+								className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
+							>
+								{isTyping ? "..." : "Send"}
+							</button>
+						</div>
+					</form>
+				</div>
+			</div>
 		</div>
 	);
+
 }
