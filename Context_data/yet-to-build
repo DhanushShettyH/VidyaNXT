@@ -1,5 +1,3 @@
-
-
 ====================================================================
 
 <!-- alternate fall back if google fail is open source tools -->
@@ -17,10 +15,10 @@ Storage | Firestore | IndexedDB, SQLite Offline
 Frontend | Firebase Studio | Tailwind + Preact for custom PWA
 -------------------|--------------------|---------------------------------
 
-
-
 <!-- optimization -->
+
 note:- (Fire-and-poll strategy)
+
 - fallback strategies
 - rate limiting
 - lazy loading
@@ -41,48 +39,59 @@ note:- (Fire-and-poll strategy)
 -Agent Communication Protocol-inter-agent messaging using Firebase Realtime Database:
 -Goal-Oriented Action Planning (GOAP) for lesson creation:
 -Retrieval-Augmented Generation (RAG) :-Embedding Search: Use Vertex AI embeddings to find relevant past experiences ,Context Injection (Google AlloyDB for Vector)
+
 - Multi-Modal Chain of Thought
-const reasoningChain = {
+  const reasoningChain = {
   observe: "Analyze textbook image + student skill levels",
   orient: "Identify learning gaps and cultural context",
   decide: "Select optimal teaching strategy",
   act: "Generate differentiated materials"
-};
--Multimodal Fusion Architecture
--Edge AI Implementation
--Resource Optimization: Pre-generate likely-needed materials
--Agent State Management
--Distributed Processing Pipeline
--Advanced Prompt Engineering : template,context window, persona .
--Material Recycling
--Sustainability Focus: Promote environmental consciousness in lesson plans
--robust error handling
+  };
+  -Multimodal Fusion Architecture
+  -Edge AI Implementation
+  -Resource Optimization: Pre-generate likely-needed materials
+  -Agent State Management
+  -Distributed Processing Pipeline
+  -Advanced Prompt Engineering : template,context window, persona .
+  -Material Recycling
+  -Sustainability Focus: Promote environmental consciousness in lesson plans
+  -robust error handling
 - scalability :- Instant scaling of Firebase Functions based on demand
--Performance Optimization: response times
--fallback mechanisms
--## Agent-to-Agent protocol (A2A) in Vertex allows future expansion
--Chirp’s 
--MCP
--Cache last 10 answers & worksheets in IndexedDB. Use Workbox in PWA build; background-sync heavy calls.
-Fast edge responses Gemini 1.5 Flash Low-latency look-ups
+  -Performance Optimization: response times
+  -fallback mechanisms
+  -## Agent-to-Agent protocol (A2A) in Vertex allows future expansion
+  -Chirp’s
+  -MCP
+  -react + pwa
+  -Cache last 10 answers & worksheets in IndexedDB. Use Workbox in PWA build; background-sync heavy calls.
+  Fast edge responses Gemini 1.5 Flash Low-latency look-ups
+
 ## Orchestration Vertex AI Agent Builder (ADK + Agent Engine)
+
 ## visual aid - SVG + ASCII sketch steps
+
 ## Edge/offline resilience while others rely purely on online calls. Queue uploads, cache prior worksheets—demo in airplane mode.
+
 ## Transparent grounding & citations: Vertex Agent Builder can automatically cite textbook lines; judges care about hallucination control
+
 ## when ever model finishes computation send push notification so teacher don't have to wait in application(he just need to initiate rest is managed and notified.)
+
 Turtle Graphics (e.g., from Python or a JavaScript port) to generate trace-by-hand line drawings.
 LayoutParser for extracting structured data from textbook scans (e.g., boxes, question numbers).
 Tesseract OCR with Indic models as fallback if Gemini or Vision APIs time out.
 
------------------------
--ai orchestration 
-------------------------
+---
+
+## -ai orchestration
+
 -chain-of-thought (CoT) : Embed chain-of-thought (CoT) reasoning in the Planner prompt so the LLM writes its own sub-goals step-by-step, which empirically improves complex reasoning
 Expose JSON schemas for classroom-specific tools (e.g., “generateWorksheet”, “drawDiagram”, “speechEval”). With function-calling the agent chooses the correct tool, executes it, then re-plans if the Critic flags low confidence
 -Augment RAG with a lightweight graph-reasoning model that walks a curriculum KG to supply explicit fact chains (KG-CoT). This yields interpretable “why” paths and keeps content syllabus-faithful
---------------------------------
-multi modal processing pipeline.
----------------------------------
+
+---
+
+## multi modal processing pipeline.
+
 -Vision-Language Inference Loop :Mobile client captures image → uploads to Cloud Storage. triggers:
 a. Pre-process with Sharp / OpenCV (denoise, crop).
 b. OCR & layout parse (Gemini Vision or Document-AI).

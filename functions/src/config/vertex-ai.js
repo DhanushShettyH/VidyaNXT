@@ -23,7 +23,7 @@ const AUDIO_BUCKET_NAME = `${PROJECT_ID}-sahayak-audio`;
 // Model endpoints
 const IMAGEN_ENDPOINT = `projects/${PROJECT_ID}/locations/${LOCATION}/publishers/google/models/imagen-3.0-generate-002`;
 const CHIRP_ENDPOINT = `projects/${PROJECT_ID}/locations/${LOCATION}/publishers/google/models/chirp-2`;
-
+const DEPLOYED_AGENT_RESOURCE_NAME = `projects/400977849683/locations/us-central1/reasoningEngines/1521187531167629312`;
 class VertexAIService {
   constructor() {
     this.predictionClient = predictionClient;
@@ -301,6 +301,126 @@ class VertexAIService {
       }
       throw new Error(`Failed to save image: ${error.message}`);
     }
+  }
+
+  // **NEW METHOD: Call the deployed ADK agent**
+  async callDeployedAgent(input) {
+    try {
+      console.log("🤖 Calling deployed ADK agent with input:", input);
+
+      // Prepare the request for the deployed reasoning engine
+      const request = {
+        endpoint: DEPLOYED_AGENT_RESOURCE_NAME,
+        instances: [
+          {
+            structValue: {
+              fields: {
+                input: {
+                  structValue: {
+                    fields: this.convertToGoogleValue(input),
+                  },
+                },
+              },
+            },
+          },
+        ],
+      };
+
+      const [response] = await this.predictionClient.predict(request);
+
+      // Extract the result from the response
+      if (response.predictions && response.predictions.length > 0) {
+        const prediction = response.predictions[0];
+
+        // Parse the response based on your agent's output format
+        if (prediction.structValue?.fields?.output?.structValue?.fields) {
+          const output = this.convertFromGoogleValue(
+            prediction.structValue.fields.output.structValue.fields
+          );
+          console.log("✅ Agent response:", output);
+          return output;
+        } else if (prediction.structValue?.fields) {
+          const output = this.convertFromGoogleValue(
+            prediction.structValue.fields
+          );
+          console.log("✅ Agent response:", output);
+          return output;
+        }
+      }
+
+      throw new Error("No valid response from deployed agent");
+    } catch (error) {
+      console.error("❌ Deployed agent call failed:", error);
+      throw new Error(`Agent call failed: ${error.message}`);
+    }
+  }
+
+  // Helper method to convert JavaScript objects to Google Value format
+  convertToGoogleValue(obj) {
+    const result = {};
+
+    for (const [key, value] of Object.entries(obj)) {
+      if (typeof value === "string") {
+        result[key] = { stringValue: value };
+      } else if (typeof value === "number") {
+        result[key] = { numberValue: value };
+      } else if (typeof value === "boolean") {
+        result[key] = { boolValue: value };
+      } else if (Array.isArray(value)) {
+        result[key] = {
+          listValue: {
+            values: value.map((item) =>
+              typeof item === "string"
+                ? { stringValue: item }
+                : typeof item === "number"
+                  ? { numberValue: item }
+                  : { stringValue: String(item) }
+            ),
+          },
+        };
+      } else if (value && typeof value === "object") {
+        result[key] = {
+          structValue: {
+            fields: this.convertToGoogleValue(value),
+          },
+        };
+      } else {
+        result[key] = { stringValue: String(value) };
+      }
+    }
+
+    return result;
+  }
+
+  // Helper method to convert Google Value format back to JavaScript objects
+  convertFromGoogleValue(fields) {
+    const result = {};
+
+    for (const [key, value] of Object.entries(fields)) {
+      if (value.stringValue !== undefined) {
+        result[key] = value.stringValue;
+      } else if (value.numberValue !== undefined) {
+        result[key] = value.numberValue;
+      } else if (value.boolValue !== undefined) {
+        result[key] = value.boolValue;
+      } else if (value.listValue?.values) {
+        result[key] = value.listValue.values.map((item) =>
+          item.stringValue !== undefined
+            ? item.stringValue
+            : item.numberValue !== undefined
+              ? item.numberValue
+              : item.boolValue !== undefined
+                ? item.boolValue
+                : String(item)
+        );
+      } else if (value.structValue?.fields) {
+        result[key] = this.convertFromGoogleValue(value.structValue.fields);
+      } else {
+        result[key] = String(value);
+      }
+    }
+
+    return result;
   }
 }
 

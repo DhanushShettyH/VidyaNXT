@@ -20,6 +20,7 @@
     "@google-cloud/functions-framework": "^4.0.0",
     "@google-cloud/pubsub": "^5.1.0",
     "@google-cloud/storage": "^7.16.0",
+    "@google-cloud/vertexai": "^1.10.0",
     "@google-labs/breadboard": "^0.34.0",
     "@google-labs/breadboard-cli": "^0.13.1",
     "@google-labs/breadboard-server": "^0.1.17",
@@ -32,6 +33,7 @@
     "express": "^5.1.0",
     "firebase-admin": "^12.7.0",
     "firebase-functions": "^6.3.2",
+    "google-auth-library": "^10.1.0",
     "uuid": "^11.1.0",
     "ws": "^8.18.3"
   },

@@ -20,8 +20,12 @@ const { FieldValue } = require("firebase-admin/firestore");
 const wellnessAgent = require("../agents/wellness-agent");
 
 const { db } = require("../config/firebase-config");
+const { VertexAIService } = require("../config/vertex-ai");
 
-// Profile processing trigger
+// const COLLECTIONS = {
+//   TEACHER_PROFILES: "teacher_profiles",
+// };
+
 const profileAgent = onDocumentCreated(
   "teachers/{teacherId}",
   async (event) => {
@@ -39,8 +43,8 @@ const profileAgent = onDocumentCreated(
     try {
       console.log(`🤖 Profile Agent: Processing teacher ${teacherId}`);
 
-      const agent = new ProfileAgent();
-      const profileResult = await agent.processProfile(payload);
+      // Call the deployed ADK agent instead of local ProfileAgent
+      const profileResult = await VertexAIService.callDeployedAgent(payload);
 
       await db
         .collection(COLLECTIONS.TEACHER_PROFILES)
@@ -321,5 +325,5 @@ module.exports = {
   matchingTrigger,
   orchestrationTrigger,
   wellnessAnalysisAgent,
-  incrementUnread
+  incrementUnread,
 };
