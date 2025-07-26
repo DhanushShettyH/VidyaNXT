@@ -38,6 +38,7 @@ const profileAgent = onDocumentCreated(
       grades: teacherData.grades,
       location: teacherData.location,
       experience: teacherData.experienceYears,
+      expertise: teacherData.expertise,
     };
 
     try {

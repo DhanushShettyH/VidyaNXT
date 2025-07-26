@@ -2,7 +2,7 @@ const { HttpsError } = require("firebase-functions/v2/https");
 
 // Teacher registration validation
 function validateTeacherRegistration(data) {
-  const { displayName, grades, location, experienceYears } = data;
+  const { displayName, grades, location, experienceYears, expertise } = data;
 
   if (!displayName?.trim()) {
     throw new HttpsError("invalid-argument", "Display name is required");
@@ -25,6 +25,7 @@ function validateTeacherRegistration(data) {
     grades: grades.filter((g) => g && g.trim()),
     location: location.trim(),
     experienceYears,
+    expertise,
   };
 }
 
