@@ -1,27 +1,54 @@
 const { EXPERIENCE_LEVELS, AI_PREFERENCES } = require("../config/constants");
 
-// Determine experience level based on years
-function getExperienceLevel(years) {
-  if (years < 3) return EXPERIENCE_LEVELS.NOVICE;
-  if (years < 10) return EXPERIENCE_LEVELS.EXPERIENCED;
-  return EXPERIENCE_LEVELS.VETERAN;
+// utils/helpers.js
+function getExperienceLevel(experienceYears) {
+  if (experienceYears < 2) return "beginner";
+  if (experienceYears < 5) return "intermediate";
+  if (experienceYears < 10) return "experienced";
+  return "expert";
 }
 
-// Get AI interaction preferences
 function getAIPreferences(grades, experienceYears) {
-  const experienceLevel = getExperienceLevel(experienceYears);
-
-  return {
-    preferredInteractionStyle:
-      experienceYears < 5
-        ? AI_PREFERENCES.SUPPORTIVE
-        : AI_PREFERENCES.COLLABORATIVE,
-    topicExpertise: determineTopicExpertise(grades, experienceYears),
-    communicationPreference:
-      experienceLevel === EXPERIENCE_LEVELS.NOVICE
-        ? AI_PREFERENCES.DETAILED
-        : AI_PREFERENCES.CONCISE,
+  const preferences = {
+    contentComplexity: experienceYears >= 3 ? "intermediate" : "basic",
+    aiAssistanceLevel: experienceYears < 3 ? "high" : "moderate",
+    preferredSubjects: [],
+    gradeFocus: grades,
   };
+
+  // Add subject preferences based on grades
+  if (grades.some((grade) => ["K", "1", "2", "3"].includes(grade))) {
+    preferences.preferredSubjects.push(
+      "reading",
+      "basic_math",
+      "science_basics"
+    );
+  }
+  if (grades.some((grade) => ["4", "5", "6"].includes(grade))) {
+    preferences.preferredSubjects.push(
+      "mathematics",
+      "science",
+      "social_studies"
+    );
+  }
+  if (
+    grades.some((grade) => ["7", "8", "9", "10", "11", "12"].includes(grade))
+  ) {
+    preferences.preferredSubjects.push(
+      "advanced_math",
+      "chemistry",
+      "physics",
+      "literature"
+    );
+  }
+
+  return preferences;
+}
+
+function calculateProfileStrength(experienceYears, grades) {
+  const baseScore = Math.min(experienceYears * 10, 50);
+  const gradeDiversity = new Set(grades).size * 5;
+  return Math.min(baseScore + gradeDiversity, 100);
 }
 
 // Simple topic expertise determination
@@ -44,11 +71,6 @@ function determineTopicExpertise(grades, experience) {
   }
 
   return gradeTypes;
-}
-
-// Calculate profile strength
-function calculateProfileStrength(experienceYears, grades) {
-  return Math.min(100, experienceYears * 5 + grades.length * 15);
 }
 
 // Wait/delay helper
@@ -138,6 +160,116 @@ function validateContentStructure(content) {
   }
 
   return defaultContent;
+}
+
+// !Parse ADK response
+function parseADKResponse(responseData) {
+  try {
+    let summary = null;
+
+    // Convert response to string if it's an object
+    let responseStr = "";
+    if (typeof responseData === "string") {
+      responseStr = responseData;
+    } else if (responseData && typeof responseData === "object") {
+      responseStr = JSON.stringify(responseData);
+    } else {
+      console.warn("⚠️ Unexpected response format:", typeof responseData);
+      return null;
+    }
+
+    console.log("📝 Parsing response string length:", responseStr.length);
+
+    // Method 1: Split by newlines and parse each JSON object
+    const lines = responseStr
+      .split("\n")
+      .filter((line) => line.trim().length > 0);
+    console.log("📋 Found", lines.length, "lines to parse");
+
+    for (let i = 0; i < lines.length; i++) {
+      try {
+        const jsonObj = JSON.parse(lines[i]);
+        console.log(
+          `🔍 Line ${i} - Author: ${jsonObj.author}, Has text: ${!!jsonObj.content?.parts?.[0]?.text}`
+        );
+
+        // Look for profile_agent response with actual text content
+        if (
+          jsonObj.author === "profile_agent" &&
+          jsonObj.content?.parts?.[0]?.text
+        ) {
+          summary = jsonObj.content.parts[0].text.trim();
+          console.log(
+            "✅ Found summary via JSON parsing:",
+            summary.substring(0, 100) + "..."
+          );
+          break;
+        }
+      } catch (lineParseErr) {
+        console.warn(`⚠️ Failed to parse line ${i}:`, lineParseErr.message);
+        continue;
+      }
+    }
+
+    // Method 2: Fallback regex approach if JSON parsing fails
+    if (!summary) {
+      console.log("🔄 Trying regex fallback approach...");
+      const profileAgentRegex =
+        /"author":\s*"profile_agent"[^}]*?"text":\s*"([^"\\]*(\\.[^"\\]*)*)"/;
+      const match = responseStr.match(profileAgentRegex);
+
+      if (match && match[1]) {
+        summary = match[1]
+          .replace(/\\"/g, '"') // Unescape quotes
+          .replace(/\\n/g, "\n") // Unescape newlines
+          .trim();
+        console.log(
+          "✅ Found summary via regex:",
+          summary.substring(0, 100) + "..."
+        );
+      }
+    }
+
+    // Method 3: Final fallback - look for any text content in profile_agent context
+    if (!summary) {
+      console.log("🔄 Trying final fallback approach...");
+      const textRegex = /"text":\s*"([^"\\]*(\\.[^"\\]*)*)"/g;
+      let match;
+      const textMatches = [];
+
+      while ((match = textRegex.exec(responseStr)) !== null) {
+        textMatches.push(match[1]);
+      }
+
+      // Get the last text match (usually the final response)
+      if (textMatches.length > 0) {
+        summary = textMatches[textMatches.length - 1]
+          .replace(/\\"/g, '"')
+          .replace(/\\n/g, "\n")
+          .trim();
+        console.log(
+          "✅ Found summary via final fallback:",
+          summary.substring(0, 100) + "..."
+        );
+      }
+    }
+
+    if (!summary) {
+      console.warn("❌ No summary found in response");
+      return null;
+    }
+
+    // Validate summary content
+    if (summary.length < 10) {
+      console.warn("⚠️ Summary too short, might be invalid:", summary);
+      return null;
+    }
+
+    return summary;
+  } catch (error) {
+    console.error("❌ Error parsing ADK response:", error.message);
+    return null;
+  }
 }
 
 //!parseGeminiResponse function
@@ -450,4 +582,5 @@ module.exports = {
   parseGeminiResponse,
   sanitizeForFirestore,
   validateContentStructure,
+  parseADKResponse,
 };

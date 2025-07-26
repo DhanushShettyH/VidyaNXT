@@ -3,7 +3,7 @@ const {
   onDocumentUpdated,
 } = require("firebase-functions/v2/firestore");
 const admin = require("firebase-admin");
-const ProfileAgent = require("../agents/profile-agent");
+// const ProfileAgent = require("../agents/profile-agent");
 const { COLLECTIONS } = require("../config/constants");
 const { getTeacherProfile_ } = require("../services/teacher");
 const { orchestrationAgent } = require("../agents/orchestration-agent");
@@ -21,11 +21,13 @@ const wellnessAgent = require("../agents/wellness-agent");
 
 const { db } = require("../config/firebase-config");
 const { VertexAIService } = require("../config/vertex-ai");
+const {
+  getExperienceLevel,
+  getAIPreferences,
+  calculateProfileStrength,
+} = require("../utils/helpers");
 
-// const COLLECTIONS = {
-//   TEACHER_PROFILES: "teacher_profiles",
-// };
-
+// ! profile agent is triggered.
 const profileAgent = onDocumentCreated(
   "teachers/{teacherId}",
   async (event) => {
@@ -44,8 +46,58 @@ const profileAgent = onDocumentCreated(
     try {
       console.log(`🤖 Profile Agent: Processing teacher ${teacherId}`);
 
-      // Call the deployed ADK agent instead of local ProfileAgent
-      const profileResult = await VertexAIService.callDeployedAgent(payload);
+      // ✅ FORMAT THE MESSAGE HERE - All formatting done before calling agent
+      const teacherInfo = `Name: ${teacherData.displayName}, Grades: ${teacherData.grades.join(", ")}, Location: ${teacherData.location}, Experience: ${teacherData.experienceYears} years`;
+      const formattedMessage = `Generate a professional summary for this teacher profile: ${teacherInfo}`;
+
+      // ✅ Call agent with only the formatted message
+      const summaryResponse =
+        await VertexAIService.callDeployedAgent(formattedMessage);
+      console.log(summaryResponse);
+
+      let summary;
+      try {
+        if (summaryResponse?.content?.parts?.[0]?.text) {
+          summary = summaryResponse.content.parts[0].text;
+        } else if (summaryResponse?.summary) {
+          summary = summaryResponse.summary;
+        } else {
+          summary = summaryResponse.toString().trim();
+        }
+      } catch (parseError) {
+        console.warn("Failed to parse ADK response, using fallback");
+        summary = fallbackSummary;
+      }
+
+      // Process the complete profile using helper functions
+      const experienceLevel = getExperienceLevel(teacherData.experienceYears);
+      const aiPreferences = getAIPreferences(
+        teacherData.grades,
+        teacherData.experienceYears
+      );
+      const profileStrength = calculateProfileStrength(
+        teacherData.experienceYears,
+        teacherData.grades
+      );
+
+      // Create matching criteria
+      const matchingCriteria = {
+        grades: teacherData.grades,
+        location: teacherData.location,
+        experienceLevel: experienceLevel,
+        gradeScore: teacherData.grades.length * 10,
+        regionKey: teacherData.location.toLowerCase().replace(/\s+/g, "_"),
+      };
+
+      // Build the complete profile object
+      const profileResult = {
+        teacherId: teacherId,
+        summary: summary,
+        matchingCriteria: matchingCriteria,
+        aiPreferences: aiPreferences,
+        profileStrength: profileStrength,
+        createdAt: new Date().toISOString(),
+      };
 
       await db
         .collection(COLLECTIONS.TEACHER_PROFILES)
@@ -56,65 +108,81 @@ const profileAgent = onDocumentCreated(
         });
 
       console.log(`✅ Profile Agent: Stored profile for ${teacherId}`);
-      await updateNetworkStats(teacherData);
     } catch (error) {
       console.error(`❌ Profile Agent failed for ${teacherId}:`, error.message);
+
+      // Fallback: create profile with basic summary if ADK agent fails
+      const experienceLevel = getExperienceLevel(teacherData.experienceYears);
+      const aiPreferences = getAIPreferences(
+        teacherData.grades,
+        teacherData.experienceYears
+      );
+      const profileStrength = calculateProfileStrength(
+        teacherData.experienceYears,
+        teacherData.grades
+      );
+
+      const matchingCriteria = {
+        grades: teacherData.grades,
+        location: teacherData.location,
+        experienceLevel: experienceLevel,
+        gradeScore: teacherData.grades.length * 10,
+        regionKey: teacherData.location.toLowerCase().replace(/\s+/g, "_"),
+      };
+
       await db.collection(COLLECTIONS.TEACHER_PROFILES).doc(teacherId).set({
-        error: error.message,
-        processingFailed: true,
+        teacherId: teacherId,
+        summary: fallbackSummary,
+        matchingCriteria: matchingCriteria,
+        aiPreferences: aiPreferences,
+        profileStrength: profileStrength,
+        createdAt: new Date().toISOString(),
         processedAt: new Date().toISOString(),
+        fallbackUsed: true,
+        originalError: error.message,
       });
     }
   }
 );
 
-async function updateNetworkStats(teacherData) {
-  try {
-    const statsRef = db.collection(COLLECTIONS.NETWORK_STATS).doc("global");
-    await db.runTransaction(async (transaction) => {
-      const doc = await transaction.get(statsRef);
-      let stats = {
-        totalTeachers: 0,
-        gradeCoverage: {},
-        locationCoverage: {},
-      };
-      if (doc.exists) {
-        stats = doc.data();
-      }
-      stats.totalTeachers += 1;
-      for (const grade of teacherData.grades) {
-        stats.gradeCoverage[grade] = (stats.gradeCoverage[grade] || 0) + 1;
-      }
-      const location = teacherData.location;
-      stats.locationCoverage[location] =
-        (stats.locationCoverage[location] || 0) + 1;
-      stats.lastUpdated = new Date().toISOString();
-      transaction.set(statsRef, stats);
-    });
-    console.log("✅ Network stats updated");
-  } catch (error) {
-    console.error("❌ Failed to update network stats:", error);
-  }
-}
-
-// Classification trigger
+//! Classification trigger
 const classificationTrigger = onDocumentCreated(
   "challenges/{challengeId}",
   async (event) => {
     const challengeId = event.params.challengeId;
     const challengeData = event.data.data();
+
     try {
       console.log(`📝 Classification trigger for ${challengeId}`);
-      const classificationResult = await classificationAgent.classify({
-        id: challengeId,
-        text: challengeData.text,
-        teacherId: challengeData.teacherId,
+
+      // Build classification prompt message
+      const message = buildClassificationPrompt(challengeData.text);
+
+      // Call deployed ADK agent with formatted message
+      const classificationResult = await callDeployedAgent({
+        content: message,
       });
-      await db.collection("challenges").doc(challengeId).update({
-        classification: classificationResult,
-        status: "CLASSIFIED",
-        classifiedAt: new Date().toISOString(),
-      });
+
+      // Extract summary JSON string from your ADK parsing (assumed to be stringified JSON)
+      const classificationJson = classificationResult.summary;
+      const classificationObj = JSON.parse(classificationJson);
+
+      // Prepare Firestore update fields matching your schema and agent response
+      await db
+        .collection("challenges")
+        .doc(challengeId)
+        .update({
+          classification: {
+            type: classificationObj.primaryType,
+            confidence: classificationObj.confidence,
+            secondaryTypes: classificationObj.secondaryTypes,
+            reasoning: classificationObj.reasoning,
+          },
+          status: "CLASSIFIED",
+          classifiedAt: new Date().toISOString(),
+        });
+
+      console.log(`✅ Classification completed for ${challengeId}`);
     } catch (error) {
       console.error(
         `❌ Classification failed for ${challengeId}:`,
@@ -128,33 +196,97 @@ const classificationTrigger = onDocumentCreated(
     }
   }
 );
+// Example prompt builder function (adjust category list accordingly)
+function buildClassificationPrompt(text) {
+  const labels = [
+    "classroom management",
+    "content delivery",
+    "parent communication",
+    "student engagement",
+    "assessment and grading",
+    "technology integration",
+    "special needs support",
+    "behavior management",
+    "curriculum planning",
+    "time management",
+    "professional development",
+    "work-life balance",
+  ];
 
-// Matching trigger
+  return `
+You are an expert in educational challenges classification. Analyze the following teacher challenge and classify it.
+
+Available Categories:
+${labels.map((label) => `- ${label}`).join("\n")}
+
+Challenge Text: "${text}"
+
+Respond with a JSON object containing:
+{
+  "primaryType": "most relevant category from the list",
+  "confidence": confidence_score_0_to_1,
+  "secondaryTypes": ["up to 2 other relevant categories"],
+  "reasoning": "brief explanation of classification"
+}
+
+Focus on the main educational challenge being described. Be precise and use only the categories provided.
+`;
+}
+
+//! Matching trigger
 const matchingTrigger = onDocumentUpdated(
   "challenges/{challengeId}",
   async (event) => {
     const before = event.data.before.data();
     const after = event.data.after.data();
     const challengeId = event.params.challengeId;
-    if (before.status !== "POSTED" || after.status !== "CLASSIFIED") {
+
+    // Only trigger when status changes from POSTED to CLASSIFIED
+    if (!(before.status === "POSTED" && after.status === "CLASSIFIED")) {
       return;
     }
+
     const { classification, teacherId } = after;
+
     try {
+      // Get current teacher profile
       const teacherProfile = await getTeacherProfile_(teacherId);
-      const matchingResult = await matchingAgent.findMatches({
-        challengeId,
+
+      // Fetch all peer profiles from your DB excluding current teacher
+      const allProfilesSnapshot = await db.collection("teachers").get();
+      let allProfiles = allProfilesSnapshot.docs
+        .map((doc) => doc.data())
+        .filter((profile) => profile.teacherId !== teacherId);
+
+      // Build prompt message for matching agent
+      const message = buildMatchingPrompt(
         teacherProfile,
         classification,
-      });
-      console.log(`🤝 Matching trigger for ${challengeId}`, matchingResult);
+        allProfiles
+      );
 
-      await db.collection("challenges").doc(challengeId).update({
-        matches: matchingResult.matches,
-        aiChatRecommended: matchingResult.aiChatRecommended,
-        status: "MATCHED",
-        matchedAt: new Date().toISOString(),
-      });
+      // Call deployed matching agent
+      const matchingResultRaw = await callDeployedAgent({ content: message });
+
+      // Extract JSON string from ADK agent response
+      const matchingResultJson = matchingResultRaw.summary;
+      const matchingResult = JSON.parse(matchingResultJson);
+
+      // Normalize returned field 'aiRecommended' to 'aiChatRecommended' for your DB
+      const aiChatRecommended = matchingResult.aiRecommended ?? false;
+
+      // Persist matches, AI recommendation, and updated status
+      await db
+        .collection("challenges")
+        .doc(challengeId)
+        .update({
+          matches: matchingResult.matches || [],
+          aiChatRecommended,
+          status: "MATCHED",
+          matchedAt: new Date().toISOString(),
+        });
+
+      console.log(`✅ Matching completed for ${challengeId}`, matchingResult);
     } catch (error) {
       console.error(`❌ Matching failed for ${challengeId}:`, error);
       await db.collection("challenges").doc(challengeId).update({
@@ -167,8 +299,53 @@ const matchingTrigger = onDocumentUpdated(
     }
   }
 );
+function buildMatchingPrompt(teacherProfile, classification, allProfiles) {
+  return `
+You are an expert teacher matching system. Find the best peer matches for a teacher based on their profile and challenge.
 
-// Orchestration trigger
+IMPORTANT: DO NOT include the current teacher (ID: ${teacherProfile.teacherId}) in your matches. Only match with OTHER teachers.
+
+Current Teacher Profile:
+${JSON.stringify(teacherProfile, null, 2)}
+
+Challenge Classification:
+${JSON.stringify(classification, null, 2)}
+
+Available Peer Profiles (excluding current teacher):
+${JSON.stringify(allProfiles.slice(0, 20), null, 2)}
+
+Find the best matches considering:
+1. Grade level overlap
+2. Subject expertise
+3. Experience level compatibility
+4. Geographic location
+5. Challenge type relevance
+
+Also determine if AI chat should be recommended based on:
+- Challenge complexity
+- Challenge type
+- Available peer quality
+
+Respond with JSON:
+{
+  "matches": [
+    {
+      "type": "peer",
+      "peerId": "teacher_id_of_peer_NOT_current_teacher",
+      "score": 0.0-1.0,
+      "reasons": ["specific matching reasons"]
+    }
+  ],
+  "aiRecommended": true/false,
+  "aiReason": "reason for AI recommendation"
+}
+
+CRITICAL: Ensure peerId is NEVER ${teacherProfile.teacherId}. Only return OTHER teachers' IDs.
+Return top 3 peer matches maximum. Score based on relevance and compatibility.
+`;
+}
+
+//! Orchestration trigger
 const orchestrationTrigger = onDocumentUpdated(
   "challenges/{challengeId}",
   async (event) => {
@@ -241,7 +418,7 @@ const orchestrationTrigger = onDocumentUpdated(
   }
 );
 
-// Wellness analysis trigger
+//! Wellness analysis trigger
 const wellnessAnalysisAgent = onDocumentCreated(
   "teachers/{teacherId}/wellness_reports/{reportId}",
   async (event) => {
