@@ -22,29 +22,11 @@
 		}
 	],
 	"hosting": {
-		"site": "vidyanxt-c5816",
-		"public": "dist",
+		"public": "public",
 		"ignore": [
 			"firebase.json",
 			"**/.*",
 			"**/node_modules/**"
-		],
-		"rewrites": [
-			{
-				"source": "**",
-				"destination": "/index.html"
-			}
-		],
-		"headers": [
-			{
-				"source": "**/*.@(woff|woff2|ttf|otf|eot)",
-				"headers": [
-					{
-						"key": "Cache-Control",
-						"value": "public, max-age=31536000"
-					}
-				]
-			}
 		]
 	},
 	"emulators": {
@@ -52,9 +34,9 @@
 			"port": 9099
 		},
 		"functions": {
-      "port": 5001,
-      "timeout": 300000
-    },
+			"port": 5001,
+			"timeout": 300000
+		},
 		"firestore": {
 			"port": 8080
 		},
@@ -62,5 +44,8 @@
 			"enabled": true
 		},
 		"singleProjectMode": true
+	},
+	"storage": {
+		"rules": "storage.rules"
 	}
 }

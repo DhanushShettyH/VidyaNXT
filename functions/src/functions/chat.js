@@ -6,7 +6,7 @@ const admin = require("firebase-admin");
 const { FieldValue } = require("firebase-admin/firestore");
 const { generateText } = require("../config/gemini");
 const { delay, parseGeminiResponse } = require("../utils/helpers");
-const { createWellnessReport } = require("../services/wellness");
+// const { createWellnessReport } = require("../services/wellness");
 const { incrementUnread } = require("./triggers");
 
 const { db } = require("../config/firebase-config");
@@ -269,13 +269,13 @@ const sendAiChatMessage = onCall(async (request) => {
     ).length;
 
     // Create wellness report
-    await createWellnessReport(sessionData.teacherId, "chat", messagesData, {
-      session_id: sessionId,
-      message_count: messagesData.length,
-      teacher_message_count: teacherMessageCount,
-      duration: Date.now() - new Date(sessionData.createdAt).getTime(),
-      ended: endSession,
-    });
+    // await createWellnessReport(sessionData.teacherId, "chat", messagesData, {
+    //   session_id: sessionId,
+    //   message_count: messagesData.length,
+    //   teacher_message_count: teacherMessageCount,
+    //   duration: Date.now() - new Date(sessionData.createdAt).getTime(),
+    //   ended: endSession,
+    // });
   }
 
   return {
@@ -348,14 +348,10 @@ const endAiChatSession = onCall(async (request) => {
   };
 });
 
-
-
-
 module.exports = {
   startChatWith,
   markAsRead,
   createAiChatSession,
   sendAiChatMessage,
   endAiChatSession,
-
 };

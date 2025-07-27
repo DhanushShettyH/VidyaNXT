@@ -419,63 +419,63 @@ const orchestrationTrigger = onDocumentUpdated(
 );
 
 //! Wellness analysis trigger
-const wellnessAnalysisAgent = onDocumentCreated(
-  "teachers/{teacherId}/wellness_reports/{reportId}",
-  async (event) => {
-    try {
-      const wellnessData = event.data.data();
-      const teacherId = event.params.teacherId;
-      const reportId = event.params.reportId;
+// const wellnessAnalysisAgent = onDocumentCreated(
+//   "teachers/{teacherId}/wellness_reports/{reportId}",
+//   async (event) => {
+//     try {
+//       const wellnessData = event.data.data();
+//       const teacherId = event.params.teacherId;
+//       const reportId = event.params.reportId;
 
-      console.log("Processing wellness analysis for teacher:", teacherId);
+//       console.log("Processing wellness analysis for teacher:", teacherId);
 
-      let analysis;
+//       let analysis;
 
-      // Analyze based on type
-      if (wellnessData.analysis_type === "challenge") {
-        analysis = await wellnessAgent.analyzeChallengeWellness(
-          teacherId,
-          wellnessData.content
-        );
-      } else if (wellnessData.analysis_type === "chat") {
-        analysis = await wellnessAgent.analyzeChatWellness(
-          teacherId,
-          wellnessData.content,
-          wellnessData.session_data || {}
-        );
-      }
+//       // Analyze based on type
+//       if (wellnessData.analysis_type === "challenge") {
+//         analysis = await wellnessAgent.analyzeChallengeWellness(
+//           teacherId,
+//           wellnessData.content
+//         );
+//       } else if (wellnessData.analysis_type === "chat") {
+//         analysis = await wellnessAgent.analyzeChatWellness(
+//           teacherId,
+//           wellnessData.content,
+//           wellnessData.session_data || {}
+//         );
+//       }
 
-      // Update wellness report with analysis
-      await event.data.ref.update({
-        ...analysis,
-        processed_at: FieldValue.serverTimestamp(),
-        status: "analyzed",
-      });
+//       // Update wellness report with analysis
+//       await event.data.ref.update({
+//         ...analysis,
+//         processed_at: FieldValue.serverTimestamp(),
+//         status: "analyzed",
+//       });
 
-      // Send critical alert if needed
-      if (analysis.critical_alert) {
-        await sendWellnessCriticalAlert(teacherId, analysis);
-      }
+//       // Send critical alert if needed
+//       if (analysis.critical_alert) {
+//         await sendWellnessCriticalAlert(teacherId, analysis);
+//       }
 
-      // Update teacher's wellness summary
-      await updateTeacherWellnessSummary(teacherId, analysis);
+//       // Update teacher's wellness summary
+//       await updateTeacherWellnessSummary(teacherId, analysis);
 
-      console.log("Wellness analysis completed for teacher:", teacherId);
-      return { success: true };
-    } catch (error) {
-      console.error("Wellness analysis failed:", error);
+//       console.log("Wellness analysis completed for teacher:", teacherId);
+//       return { success: true };
+//     } catch (error) {
+//       console.error("Wellness analysis failed:", error);
 
-      // Update report with error status
-      await event.data.ref.update({
-        status: "error",
-        error_message: error.message,
-        processed_at: FieldValue.serverTimestamp(),
-      });
+//       // Update report with error status
+//       await event.data.ref.update({
+//         status: "error",
+//         error_message: error.message,
+//         processed_at: FieldValue.serverTimestamp(),
+//       });
 
-      return { error: error.message };
-    }
-  }
-);
+//       return { error: error.message };
+//     }
+//   }
+// );
 
 const incrementUnread = onDocCreated(
   "conversations/{convoId}/messages/{msgId}",
@@ -502,6 +502,6 @@ module.exports = {
   classificationTrigger,
   matchingTrigger,
   orchestrationTrigger,
-  wellnessAnalysisAgent,
+  //   wellnessAnalysisAgent,
   incrementUnread,
 };

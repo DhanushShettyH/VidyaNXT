@@ -2,7 +2,7 @@ const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const { FieldValue } = require("firebase-admin/firestore");
 
 const admin = require("firebase-admin");
-const { createWellnessReport } = require("../services/wellness");
+// const { createWellnessReport } = require("../services/wellness");
 
 // Initialize
 const { db } = require("../config/firebase-config");
@@ -41,7 +41,7 @@ exports.postChallenge = onCall(async (request) => {
     const challengeRef = await db.collection("challenges").add(challenge);
 
     // Trigger wellness analysis
-    await createWellnessReport(teacherId, "challenge", text.trim());
+    // await createWellnessReport(teacherId, "challenge", text.trim());
 
     console.log(
       `Wellness analysis triggered for challenge: ${challengeRef.id}`
